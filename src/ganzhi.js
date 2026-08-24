@@ -37,11 +37,11 @@ export const WUXING = Object.freeze({
 /** How 23:00–00:00 chooses the day pillar and the hour stem. */
 export const RAT_HOUR_MODE = Object.freeze({
   /** 23:00 starts the following Ganzhi day; its hour stem follows that day. */
-  NO_SPLIT: 'no-split',
+  NEXT_DAY: 'next-day',
   /** Keep today's day pillar and use today's day stem for the late-Zi hour. */
-  TODAY_STEM: 'today-stem',
+  CURRENT_DAY: 'current-day',
   /** Keep today's day pillar but use tomorrow's day stem for the late-Zi hour. */
-  TOMORROW_STEM: 'tomorrow-stem',
+  CURRENT_DAY_TOMORROW_STEM: 'current-day-tomorrow-stem',
 });
 
 /** Whether year/month pillar boundaries use historical assigned term days. */
@@ -229,11 +229,11 @@ function calculateDayAndHourPillars(virtualTime, ratHourMode) {
   }
   const lateRatHour = virtualTime.hour >= 23;
   let dayAnchor = virtualTime;
-  if (lateRatHour && ratHourMode === RAT_HOUR_MODE.NO_SPLIT) dayAnchor = nextCivilDate(virtualTime);
+  if (lateRatHour && ratHourMode === RAT_HOUR_MODE.NEXT_DAY) dayAnchor = nextCivilDate(virtualTime);
   const day = calculateDayPillar(dayAnchor);
   const hourBranch = Math.floor((virtualTime.hour + 1) / 2) % 12;
   let hourDayStem = ganzhiStem(day);
-  if (lateRatHour && ratHourMode === RAT_HOUR_MODE.TOMORROW_STEM) {
+  if (lateRatHour && ratHourMode === RAT_HOUR_MODE.CURRENT_DAY_TOMORROW_STEM) {
     hourDayStem = ganzhiStem(advanceGanzhi(day, 1));
   }
   return { day, hour: getHourGanzhi(hourDayStem, hourBranch) };
@@ -249,7 +249,7 @@ function calculateDayAndHourPillars(virtualTime, ratHourMode) {
 export function calculateFourPillars(instant, virtualTime, rawOptions = {}) {
   const jdUT1 = asUt1JulianDay(instant);
   validateVirtualTime(virtualTime);
-  const ratHourMode = rawOptions.ratHourMode ?? RAT_HOUR_MODE.NO_SPLIT;
+  const ratHourMode = rawOptions.ratHourMode ?? RAT_HOUR_MODE.NEXT_DAY;
   const historical = useHistoricalTerms(rawOptions);
   const year = calculateYearPillar(jdUT1, virtualTime, rawOptions, historical);
   const month = calculateMonthPillar(jdUT1, year, rawOptions, historical);
@@ -274,7 +274,7 @@ export function describeFourPillars(pillars) {
 
 export const GANZHI_INFO = Object.freeze({
   encoding: 'high nibble=stem, low nibble=branch',
-  defaultRatHourMode: RAT_HOUR_MODE.NO_SPLIT,
+  defaultRatHourMode: RAT_HOUR_MODE.NEXT_DAY,
   historicalTermBoundary: 'assigned civil day 00:00 at UTC+08',
   calendarModes: Object.values(CALENDAR_MODE),
 });

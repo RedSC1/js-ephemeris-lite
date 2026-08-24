@@ -72,7 +72,7 @@ const birthClock = new ZonedTime({
 });
 const pillars = fourPillarsForZonedTime(birthClock, {
   mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
-  ratHourMode: RAT_HOUR_MODE.TOMORROW_STEM,
+  ratHourMode: RAT_HOUR_MODE.CURRENT_DAY_TOMORROW_STEM,
 });
 console.log(describeFourPillars(pillars));
 ```
@@ -189,7 +189,7 @@ const clock = new ZonedTime({
 
 const packed = fourPillarsForZonedTime(clock, {
   mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
-  ratHourMode: RAT_HOUR_MODE.TOMORROW_STEM,
+  ratHourMode: RAT_HOUR_MODE.CURRENT_DAY_TOMORROW_STEM,
   pillarHistoricalMode: PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR,
 });
 
@@ -199,7 +199,7 @@ console.log(describeFourPillars(packed));   // { year: '己卯', ... }
 
 年柱以立春为界，月柱以十二节为界，日柱按民用日，时柱使用五鼠遁；另导出 `calculateDayPillar()`、`getMonthGanzhi()`、`getHourGanzhi()`、`ganzhiName()`、`getNayinId()` 和 `getNayinElement()` 等底层函数。
 
-`RAT_HOUR_MODE` 只决定 23:00～00:00 的日柱/时干规则：`NO_SPLIT`、`TODAY_STEM`、`TOMORROW_STEM`。它不会改变农历月份。`PILLAR_HISTORICAL_MODE` 决定年月柱节界是否采用历史分配日；历史分配日固定为 UTC+08 的中国历日，不能随本地时区平移。
+`RAT_HOUR_MODE` 只决定 23:00～00:00 的日柱/时干规则：`NEXT_DAY` 在 23:00 整体换入次日，`CURRENT_DAY` 的日柱和时干都沿用当天，`CURRENT_DAY_TOMORROW_STEM` 保留当天日柱但按次日五鼠遁取时干。它不会改变农历月份。`PILLAR_HISTORICAL_MODE` 决定年月柱节界是否采用历史分配日；历史分配日固定为 UTC+08 的中国历日，不能随本地时区平移。
 
 需要真太阳时或平太阳时时，调用 `calculateFourPillars(instant, virtualTime, options)`：`instant` 保留真实物理瞬时供立春节界使用，`virtualTime` 放已经换算好的当地太阳钟字段，二者不会被库偷偷混成一个时间。
 

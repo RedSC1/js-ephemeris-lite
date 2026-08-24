@@ -69,13 +69,18 @@ test('modern four-pillar regression vectors match the C++ layer', () => {
 });
 
 test('the three late-Zi conventions remain independent', () => {
+  assert.deepEqual(RAT_HOUR_MODE, {
+    NEXT_DAY: 'next-day',
+    CURRENT_DAY: 'current-day',
+    CURRENT_DAY_TOMORROW_STEM: 'current-day-tomorrow-stem',
+  });
   const time = new ZonedTime({
     year: 2000, month: 1, day: 1, hour: 23, minute: 30, second: 0, offsetMinutes: 480,
   });
   const expected = new Map([
-    [RAT_HOUR_MODE.NO_SPLIT, [0x57, 0x00]],
-    [RAT_HOUR_MODE.TOMORROW_STEM, [0x46, 0x00]],
-    [RAT_HOUR_MODE.TODAY_STEM, [0x46, 0x80]],
+    [RAT_HOUR_MODE.NEXT_DAY, [0x57, 0x00]],
+    [RAT_HOUR_MODE.CURRENT_DAY_TOMORROW_STEM, [0x46, 0x00]],
+    [RAT_HOUR_MODE.CURRENT_DAY, [0x46, 0x80]],
   ]);
   for (const [ratHourMode, [day, hour]] of expected) {
     const pillars = fourPillarsForZonedTime(time, { ...ASTRONOMICAL_CHINA, ratHourMode });
@@ -98,4 +103,3 @@ test('Li-Chun and monthly Jie switch pillars at the solved instant', () => {
     year: '甲辰', month: '丙寅', day: describeFourPillars(after).day, hour: describeFourPillars(after).hour,
   });
 });
-

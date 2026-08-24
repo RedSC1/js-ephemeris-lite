@@ -45,7 +45,7 @@ const calendar: ChineseCalendarYear = calculateChineseCalendarYear(instant);
 const root: number = solveNewMoon(instant.jdTT, { moonLatitudeTerms: 10 }).jdUT1;
 const pillars = fourPillarsForZonedTime(clock, {
   mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
-  ratHourMode: RAT_HOUR_MODE.TOMORROW_STEM,
+  ratHourMode: RAT_HOUR_MODE.CURRENT_DAY_TOMORROW_STEM,
   pillarHistoricalMode: PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR,
 });
 const names: string = describeFourPillars(pillars).day;

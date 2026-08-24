@@ -15,9 +15,9 @@ export const WUXING: Readonly<{
 }>;
 
 export const RAT_HOUR_MODE: Readonly<{
-  NO_SPLIT: 'no-split';
-  TODAY_STEM: 'today-stem';
-  TOMORROW_STEM: 'tomorrow-stem';
+  NEXT_DAY: 'next-day';
+  CURRENT_DAY: 'current-day';
+  CURRENT_DAY_TOMORROW_STEM: 'current-day-tomorrow-stem';
 }>;
 export type RatHourMode = typeof RAT_HOUR_MODE[keyof typeof RAT_HOUR_MODE];
 
