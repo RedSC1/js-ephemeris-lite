@@ -23,6 +23,7 @@ npm install js-ephemeris-lite
 - 干支历底层：立春年界、逐节月界、日时柱、五虎遁、五鼠遁、纳音，并独立支持三种晚子时约定。
 - 历史定朔/定气日期压缩表：分段线性基准加稀疏 `±1 day` 位修正，覆盖 33161 个朔和 52324 个节气事件。
 - C++ fast2 结构迁移的日出日落：普通纬度使用解析种子加 2～3 次 Newton，高纬/浅切退化为 2 小时窗口扫描和精确残差二分；默认上边缘、hybrid 大气折射。
+- C++ 太阳时链路迁移的均时差、地方平太阳时和地方视太阳时（真太阳时），可直接作为四柱的虚拟钟面。
 
 运行：
 
@@ -166,6 +167,43 @@ console.log(altitude.apparentAltitudeRad, altitude.azimuthRad);
 默认大气为 `1013.25 mbar`、`15°C`，默认太阳上边缘和 hybrid 折射。`hybridAtmosphericRefraction()` 使用 `≤14°` Bennett、`≥16°` Smart、其间线性混合，真高度低于 `-1°` 时关闭折射。还可传 `fixedDiscSize: true` 固定太阳视半径，或用 `horizonDegrees` 表示地平遮挡高度。
 
 `solarAltitude()` 返回 `centerAltitudeRad`、`apparentAltitudeRad`、`azimuthRad`、相对目标地平的 `residualRad` 和解析斜率 `slopeRadPerDay`。它和日出日落求解器使用同一套地心太阳、太阳光行差、章动、地球自转、观测者视差、太阳视半径和折射链路。
+
+## 地方平太阳时与真太阳时
+
+```js
+import {
+  CALENDAR_MODE,
+  RAT_HOUR_MODE,
+  ZonedTime,
+  calculateFourPillars,
+  equationOfTime,
+  meanSolarTime,
+  trueSolarTime,
+} from 'js-ephemeris-lite';
+
+const civilClock = new ZonedTime({
+  year: 2000, month: 1, day: 1,
+  hour: 23, minute: 10, second: 0,
+  offsetMinutes: 480,
+});
+const instant = civilClock.toJulianTime();
+
+const meanClock = meanSolarTime(instant, 116.4);
+const trueClock = trueSolarTime(instant, 116.4);
+console.log(equationOfTime(instant).equationSeconds);
+console.log(meanClock, trueClock);
+
+const pillars = calculateFourPillars(instant, trueClock, {
+  mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
+  ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
+});
+```
+
+经度采用东正西负 degree。定义与 C++ 层一致：`LMT = UT1 + longitude / 360°`，`LAT = LMT + equationOfTime`；`trueSolarTime()` 即地方视太阳时。均时差不是现代日期拟合，而是由同一套地心视太阳赤经和 GAST 计算。
+
+`SolarClock` 是专供日柱、时柱等规则使用的**虚拟钟面**，没有 `offsetMinutes`、`toDate()` 或 `toJulianTime()`，不会伪装成物理瞬时。经度差和均时差修正使用完整 Julian Day，因此结果跨过午夜时，年月日会自然落到前一天或后一天。调用 `calculateFourPillars()` 时仍应把原始 `instant` 作为第一个参数判定立春和节令，把 `SolarClock` 作为第二个参数判定日柱和时柱。
+
+底层另提供 `localMeanToApparentSolarTime()` 与 `localApparentToMeanSolarTime()`，输入输出都是虚拟太阳钟的数值 JD；后者按 C++ 路径迭代反解。
 
 ## 干支历与四柱
 

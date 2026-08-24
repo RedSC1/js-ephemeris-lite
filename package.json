@@ -43,6 +43,10 @@
       "types": "./src/solar-visibility.d.ts",
       "default": "./src/solar-visibility.js"
     },
+    "./solar-time": {
+      "types": "./src/solar-time.d.ts",
+      "default": "./src/solar-time.js"
+    },
     "./time": {
       "types": "./src/time.d.ts",
       "default": "./src/time.js"
@@ -58,7 +62,9 @@
     "lunar-calendar",
     "chinese-calendar",
     "ganzhi",
-    "solar-terms"
+    "solar-terms",
+    "equation-of-time",
+    "true-solar-time"
   ],
   "scripts": {
     "demo": "node src/ephemeris.js",

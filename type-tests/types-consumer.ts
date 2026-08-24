@@ -5,6 +5,7 @@ import {
   SOLAR_LIMB,
   JulianTime,
   ZonedTime,
+  calculateFourPillars,
   calculateChineseCalendarYear,
   describeFourPillars,
   earthHeliocentricState,
@@ -14,10 +15,12 @@ import {
   solarRiseSetForDate,
   solveNewMoon,
   sunGeocentricPosition,
+  trueSolarTime,
   type CartesianState,
   type ChineseCalendarYear,
   type EphemerisVector3,
   type SolarRiseSetResult,
+  type SolarClock,
 } from 'js-ephemeris-lite';
 import { moonHeliocentricState } from 'js-ephemeris-lite/ephemeris';
 import { getPreviousJie } from 'js-ephemeris-lite/chinese-calendar';
@@ -49,6 +52,10 @@ const pillars = fourPillarsForZonedTime(clock, {
   pillarHistoricalMode: PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR,
 });
 const names: string = describeFourPillars(pillars).day;
+const solarClock: SolarClock = trueSolarTime(instant, 116.4);
+const solarPillars = calculateFourPillars(instant, solarClock, {
+  ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
+});
 const riseSet: SolarRiseSetResult<ZonedTime> = solarRiseSetForDate(
   clock,
   {
@@ -75,7 +82,8 @@ calculateDayPillar(clock);
 computeSolarRiseSetFast(instant, { longitudeDeg: 0, latitudeDeg: 0 });
 deltaTSeconds(2025);
 
-void [vector, moonVector, earth, moon, calendar, root, names, riseSet, numericRiseSet, altitude];
+void [vector, moonVector, earth, moon, calendar, root, names, solarClock, solarPillars,
+  riseSet, numericRiseSet, altitude];
 
 // @ts-expect-error invalid late-Zi convention must be rejected by the declarations
 fourPillarsForZonedTime(clock, { ratHourMode: 'invented-mode' });
