@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build"
+    "test": "npm run build && node --test test/*.test.mjs"
   },
   "dependencies": {
     "js-ephemeris-lite": "file:../.."
