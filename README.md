@@ -1,6 +1,6 @@
 # js-ephemeris-lite
 
-轻量、零运行时依赖的纯 JavaScript 半解析星历与中国历法库。当前 API 以 `0.x` 版本发布，在 `1.0` 前仍可能调整。
+轻量、零运行时依赖的纯 JavaScript 半解析星历与中国历法库，内置完整 TypeScript 类型声明。当前 API 以 `0.x` 版本发布，在 `1.0` 前仍可能调整。
 
 原创实现以 MPL-2.0 发布；星历模型、科学数据与历史历表的来源和权利边界见 [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md)。
 
@@ -115,22 +115,24 @@ console.log(earth.position, earth.velocity);
 
 ```js
 import {
+  JulianTime,
   SOLAR_LIMB,
   solarAltitude,
   solarRiseSetForDate,
 } from 'js-ephemeris-lite';
 
 const riseSet = solarRiseSetForDate(
-  { year: 2025, month: 1, day: 1 },
+  { year: 2025, month: 1, day: 1, offsetMinutes: 480 },
   {
     longitudeDeg: 116.4,
     latitudeDeg: 39.9,
     heightMeters: 50,
-    offsetMinutes: 480,
-    limb: SOLAR_LIMB.UPPER,
-    refraction: true,
     pressureMbar: 1013.25,
     temperatureCelsius: 15,
+  },
+  {
+    limb: SOLAR_LIMB.UPPER,
+    refraction: true,
     horizonDegrees: 0,
   },
 );
@@ -147,7 +149,9 @@ const altitude = solarAltitude(
 console.log(altitude.apparentAltitudeRad, altitude.azimuthRad);
 ```
 
-`solarRiseSetForDate(date, observer)` 中 `offsetMinutes` 是该民用日期的固定 UTC offset，必须提供。经纬度单位为 degree，东经/北纬为正；高度单位为 metre。返回的 `path` 是 `analytic-newton` 或 `fallback-window`，`sampleCount`/`refineCount` 可用于检查是否走了高纬退化路径。极昼极夜时 `rise`/`set` 为 `null`，原因由 `altitudeState` 给出。
+`solarRiseSetForDate(date, observer, options)` 中 `date.offsetMinutes` 定义这个民用日期对应的固定 UTC offset，必须提供；即使结果是绝对的 JulianTime，求解器也需要它确定应搜索哪一个当地 24 小时区间。经度不能替代民用时区。经纬度单位为 degree，东经/北纬为正；高度单位为 metre。返回的 `path` 是 `analytic-newton` 或 `fallback-window`，`sampleCount`/`refineCount` 可用于检查是否走了高纬退化路径。极昼极夜时 `rise`/`set` 为 `null`，原因由 `altitudeState` 给出。
+
+如果已经有一个绝对中心时刻，只需要搜索其前后半天并返回 `JulianTime`，可直接调用 `computeSolarRiseSetFast(center, observer, options)`；这个底层 API 不需要时区。
 
 默认大气为 `1013.25 mbar`、`15°C`，默认太阳上边缘和 hybrid 折射。`hybridAtmosphericRefraction()` 使用 `≤14°` Bennett、`≥16°` Smart、其间线性混合，真高度低于 `-1°` 时关闭折射。还可传 `fixedDiscSize: true` 固定太阳视半径，或用 `horizonDegrees` 表示地平遮挡高度。
 

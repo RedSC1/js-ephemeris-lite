@@ -369,8 +369,9 @@ export function computeSolarRiseSetFast(center, rawObserver, rawOptions = {}) {
 
 /** Convenience wrapper for one fixed-offset civil date. */
 export function solarRiseSetForDate(
-  date,
-  { offsetMinutes, ...observerAndOptions },
+  { offsetMinutes, ...date },
+  observer,
+  options = {},
 ) {
   const center = new ZonedTime({
     year: date.year,
@@ -381,14 +382,7 @@ export function solarRiseSetForDate(
     second: 0,
     offsetMinutes,
   }).toJulianTime();
-  const observer = {
-    longitudeDeg: observerAndOptions.longitudeDeg,
-    latitudeDeg: observerAndOptions.latitudeDeg,
-    heightMeters: observerAndOptions.heightMeters,
-    pressureMbar: observerAndOptions.pressureMbar,
-    temperatureCelsius: observerAndOptions.temperatureCelsius,
-  };
-  const result = computeSolarRiseSetFast(center, observer, observerAndOptions);
+  const result = computeSolarRiseSetFast(center, observer, options);
   return {
     ...result,
     riseZoned: result.rise?.toZonedTime(offsetMinutes) ?? null,

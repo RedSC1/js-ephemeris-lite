@@ -27,7 +27,6 @@ test('Denver fast sunrise/set tracks the C++ fast regression oracles', () => {
     longitudeDeg: -104.9903,
     latitudeDeg: 39.7392,
     heightMeters: 1609,
-    offsetMinutes: -360,
   };
   const variants = [
     [{}, 2460409.022335537709, 2460409.563677349128, 8, 10],
@@ -38,8 +37,9 @@ test('Denver fast sunrise/set tracks the C++ fast regression oracles', () => {
   ];
   for (const [options, expectedRise, expectedSet, riseTolerance, setTolerance] of variants) {
     const result = solarRiseSetForDate(
-      { year: 2024, month: 4, day: 8 },
-      { ...base, ...options },
+      { year: 2024, month: 4, day: 8, offsetMinutes: -360 },
+      base,
+      options,
     );
     assert.equal(result.altitudeState, SOLAR_ALTITUDE_STATE.CROSSES);
     assert.equal(result.path, 'analytic-newton');
@@ -55,24 +55,24 @@ test('Denver fast sunrise/set tracks the C++ fast regression oracles', () => {
 test('high-latitude fast window classifies crossings, polar day and polar night', () => {
   const location = { longitudeDeg: 18.9553, latitudeDeg: 69.6492, heightMeters: 10 };
   const spring = solarRiseSetForDate(
-    { year: 2024, month: 4, day: 15 },
-    { ...location, offsetMinutes: 120 },
+    { year: 2024, month: 4, day: 15, offsetMinutes: 120 },
+    location,
   );
   assert.equal(spring.path, 'fallback-window');
   assert.equal(spring.altitudeState, SOLAR_ALTITUDE_STATE.CROSSES);
   assert.ok(spring.rise && spring.set);
 
   const summer = solarRiseSetForDate(
-    { year: 2024, month: 6, day: 21 },
-    { ...location, offsetMinutes: 120 },
+    { year: 2024, month: 6, day: 21, offsetMinutes: 120 },
+    location,
   );
   assert.equal(summer.altitudeState, SOLAR_ALTITUDE_STATE.ALWAYS_ABOVE);
   assert.equal(summer.rise, null);
   assert.equal(summer.set, null);
 
   const winter = solarRiseSetForDate(
-    { year: 2024, month: 12, day: 21 },
-    { ...location, offsetMinutes: 60 },
+    { year: 2024, month: 12, day: 21, offsetMinutes: 60 },
+    location,
   );
   assert.equal(winter.altitudeState, SOLAR_ALTITUDE_STATE.ALWAYS_BELOW);
 });
@@ -93,8 +93,8 @@ test('typed center and standalone altitude APIs remain finite', () => {
 test('fast rise/set remains finite across the lite long interval', () => {
   for (const year of [-6000, 0, 10000]) {
     const result = solarRiseSetForDate(
-      { year, month: 6, day: 21 },
-      { longitudeDeg: 116.4, latitudeDeg: 39.9, heightMeters: 50, offsetMinutes: 480 },
+      { year, month: 6, day: 21, offsetMinutes: 480 },
+      { longitudeDeg: 116.4, latitudeDeg: 39.9, heightMeters: 50 },
     );
     assert.equal(result.altitudeState, SOLAR_ALTITUDE_STATE.CROSSES);
     assert.ok(Number.isFinite(result.rise.jdUT1));

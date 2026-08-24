@@ -13,15 +13,40 @@
     "THIRD_PARTY_NOTICES.md"
   ],
   "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "exports": {
-    ".": "./src/index.js",
-    "./ephemeris": "./src/ephemeris.js",
-    "./coordinates": "./src/coordinates.js",
-    "./calendar-events": "./src/calendar-events.js",
-    "./chinese-calendar": "./src/chinese-calendar.js",
-    "./ganzhi": "./src/ganzhi.js",
-    "./solar-visibility": "./src/solar-visibility.js",
-    "./time": "./src/time.js",
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./ephemeris": {
+      "types": "./src/ephemeris.d.ts",
+      "default": "./src/ephemeris.js"
+    },
+    "./coordinates": {
+      "types": "./src/coordinates.d.ts",
+      "default": "./src/coordinates.js"
+    },
+    "./calendar-events": {
+      "types": "./src/calendar-events.d.ts",
+      "default": "./src/calendar-events.js"
+    },
+    "./chinese-calendar": {
+      "types": "./src/chinese-calendar.d.ts",
+      "default": "./src/chinese-calendar.js"
+    },
+    "./ganzhi": {
+      "types": "./src/ganzhi.d.ts",
+      "default": "./src/ganzhi.js"
+    },
+    "./solar-visibility": {
+      "types": "./src/solar-visibility.d.ts",
+      "default": "./src/solar-visibility.js"
+    },
+    "./time": {
+      "types": "./src/time.d.ts",
+      "default": "./src/time.js"
+    },
     "./package.json": "./package.json"
   },
   "engines": {
@@ -38,7 +63,11 @@
   "scripts": {
     "demo": "node src/ephemeris.js",
     "test": "node --test",
-    "prepack": "npm test"
+    "test:types": "tsc -p tsconfig.types.json",
+    "prepack": "npm test && npm run test:types"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
   },
   "repository": {
     "type": "git",
