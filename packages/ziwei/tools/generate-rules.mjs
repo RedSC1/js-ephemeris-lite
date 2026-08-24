@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 function parseValue(source) {
   if (source.startsWith('[') || source.startsWith('"')) return JSON.parse(source);
@@ -50,6 +51,10 @@ const placementDoc = parseSimpleToml(path.join(sourceDir, 'placement.toml'));
 const brightnessDoc = parseSimpleToml(path.join(sourceDir, 'brightness.toml'));
 const sihuaDoc = parseSimpleToml(path.join(sourceDir, 'sihua.toml'));
 const mastersDoc = parseSimpleToml(path.join(sourceDir, 'masters.toml'));
+const supplementalDoc = parseSimpleToml(path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../rules/supplemental.toml',
+));
 
 const natalStars = starsDoc.natal_stars;
 const flowStars = starsDoc.flow_stars;
@@ -60,7 +65,8 @@ const stars = [...natalStars, ...flowStars].map((star, id) => ({
   natal: id < natalStars.length,
 }));
 const starIds = new Map(stars.map((star) => [star.key, star.id]));
-const placements = selected(placementDoc.placements)
+const placementRules = [...placementDoc.placements, ...(supplementalDoc.placements ?? [])];
+const placements = selected(placementRules)
   .filter((rule) => starIds.get(rule.star) < natalStars.length)
   .map((rule) => ({
     starId: starIds.get(rule.star),
@@ -74,7 +80,7 @@ if (placements.length !== natalStars.length) {
 const placementVariants = natalStars.map((star) => ({
   starId: starIds.get(star.key),
   starKey: star.key,
-  options: Object.fromEntries(placementDoc.placements
+  options: Object.fromEntries(placementRules
     .filter((rule) => rule.star === star.key)
     .map((rule) => [rule.option, {
       starId: starIds.get(rule.star),
@@ -104,9 +110,16 @@ const sihuaVariants = stemKeys.map((stem, stemIndex) => ({
       ji: starIds.get(rule.ji),
     }])),
 }));
-const masterVariants = Object.fromEntries(mastersDoc.masters.map((rule) => [rule.option, {
-  life: rule.life.map((key) => starIds.get(key)),
-  body: rule.body.map((key) => starIds.get(key)),
+const masterRules = [...mastersDoc.masters, ...(supplementalDoc.masters ?? [])];
+const masterVariants = Object.fromEntries(masterRules.map((rule) => [rule.option, {
+  life: {
+    input: rule.life_input ?? 'anchor.life',
+    stars: rule.life.map((key) => starIds.get(key)),
+  },
+  body: {
+    input: rule.body_input ?? 'master.year_branch',
+    stars: rule.body.map((key) => starIds.get(key)),
+  },
 }]));
 
 const banner = `// Generated from the default Ziwei TOML resources. Do not edit by hand.\n`;
@@ -117,13 +130,15 @@ export interface GeneratedTransformSet { readonly lu: number; readonly quan: num
 export interface GeneratedPlacementVariants { readonly starId: number; readonly starKey: string; readonly options: Readonly<Record<string, GeneratedPlacement>> }
 export interface GeneratedBrightnessVariants { readonly starId: number; readonly starKey: string; readonly options: Readonly<Record<string, readonly number[]>> }
 export interface GeneratedSihuaVariants { readonly stemIndex: number; readonly stemKey: string; readonly options: Readonly<Record<string, GeneratedTransformSet>> }
+export interface GeneratedMasterLookup { readonly input: 'anchor.life' | 'lunar.year_branch' | 'master.year_branch'; readonly stars: readonly number[] }
+export interface GeneratedMasterVariant { readonly life: GeneratedMasterLookup; readonly body: GeneratedMasterLookup }
 
 export const GENERATED_STARS: readonly GeneratedStar[] = Object.freeze(${JSON.stringify(stars)});
 export const GENERATED_NATAL_STAR_COUNT = ${natalStars.length};
 export const GENERATED_PLACEMENT_VARIANTS: readonly GeneratedPlacementVariants[] = Object.freeze(${JSON.stringify(placementVariants)} as unknown as GeneratedPlacementVariants[]);
 export const GENERATED_BRIGHTNESS_VARIANTS: readonly GeneratedBrightnessVariants[] = Object.freeze(${JSON.stringify(brightnessVariants)});
 export const GENERATED_SIHUA_VARIANTS: readonly GeneratedSihuaVariants[] = Object.freeze(${JSON.stringify(sihuaVariants)});
-export const GENERATED_MASTER_VARIANTS: Readonly<Record<string, { readonly life: readonly number[]; readonly body: readonly number[] }>> = Object.freeze(${JSON.stringify(masterVariants)});
+export const GENERATED_MASTER_VARIANTS: Readonly<Record<string, GeneratedMasterVariant>> = Object.freeze(${JSON.stringify(masterVariants)});
 `;
 
 fs.mkdirSync(path.dirname(outputFile), { recursive: true });

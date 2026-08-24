@@ -151,3 +151,62 @@ test('rule options merge deeply and unavailable variants fail clearly', () => {
     /brightness option "option2" is unavailable/,
   );
 });
+
+test('Tian-Shang, Tian-Shi and master option2 conventions remain independent', () => {
+  const birth = new ZonedTime({
+    year: 2003, month: 3, day: 13, hour: 14, minute: 15, second: 0, offsetMinutes: 480,
+  });
+  const tianShang = findStarId('tianshang');
+  const tianShi = findStarId('tianshi');
+  const defaults = ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({ gender: ZIWEI_GENDER.MALE }),
+  );
+  const tianShangOnly = ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({
+      gender: ZIWEI_GENDER.MALE,
+      rules: { placement: { tianshang: ZIWEI_RULE_OPTION.OPTION_2 } },
+    }),
+  );
+  const tianShiOnly = ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({
+      gender: ZIWEI_GENDER.MALE,
+      rules: { placement: { tianshi: ZIWEI_RULE_OPTION.OPTION_2 } },
+    }),
+  );
+  const mastersOnly = ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({
+      gender: ZIWEI_GENDER.MALE,
+      rules: { masters: ZIWEI_RULE_OPTION.OPTION_2 },
+    }),
+  );
+
+  assert.equal(tianShangOnly.starPositions[tianShang], defaults.starPositions[tianShi]);
+  assert.equal(tianShangOnly.starPositions[tianShi], defaults.starPositions[tianShi]);
+  assert.equal(tianShiOnly.starPositions[tianShang], defaults.starPositions[tianShang]);
+  assert.equal(tianShiOnly.starPositions[tianShi], defaults.starPositions[tianShang]);
+  assert.equal(tianShangOnly.lifeMaster, defaults.lifeMaster);
+  assert.equal(mastersOnly.starPositions[tianShang], defaults.starPositions[tianShang]);
+  assert.equal(mastersOnly.starPositions[tianShi], defaults.starPositions[tianShi]);
+  assert.equal(defaults.lifeMaster, 5);
+  assert.equal(mastersOnly.lifeMaster, 3);
+  assert.equal(mastersOnly.bodyMaster, defaults.bodyMaster);
+
+  const yinFemale = ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({
+      gender: ZIWEI_GENDER.FEMALE,
+      rules: {
+        placement: {
+          tianshang: ZIWEI_RULE_OPTION.OPTION_2,
+          tianshi: ZIWEI_RULE_OPTION.OPTION_2,
+        },
+      },
+    }),
+  );
+  assert.equal(yinFemale.starPositions[tianShang], defaults.starPositions[tianShang]);
+  assert.equal(yinFemale.starPositions[tianShi], defaults.starPositions[tianShi]);
+});

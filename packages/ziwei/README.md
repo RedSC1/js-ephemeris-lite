@@ -154,6 +154,11 @@ const options = new ZiweiOptions({
   bodyMasterYearBoundary: PILLAR_BOUNDARY.LUNAR,
   rules: {
     longevity: ZIWEI_RULE_OPTION.OPTION_2,
+    masters: ZIWEI_RULE_OPTION.OPTION_2,
+    placement: {
+      tianshang: ZIWEI_RULE_OPTION.OPTION_2,
+      tianshi: ZIWEI_RULE_OPTION.OPTION_2,
+    },
   },
 });
 ```
@@ -175,19 +180,28 @@ const options = new ZiweiOptions({
     longevity: 'option2',
     brightnessDefault: 'option1',
     sihuaDefault: 'option1',
-    masters: 'option1',
+    masters: 'option2',
 
     // 资源存在对应 variant 时，还可以逐项覆盖：
-    placement: { ziwei: 'option1' },
+    placement: {
+      tianshang: 'option2',
+      tianshi: 'option2',
+    },
     brightness: { taiyang: 'option1' },
     sihua: { geng: 'option1' },
   },
 });
 ```
 
-当前随包编译的资源中，只有十二长生完整提供 `option1`、`option2` 两套安星法；
-普通本命星安星、亮度、十天干四化和命身主暂时只有 `option1`。指定资源中不存在的
-variant 会在创建命盘时直接抛出带星曜/天干键的 `RangeError`，不会悄悄退回默认表。
+当前随包编译的资源中，以下规则提供两套独立选择：
+
+- `longevity`：十二长生的两套火土局口径；
+- `placement.tianshang`、`placement.tianshi`：`option1` 固定天伤在交友、天使在疾厄；各自的 `option2` 按年干阴阳和性别选择交换后的宫位；
+- `masters`：`option1` 以命宫支取命主，`option2` 以农历生年支取命主；两套身主都按生年支。
+
+这些 `option2` 只是彼此独立的算法 variant，不代表或预设任何完整门派，亮度也不会跟随切换。
+普通本命星安星、亮度和十天干四化目前仍只有 `option1`。指定资源中不存在的 variant
+会在创建命盘时直接抛出带星曜/天干键的 `RangeError`，不会悄悄退回默认表。
 
 命盘创建时会一次性解析上述选择；实际安星和查询亮度仍然只是数组索引，不会在每颗星上重复做流派判断。
 
@@ -195,6 +209,6 @@ variant 会在创建命盘时直接抛出带星曜/天干键的 `RangeError`，�
 
 已经完成：本命出生解析、anchors、十二宫、独立规则 variant 选择、本命星规则、亮度、命主身主和十二位四化 mask。
 
-尚未移植：十二长生以外的 `option2` 资源、大限/小限、流年流月流日流时栈、反推时辰和中文展示词典。
+尚未移植：其余安星、亮度和四化的 `option2` 资源，大限/小限、流年流月流日流时栈、反推时辰和中文展示词典。
 
 规则层已对照 C++ 有限命盘 oracle 连续检查 10,000 张，并对物理日历命盘做逐字段差分。可运行示例见 `examples/basic.ts`。

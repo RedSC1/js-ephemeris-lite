@@ -39,6 +39,19 @@ function addTransformSet(masks: number[], transforms: TransformSet, startMark: n
   for (let kind = 0; kind < 4; kind += 1) masks[ids[kind]!]! |= 1 << (startMark + kind);
 }
 
+function masterLookupBranch(
+  input: SelectedZiweiRules['masters']['life']['input'],
+  lifeBranch: number,
+  anchors: ZiweiAnchors,
+  configuredYear: number,
+): number {
+  switch (input) {
+    case 'anchor.life': return lifeBranch;
+    case 'lunar.year_branch': return ganzhiBranch(anchors.lunar.year);
+    case 'master.year_branch': return ganzhiBranch(configuredYear);
+  }
+}
+
 export class ZiweiChart {
   readonly options: ZiweiOptions;
   readonly facts: ZiweiCalendarFacts;
@@ -114,8 +127,20 @@ export class ZiweiChart {
     const bodyMasterYear = this.options.bodyMasterYearBoundary === PILLAR_BOUNDARY.SOLAR_TERM
       ? this.anchors.solarTerm.year
       : this.anchors.lunar.year;
-    this.lifeMaster = this.ruleTables.masters.life[lifeBranch]!;
-    this.bodyMaster = this.ruleTables.masters.body[ganzhiBranch(bodyMasterYear)]!;
+    const lifeMasterBranch = masterLookupBranch(
+      this.ruleTables.masters.life.input,
+      lifeBranch,
+      this.anchors,
+      bodyMasterYear,
+    );
+    const bodyMasterBranch = masterLookupBranch(
+      this.ruleTables.masters.body.input,
+      lifeBranch,
+      this.anchors,
+      bodyMasterYear,
+    );
+    this.lifeMaster = this.ruleTables.masters.life.stars[lifeMasterBranch]!;
+    this.bodyMaster = this.ruleTables.masters.body.stars[bodyMasterBranch]!;
     Object.freeze(this);
   }
 

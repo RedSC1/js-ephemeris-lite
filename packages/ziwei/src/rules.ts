@@ -5,6 +5,7 @@ import {
   GENERATED_MASTER_VARIANTS,
   GENERATED_PLACEMENT_VARIANTS,
   GENERATED_SIHUA_VARIANTS,
+  type GeneratedMasterVariant,
   type GeneratedPlacement,
   type GeneratedTransformSet,
 } from './generated/default-rules.js';
@@ -30,10 +31,7 @@ export interface SelectedZiweiRules {
   readonly natalPlacements: readonly GeneratedPlacement[];
   readonly brightness: readonly (readonly number[])[];
   readonly sihua: readonly TransformSet[];
-  readonly masters: Readonly<{
-    readonly life: readonly number[];
-    readonly body: readonly number[];
-  }>;
+  readonly masters: GeneratedMasterVariant;
 }
 
 const selectionCache = new WeakMap<ZiweiRuleSelection, SelectedZiweiRules>();
