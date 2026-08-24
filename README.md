@@ -10,6 +10,8 @@
 npm install js-ephemeris-lite
 ```
 
+本仓库使用 npm workspaces：根目录是暂未发布的 `js-ephemeris-lite` 核心，`packages/bazi` 与 `packages/ziwei` 是暂时保持私有的 TypeScript 规则层。两个上层包在本地直接链接核心，待共同验证并稳定 API 后再确定最终包名和发布版本。
+
 目前包含：
 
 - SXWNL 项数预算截断的 VSOP87B Earth（882 项）；

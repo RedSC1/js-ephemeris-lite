@@ -1,0 +1,27 @@
+{
+  "name": "@opendestiny/bazi-lite",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Work-in-progress lightweight BaZi rules built on js-ephemeris-lite",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build"
+  },
+  "dependencies": {
+    "js-ephemeris-lite": "file:../.."
+  }
+}

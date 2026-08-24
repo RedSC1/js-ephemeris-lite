@@ -6,6 +6,9 @@
   "license": "MPL-2.0",
   "author": "RedSC1",
   "sideEffects": false,
+  "workspaces": [
+    "packages/*"
+  ],
   "files": [
     "src",
     "README.md",
@@ -68,8 +71,10 @@
   ],
   "scripts": {
     "demo": "node src/ephemeris.js",
+    "build:workspaces": "npm run build --workspaces --if-present",
     "test": "node --test",
     "test:types": "tsc -p tsconfig.types.json",
+    "test:workspaces": "npm run test --workspaces --if-present",
     "prepack": "npm test && npm run test:types"
   },
   "devDependencies": {
