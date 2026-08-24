@@ -19,7 +19,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test test/*.test.mjs",
+    "test": "npm run build && npm run test:examples && node --test test/*.test.mjs",
+    "test:examples": "tsc -p tsconfig.examples.json",
     "test:shen-sha": "npm run build && node tools/shen-sha-fingerprint.mjs"
   },
   "dependencies": {

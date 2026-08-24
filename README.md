@@ -12,6 +12,8 @@ npm install js-ephemeris-lite
 
 本仓库使用 npm workspaces：根目录是暂未发布的 `js-ephemeris-lite` 核心，`packages/bazi` 与 `packages/ziwei` 是暂时保持私有的 TypeScript 规则层。两个上层包在本地直接链接核心，待共同验证并稳定 API 后再确定最终包名和发布版本。八字 workspace 已包含紧凑四柱、十神藏干、合冲刑害关系、起运、大小运、人元司令和 66 位神煞 bitset 的可运行内核；紫微 workspace 仍是骨架。
 
+八字的创建、真太阳时、神煞、起运、大运和默认设置见 [`packages/bazi/README.md`](./packages/bazi/README.md)。
+
 目前包含：
 
 - SXWNL 项数预算截断的 VSOP87B Earth（882 项）；
