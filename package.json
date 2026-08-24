@@ -1,0 +1,51 @@
+{
+  "name": "js-ephemeris-lite",
+  "version": "0.1.0",
+  "description": "Lightweight long-range ephemeris, Chinese lunisolar calendar, Ganzhi, and solar visibility for JavaScript",
+  "type": "module",
+  "license": "MPL-2.0",
+  "author": "RedSC1",
+  "sideEffects": false,
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./ephemeris": "./src/ephemeris.js",
+    "./coordinates": "./src/coordinates.js",
+    "./calendar-events": "./src/calendar-events.js",
+    "./chinese-calendar": "./src/chinese-calendar.js",
+    "./ganzhi": "./src/ganzhi.js",
+    "./solar-visibility": "./src/solar-visibility.js",
+    "./time": "./src/time.js",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "ephemeris",
+    "astronomy",
+    "lunar-calendar",
+    "chinese-calendar",
+    "ganzhi",
+    "solar-terms"
+  ],
+  "scripts": {
+    "demo": "node src/ephemeris.js",
+    "test": "node --test",
+    "prepack": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RedSC1/js-ephemeris-lite.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RedSC1/js-ephemeris-lite/issues"
+  },
+  "homepage": "https://github.com/RedSC1/js-ephemeris-lite#readme"
+}
