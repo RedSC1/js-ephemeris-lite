@@ -367,28 +367,46 @@ export function computeSolarRiseSetFast(center, rawObserver, rawOptions = {}) {
   };
 }
 
-/** Convenience wrapper for one fixed-offset civil date. */
+/**
+ * Same-type rise/set wrapper.
+ * A ZonedTime selects its local civil date; a scalar JD or JulianTime selects
+ * the 24-hour window centred on that instant.
+ */
 export function solarRiseSetForDate(
-  { offsetMinutes, ...date },
+  dateOrCenter,
   observer,
   options = {},
 ) {
-  const center = new ZonedTime({
-    year: date.year,
-    month: date.month,
-    day: date.day,
-    hour: 12,
-    minute: 0,
-    second: 0,
-    offsetMinutes,
-  }).toJulianTime();
-  const result = computeSolarRiseSetFast(center, observer, options);
-  return {
-    ...result,
-    riseZoned: result.rise?.toZonedTime(offsetMinutes) ?? null,
-    setZoned: result.set?.toZonedTime(offsetMinutes) ?? null,
-    offsetMinutes,
-  };
+  if (dateOrCenter instanceof ZonedTime) {
+    const offsetMinutes = dateOrCenter.offsetMinutes;
+    const center = new ZonedTime({
+      year: dateOrCenter.year,
+      month: dateOrCenter.month,
+      day: dateOrCenter.day,
+      hour: 12,
+      minute: 0,
+      second: 0,
+      offsetMinutes,
+    }).toJulianTime();
+    const result = computeSolarRiseSetFast(center, observer, options);
+    return {
+      ...result,
+      rise: result.rise?.toZonedTime(offsetMinutes) ?? null,
+      set: result.set?.toZonedTime(offsetMinutes) ?? null,
+    };
+  }
+  if (dateOrCenter instanceof JulianTime) {
+    return computeSolarRiseSetFast(dateOrCenter, observer, options);
+  }
+  if (Number.isFinite(dateOrCenter)) {
+    const result = computeSolarRiseSetFast(dateOrCenter, observer, options);
+    return {
+      ...result,
+      rise: result.rise?.jdUT1 ?? null,
+      set: result.set?.jdUT1 ?? null,
+    };
+  }
+  throw new TypeError('dateOrCenter must be a UT1 Julian Day, JulianTime or ZonedTime');
 }
 
 export const SOLAR_VISIBILITY_INFO = Object.freeze({

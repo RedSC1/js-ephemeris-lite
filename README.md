@@ -116,13 +116,18 @@ console.log(earth.position, earth.velocity);
 ```js
 import {
   JulianTime,
+  ZonedTime,
   SOLAR_LIMB,
   solarAltitude,
   solarRiseSetForDate,
 } from 'js-ephemeris-lite';
 
 const riseSet = solarRiseSetForDate(
-  { year: 2025, month: 1, day: 1, offsetMinutes: 480 },
+  new ZonedTime({
+    year: 2025, month: 1, day: 1,
+    hour: 0, minute: 0, second: 0,
+    offsetMinutes: 480,
+  }),
   {
     longitudeDeg: 116.4,
     latitudeDeg: 39.9,
@@ -137,9 +142,14 @@ const riseSet = solarRiseSetForDate(
   },
 );
 
-console.log(riseSet.rise, riseSet.set);           // JulianTime | null
-console.log(riseSet.riseZoned, riseSet.setZoned); // ZonedTime | null
-console.log(riseSet.altitudeState);               // crosses / always-above / always-below / tangent
+console.log(riseSet.rise, riseSet.set); // ZonedTime | null
+console.log(riseSet.altitudeState);     // crosses / always-above / always-below / tangent
+
+const jdRiseSet = solarRiseSetForDate(
+  2460676.0, // 作为搜索窗口中心的 UT1 Julian Day
+  { longitudeDeg: 116.4, latitudeDeg: 39.9 },
+);
+console.log(jdRiseSet.rise, jdRiseSet.set); // number | null
 
 const altitude = solarAltitude(
   JulianTime.fromDate(new Date()),
@@ -149,9 +159,9 @@ const altitude = solarAltitude(
 console.log(altitude.apparentAltitudeRad, altitude.azimuthRad);
 ```
 
-`solarRiseSetForDate(date, observer, options)` 中 `date.offsetMinutes` 定义这个民用日期对应的固定 UTC offset，必须提供；即使结果是绝对的 JulianTime，求解器也需要它确定应搜索哪一个当地 24 小时区间。经度不能替代民用时区。经纬度单位为 degree，东经/北纬为正；高度单位为 metre。返回的 `path` 是 `analytic-newton` 或 `fallback-window`，`sampleCount`/`refineCount` 可用于检查是否走了高纬退化路径。极昼极夜时 `rise`/`set` 为 `null`，原因由 `altitudeState` 给出。
+`solarRiseSetForDate(dateOrCenter, observer, options)` 保持输入输出类型一致：传数值 UT1 Julian Day，`rise`/`set` 返回数值 JD；传 `JulianTime`，返回 `JulianTime`；传 `ZonedTime`，则取它所属的当地民用日期并返回同一 offset 的 `ZonedTime`。数值 JD 和 `JulianTime` 被解释为待搜索 24 小时窗口的中心，不带民用时区语义。
 
-如果已经有一个绝对中心时刻，只需要搜索其前后半天并返回 `JulianTime`，可直接调用 `computeSolarRiseSetFast(center, observer, options)`；这个底层 API 不需要时区。
+经纬度单位为 degree，东经/北纬为正；高度单位为 metre。返回的 `path` 是 `analytic-newton` 或 `fallback-window`，`sampleCount`/`refineCount` 可用于检查是否走了高纬退化路径。极昼极夜时 `rise`/`set` 为 `null`，原因由 `altitudeState` 给出。底层的 `computeSolarRiseSetFast(center, observer, options)` 始终返回 `JulianTime`。
 
 默认大气为 `1013.25 mbar`、`15°C`，默认太阳上边缘和 hybrid 折射。`hybridAtmosphericRefraction()` 使用 `≤14°` Bennett、`≥16°` Smart、其间线性混合，真高度低于 `-1°` 时关闭折射。还可传 `fixedDiscSize: true` 固定太阳视半径，或用 `horizonDegrees` 表示地平遮挡高度。
 

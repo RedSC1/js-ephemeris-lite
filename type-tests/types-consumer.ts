@@ -49,8 +49,8 @@ const pillars = fourPillarsForZonedTime(clock, {
   pillarHistoricalMode: PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR,
 });
 const names: string = describeFourPillars(pillars).day;
-const riseSet: SolarRiseSetResult = solarRiseSetForDate(
-  { year: 2025, month: 1, day: 1, offsetMinutes: 480 },
+const riseSet: SolarRiseSetResult<ZonedTime> = solarRiseSetForDate(
+  clock,
   {
     longitudeDeg: 116.4,
     latitudeDeg: 39.9,
@@ -58,6 +58,10 @@ const riseSet: SolarRiseSetResult = solarRiseSetForDate(
   {
     limb: SOLAR_LIMB.UPPER,
   },
+);
+const numericRiseSet: SolarRiseSetResult<number> = solarRiseSetForDate(
+  instant.jdUT1,
+  { longitudeDeg: 116.4, latitudeDeg: 39.9 },
 );
 const altitude: number = solarAltitude(instant, {
   longitudeDeg: 116.4,
@@ -71,9 +75,9 @@ calculateDayPillar(clock);
 computeSolarRiseSetFast(instant, { longitudeDeg: 0, latitudeDeg: 0 });
 deltaTSeconds(2025);
 
-void [vector, moonVector, earth, moon, calendar, root, names, riseSet, altitude];
+void [vector, moonVector, earth, moon, calendar, root, names, riseSet, numericRiseSet, altitude];
 
 // @ts-expect-error invalid late-Zi convention must be rejected by the declarations
 fourPillarsForZonedTime(clock, { ratHourMode: 'invented-mode' });
-// @ts-expect-error fixed-offset date API requires offsetMinutes
+// @ts-expect-error plain calendar objects are intentionally not accepted
 solarRiseSetForDate({ year: 2025, month: 1, day: 1 }, { longitudeDeg: 0, latitudeDeg: 0 });

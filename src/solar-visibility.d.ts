@@ -1,4 +1,4 @@
-import type { CivilDate, JulianTime, Ut1Input, ZonedTime } from './time.js';
+import type { JulianTime, Ut1Input, ZonedTime } from './time.js';
 
 export const SOLAR_ALTITUDE_STATE: Readonly<{
   NOT_FOUND: 'not-found';
@@ -34,10 +34,6 @@ export interface SolarVisibilityOptions {
   horizonDegrees?: number;
 }
 
-export interface ZonedCivilDate extends CivilDate {
-  offsetMinutes: number;
-}
-
 export interface SolarAltitudeSample {
   residualRad: number;
   slopeRadPerDay: number;
@@ -46,21 +42,15 @@ export interface SolarAltitudeSample {
   azimuthRad: number;
 }
 
-export interface SolarRiseSetResult {
+export interface SolarRiseSetResult<T = JulianTime> {
   altitudeState: SolarAltitudeState;
-  rise: JulianTime | null;
-  set: JulianTime | null;
+  rise: T | null;
+  set: T | null;
   sampleCount: number;
   refineCount: number;
   path: 'analytic-newton' | 'fallback-window';
   limb: SolarLimb;
   refraction: boolean;
-}
-
-export interface ZonedSolarRiseSetResult extends SolarRiseSetResult {
-  riseZoned: ZonedTime | null;
-  setZoned: ZonedTime | null;
-  offsetMinutes: number;
 }
 
 export function hybridAtmosphericRefraction(
@@ -78,10 +68,20 @@ export function computeSolarRiseSetFast(
   options?: SolarVisibilityOptions,
 ): SolarRiseSetResult;
 export function solarRiseSetForDate(
-  date: ZonedCivilDate,
+  dateOrCenter: number,
   observer: SolarObserver,
   options?: SolarVisibilityOptions,
-): ZonedSolarRiseSetResult;
+): SolarRiseSetResult<number>;
+export function solarRiseSetForDate(
+  dateOrCenter: JulianTime,
+  observer: SolarObserver,
+  options?: SolarVisibilityOptions,
+): SolarRiseSetResult<JulianTime>;
+export function solarRiseSetForDate(
+  dateOrCenter: ZonedTime,
+  observer: SolarObserver,
+  options?: SolarVisibilityOptions,
+): SolarRiseSetResult<ZonedTime>;
 
 export const SOLAR_VISIBILITY_INFO: Readonly<{
   ordinaryLatitudeLimitDeg: number;

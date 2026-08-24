@@ -13,6 +13,10 @@ import { JulianTime, ZonedTime } from '../src/time.js';
 
 const DEG_TO_RAD = Math.PI / 180;
 
+function zonedDate(year, month, day, offsetMinutes) {
+  return new ZonedTime({ year, month, day, hour: 0, minute: 0, second: 0, offsetMinutes });
+}
+
 test('hybrid refraction matches the C++ oracle and cutoff behavior', () => {
   assert.ok(Math.abs(hybridAtmosphericRefraction(15 * DEG_TO_RAD, {
     pressureMbar: 1010,
@@ -37,25 +41,25 @@ test('Denver fast sunrise/set tracks the C++ fast regression oracles', () => {
   ];
   for (const [options, expectedRise, expectedSet, riseTolerance, setTolerance] of variants) {
     const result = solarRiseSetForDate(
-      { year: 2024, month: 4, day: 8, offsetMinutes: -360 },
+      zonedDate(2024, 4, 8, -360),
       base,
       options,
     );
     assert.equal(result.altitudeState, SOLAR_ALTITUDE_STATE.CROSSES);
     assert.equal(result.path, 'analytic-newton');
-    assert.ok(result.rise instanceof JulianTime);
-    assert.ok(result.set instanceof JulianTime);
-    assert.ok(Math.abs(result.rise.jdUT1 - expectedRise) * 86400 <= riseTolerance);
-    assert.ok(Math.abs(result.set.jdUT1 - expectedSet) * 86400 <= setTolerance);
-    assert.equal(result.riseZoned.day, 8);
-    assert.equal(result.setZoned.day, 8);
+    assert.ok(result.rise instanceof ZonedTime);
+    assert.ok(result.set instanceof ZonedTime);
+    assert.ok(Math.abs(result.rise.toJulianTime().jdUT1 - expectedRise) * 86400 <= riseTolerance);
+    assert.ok(Math.abs(result.set.toJulianTime().jdUT1 - expectedSet) * 86400 <= setTolerance);
+    assert.equal(result.rise.day, 8);
+    assert.equal(result.set.day, 8);
   }
 });
 
 test('high-latitude fast window classifies crossings, polar day and polar night', () => {
   const location = { longitudeDeg: 18.9553, latitudeDeg: 69.6492, heightMeters: 10 };
   const spring = solarRiseSetForDate(
-    { year: 2024, month: 4, day: 15, offsetMinutes: 120 },
+    zonedDate(2024, 4, 15, 120),
     location,
   );
   assert.equal(spring.path, 'fallback-window');
@@ -63,7 +67,7 @@ test('high-latitude fast window classifies crossings, polar day and polar night'
   assert.ok(spring.rise && spring.set);
 
   const summer = solarRiseSetForDate(
-    { year: 2024, month: 6, day: 21, offsetMinutes: 120 },
+    zonedDate(2024, 6, 21, 120),
     location,
   );
   assert.equal(summer.altitudeState, SOLAR_ALTITUDE_STATE.ALWAYS_ABOVE);
@@ -71,7 +75,7 @@ test('high-latitude fast window classifies crossings, polar day and polar night'
   assert.equal(summer.set, null);
 
   const winter = solarRiseSetForDate(
-    { year: 2024, month: 12, day: 21, offsetMinutes: 60 },
+    zonedDate(2024, 12, 21, 60),
     location,
   );
   assert.equal(winter.altitudeState, SOLAR_ALTITUDE_STATE.ALWAYS_BELOW);
@@ -88,16 +92,25 @@ test('typed center and standalone altitude APIs remain finite', () => {
   assert.ok(Number.isFinite(altitude.centerAltitudeRad));
   assert.ok(Number.isFinite(altitude.apparentAltitudeRad));
   assert.ok(Number.isFinite(altitude.azimuthRad));
+
+  const numeric = solarRiseSetForDate(center.jdUT1, observer);
+  assert.equal(typeof numeric.rise, 'number');
+  assert.equal(typeof numeric.set, 'number');
+  const typed = solarRiseSetForDate(center, observer);
+  assert.ok(typed.rise instanceof JulianTime);
+  assert.ok(typed.set instanceof JulianTime);
+  assert.ok(Math.abs(numeric.rise - typed.rise.jdUT1) < 1e-15);
+  assert.ok(Math.abs(numeric.set - typed.set.jdUT1) < 1e-15);
 });
 
 test('fast rise/set remains finite across the lite long interval', () => {
   for (const year of [-6000, 0, 10000]) {
     const result = solarRiseSetForDate(
-      { year, month: 6, day: 21, offsetMinutes: 480 },
+      zonedDate(year, 6, 21, 480),
       { longitudeDeg: 116.4, latitudeDeg: 39.9, heightMeters: 50 },
     );
     assert.equal(result.altitudeState, SOLAR_ALTITUDE_STATE.CROSSES);
-    assert.ok(Number.isFinite(result.rise.jdUT1));
-    assert.ok(Number.isFinite(result.set.jdUT1));
+    assert.ok(Number.isFinite(result.rise.toJulianTime().jdUT1));
+    assert.ok(Number.isFinite(result.set.toJulianTime().jdUT1));
   }
 });
