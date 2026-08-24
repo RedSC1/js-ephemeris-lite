@@ -3,11 +3,10 @@ import { computePalaceStems, type ZiweiAnchors } from './anchors.js';
 import { resolveZiweiBirth, type ResolvedZiweiBirth } from './calendar.js';
 import { ZiweiOptions, type ZiweiOptionsInput } from './options.js';
 import {
-  MASTER_STARS,
-  NATAL_PLACEMENT_RULES,
-  SIHUA_BY_STEM,
   brightnessAt,
   evaluateNatalPlacement,
+  selectZiweiRules,
+  type SelectedZiweiRules,
 } from './rules.js';
 import { NATAL_STAR_COUNT, STAR_CATALOG, getStar, type StarInfo } from './stars.js';
 import {
@@ -52,9 +51,11 @@ export class ZiweiChart {
   readonly birthYearTransformations: TransformSet;
   readonly starPositions: readonly number[];
   readonly transformationMasks: readonly number[];
+  private readonly ruleTables: SelectedZiweiRules;
 
   private constructor(birth: ResolvedZiweiBirth) {
     this.options = birth.options;
+    this.ruleTables = selectZiweiRules(this.options.rules);
     this.facts = birth.facts;
     this.anchors = birth.anchors;
     this.bodyPalace = birth.bodyPalace;
@@ -65,7 +66,7 @@ export class ZiweiChart {
 
     const positions = Array<number>(STAR_CATALOG.length).fill(-1);
     const bitsets = Array<bigint>(12).fill(0n);
-    for (const rule of NATAL_PLACEMENT_RULES) {
+    for (const rule of this.ruleTables.natalPlacements) {
       const branch = evaluateNatalPlacement(rule, this.facts, this.anchors, this.bodyPalace);
       positions[rule.starId] = branch;
       bitsets[branch] |= 1n << BigInt(rule.starId);
@@ -93,13 +94,13 @@ export class ZiweiChart {
     const sihuaYear = this.options.sihuaYearBoundary === PILLAR_BOUNDARY.SOLAR_TERM
       ? this.anchors.solarTerm.year
       : this.anchors.lunar.year;
-    this.birthYearTransformations = SIHUA_BY_STEM[ganzhiStem(sihuaYear)]!;
+    this.birthYearTransformations = this.ruleTables.sihua[ganzhiStem(sihuaYear)]!;
     const masks = Array<number>(STAR_CATALOG.length).fill(0);
     addTransformSet(masks, this.birthYearTransformations, 0);
     for (let branch = 0; branch < 12; branch += 1) {
       const opposite = (branch + 6) % 12;
-      const own = SIHUA_BY_STEM[this.palaceStems[branch]!]!;
-      const inward = SIHUA_BY_STEM[this.palaceStems[opposite]!]!;
+      const own = this.ruleTables.sihua[this.palaceStems[branch]!]!;
+      const inward = this.ruleTables.sihua[this.palaceStems[opposite]!]!;
       const ownIds = [own.lu, own.quan, own.ke, own.ji];
       const inwardIds = [inward.lu, inward.quan, inward.ke, inward.ji];
       for (let kind = 0; kind < 4; kind += 1) {
@@ -113,8 +114,8 @@ export class ZiweiChart {
     const bodyMasterYear = this.options.bodyMasterYearBoundary === PILLAR_BOUNDARY.SOLAR_TERM
       ? this.anchors.solarTerm.year
       : this.anchors.lunar.year;
-    this.lifeMaster = MASTER_STARS.life[lifeBranch]!;
-    this.bodyMaster = MASTER_STARS.body[ganzhiBranch(bodyMasterYear)]!;
+    this.lifeMaster = this.ruleTables.masters.life[lifeBranch]!;
+    this.bodyMaster = this.ruleTables.masters.body[ganzhiBranch(bodyMasterYear)]!;
     Object.freeze(this);
   }
 
@@ -145,7 +146,7 @@ export class ZiweiChart {
       ...star,
       branch,
       palaceId: this.palaces[branch]!.palaceId,
-      brightness: brightnessAt(starId, branch),
+      brightness: brightnessAt(this.ruleTables, starId, branch),
       transformMask: this.transformationMasks[starId]!,
     });
   }

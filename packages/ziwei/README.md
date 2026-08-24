@@ -137,6 +137,7 @@ import {
   PILLAR_BOUNDARY,
   ZIWEI_CHART_MODE,
   ZIWEI_CLOCK_MODE,
+  ZIWEI_RULE_OPTION,
 } from '@opendestiny/ziwei-lite';
 
 const options = new ZiweiOptions({
@@ -151,6 +152,9 @@ const options = new ZiweiOptions({
   wuHuDunYearBoundary: PILLAR_BOUNDARY.LUNAR,
   sihuaYearBoundary: PILLAR_BOUNDARY.LUNAR,
   bodyMasterYearBoundary: PILLAR_BOUNDARY.LUNAR,
+  rules: {
+    longevity: ZIWEI_RULE_OPTION.OPTION_2,
+  },
 });
 ```
 
@@ -158,10 +162,39 @@ const options = new ZiweiOptions({
 
 使用 `options.with({ ... })` 可从现有配置派生新实例，不会修改旧命盘的口径。
 
+## 切换规则流派
+
+安星、十二长生、亮度、四化和命身主是相互独立的规则维度，统一放在
+`ZiweiOptions.rules` 中，但不会被一个含糊的 `school` 名称绑死：
+
+```ts
+const options = new ZiweiOptions({
+  gender: ZIWEI_GENDER.MALE,
+  rules: {
+    placementDefault: 'option1',
+    longevity: 'option2',
+    brightnessDefault: 'option1',
+    sihuaDefault: 'option1',
+    masters: 'option1',
+
+    // 资源存在对应 variant 时，还可以逐项覆盖：
+    placement: { ziwei: 'option1' },
+    brightness: { taiyang: 'option1' },
+    sihua: { geng: 'option1' },
+  },
+});
+```
+
+当前随包编译的资源中，只有十二长生完整提供 `option1`、`option2` 两套安星法；
+普通本命星安星、亮度、十天干四化和命身主暂时只有 `option1`。指定资源中不存在的
+variant 会在创建命盘时直接抛出带星曜/天干键的 `RangeError`，不会悄悄退回默认表。
+
+命盘创建时会一次性解析上述选择；实际安星和查询亮度仍然只是数组索引，不会在每颗星上重复做流派判断。
+
 ## 当前范围
 
-已经完成：本命出生解析、anchors、十二宫、默认 `option1` 本命星规则、亮度、命主身主和十二位四化 mask。
+已经完成：本命出生解析、anchors、十二宫、独立规则 variant 选择、本命星规则、亮度、命主身主和十二位四化 mask。
 
-尚未移植：独立 `option2` 规则选择、大限/小限、流年流月流日流时栈、反推时辰和中文展示词典。
+尚未移植：十二长生以外的 `option2` 资源、大限/小限、流年流月流日流时栈、反推时辰和中文展示词典。
 
 规则层已对照 C++ 有限命盘 oracle 连续检查 10,000 张，并对物理日历命盘做逐字段差分。可运行示例见 `examples/basic.ts`。

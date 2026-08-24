@@ -24,6 +24,37 @@ export const ZIWEI_CLOCK_MODE = Object.freeze({
 } as const);
 export type ZiweiClockMode = typeof ZIWEI_CLOCK_MODE[keyof typeof ZIWEI_CLOCK_MODE];
 
+export const ZIWEI_RULE_OPTION = Object.freeze({
+  OPTION_1: 'option1',
+  OPTION_2: 'option2',
+} as const);
+
+export interface ZiweiRuleSelectionInput {
+  placementDefault?: string;
+  brightnessDefault?: string;
+  sihuaDefault?: string;
+  masters?: string;
+  /** Selects one coherent variant for all twelve longevity-cycle stars. */
+  longevity?: string;
+  /** Per-star placement overrides, keyed by the stable romanized star key. */
+  placement?: Readonly<Record<string, string>>;
+  /** Per-star brightness overrides, keyed by the stable romanized star key. */
+  brightness?: Readonly<Record<string, string>>;
+  /** Per-heavenly-stem Four Transform overrides (`jia` ... `gui`). */
+  sihua?: Readonly<Record<string, string>>;
+}
+
+export interface ZiweiRuleSelection {
+  readonly placementDefault: string;
+  readonly brightnessDefault: string;
+  readonly sihuaDefault: string;
+  readonly masters: string;
+  readonly longevity: string;
+  readonly placement: Readonly<Record<string, string>>;
+  readonly brightness: Readonly<Record<string, string>>;
+  readonly sihua: Readonly<Record<string, string>>;
+}
+
 export interface ZiweiOptionsInput {
   gender: ZiweiGender;
   mode?: CalendarMode;
@@ -38,10 +69,44 @@ export interface ZiweiOptionsInput {
   wuHuDunYearBoundary?: PillarBoundary;
   sihuaYearBoundary?: PillarBoundary;
   bodyMasterYearBoundary?: PillarBoundary;
+  rules?: ZiweiRuleSelectionInput;
 }
 
 function includes<T>(values: readonly T[], value: T): boolean {
   return values.includes(value);
+}
+
+function ruleOption(value: string | undefined, fallback: string, label: string): string {
+  const resolved = value ?? fallback;
+  if (typeof resolved !== 'string' || resolved.trim().length === 0) {
+    throw new RangeError(`${label} must be a non-empty option name`);
+  }
+  return resolved;
+}
+
+function ruleOverrides(
+  value: Readonly<Record<string, string>> | undefined,
+  label: string,
+): Readonly<Record<string, string>> {
+  const result: Record<string, string> = {};
+  for (const [key, option] of Object.entries(value ?? {})) {
+    if (key.trim().length === 0) throw new RangeError(`${label} contains an empty rule key`);
+    result[key] = ruleOption(option, '', `${label}.${key}`);
+  }
+  return Object.freeze(result);
+}
+
+function normalizeRuleSelection(input: ZiweiRuleSelectionInput = {}): ZiweiRuleSelection {
+  return Object.freeze({
+    placementDefault: ruleOption(input.placementDefault, ZIWEI_RULE_OPTION.OPTION_1, 'placementDefault'),
+    brightnessDefault: ruleOption(input.brightnessDefault, ZIWEI_RULE_OPTION.OPTION_1, 'brightnessDefault'),
+    sihuaDefault: ruleOption(input.sihuaDefault, ZIWEI_RULE_OPTION.OPTION_1, 'sihuaDefault'),
+    masters: ruleOption(input.masters, ZIWEI_RULE_OPTION.OPTION_1, 'masters'),
+    longevity: ruleOption(input.longevity, ZIWEI_RULE_OPTION.OPTION_1, 'longevity'),
+    placement: ruleOverrides(input.placement, 'placement'),
+    brightness: ruleOverrides(input.brightness, 'brightness'),
+    sihua: ruleOverrides(input.sihua, 'sihua'),
+  });
 }
 
 export class ZiweiOptions {
@@ -58,6 +123,7 @@ export class ZiweiOptions {
   readonly wuHuDunYearBoundary: PillarBoundary;
   readonly sihuaYearBoundary: PillarBoundary;
   readonly bodyMasterYearBoundary: PillarBoundary;
+  readonly rules: ZiweiRuleSelection;
 
   constructor(input: ZiweiOptionsInput) {
     this.gender = input.gender;
@@ -75,6 +141,7 @@ export class ZiweiOptions {
     this.wuHuDunYearBoundary = input.wuHuDunYearBoundary ?? PILLAR_BOUNDARY.LUNAR;
     this.sihuaYearBoundary = input.sihuaYearBoundary ?? PILLAR_BOUNDARY.LUNAR;
     this.bodyMasterYearBoundary = input.bodyMasterYearBoundary ?? PILLAR_BOUNDARY.LUNAR;
+    this.rules = normalizeRuleSelection(input.rules);
 
     if (!includes(Object.values(ZIWEI_GENDER), this.gender)) throw new RangeError('unknown Ziwei gender');
     if (!includes(Object.values(CALENDAR_MODE), this.mode)) throw new RangeError('unknown calendar mode');
@@ -112,7 +179,16 @@ export class ZiweiOptions {
   }
 
   with(overrides: Partial<ZiweiOptionsInput>): ZiweiOptions {
-    return new ZiweiOptions({ ...this.toJSON(), ...overrides });
+    const rules = overrides.rules === undefined
+      ? this.rules
+      : {
+        ...this.rules,
+        ...overrides.rules,
+        placement: { ...this.rules.placement, ...overrides.rules.placement },
+        brightness: { ...this.rules.brightness, ...overrides.rules.brightness },
+        sihua: { ...this.rules.sihua, ...overrides.rules.sihua },
+      };
+    return new ZiweiOptions({ ...this.toJSON(), ...overrides, rules });
   }
 
   toCalendarOptions(): {
@@ -142,6 +218,7 @@ export class ZiweiOptions {
       wuHuDunYearBoundary: this.wuHuDunYearBoundary,
       sihuaYearBoundary: this.sihuaYearBoundary,
       bodyMasterYearBoundary: this.bodyMasterYearBoundary,
+      rules: this.rules,
     };
   }
 }

@@ -9,6 +9,6 @@ export * from './types.js';
 export const ZIWEI_LITE_INFO = Object.freeze({
   status: 'natal chart core available',
   corePackage: 'js-ephemeris-lite',
-  bundledRuleProfile: 'default option1',
+  bundledRuleProfile: 'independent variants with option1 defaults',
   natalStarCount: 115,
 });

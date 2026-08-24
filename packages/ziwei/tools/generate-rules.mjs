@@ -71,35 +71,59 @@ const placements = selected(placementDoc.placements)
 if (placements.length !== natalStars.length) {
   throw new Error(`expected ${natalStars.length} natal placements, got ${placements.length}`);
 }
-
-const brightnessByStar = Array.from({ length: stars.length }, () => Array(12).fill(-1));
-for (const rule of selected(brightnessDoc.brightness)) {
-  brightnessByStar[starIds.get(rule.star)] = rule.values;
-}
-const sihua = selected(sihuaDoc.sihua).map((rule) => ({
-  lu: starIds.get(rule.lu),
-  quan: starIds.get(rule.quan),
-  ke: starIds.get(rule.ke),
-  ji: starIds.get(rule.ji),
+const placementVariants = natalStars.map((star) => ({
+  starId: starIds.get(star.key),
+  starKey: star.key,
+  options: Object.fromEntries(placementDoc.placements
+    .filter((rule) => rule.star === star.key)
+    .map((rule) => [rule.option, {
+      starId: starIds.get(rule.star),
+      inputs: rule.inputs,
+      shape: rule.shape,
+      positions: rule.positions,
+    }])),
 }));
-const masters = selected(mastersDoc.masters)[0];
-const masterIds = {
-  life: masters.life.map((key) => starIds.get(key)),
-  body: masters.body.map((key) => starIds.get(key)),
-};
+
+const brightnessVariants = stars.map((star) => ({
+  starId: star.id,
+  starKey: star.key,
+  options: Object.fromEntries(brightnessDoc.brightness
+    .filter((rule) => rule.star === star.key)
+    .map((rule) => [rule.option, rule.values])),
+}));
+const stemKeys = ['jia', 'yi', 'bing', 'ding', 'wu', 'ji', 'geng', 'xin', 'ren', 'gui'];
+const sihuaVariants = stemKeys.map((stem, stemIndex) => ({
+  stemIndex,
+  stemKey: stem,
+  options: Object.fromEntries(sihuaDoc.sihua
+    .filter((rule) => rule.stem === stem)
+    .map((rule) => [rule.option, {
+      lu: starIds.get(rule.lu),
+      quan: starIds.get(rule.quan),
+      ke: starIds.get(rule.ke),
+      ji: starIds.get(rule.ji),
+    }])),
+}));
+const masterVariants = Object.fromEntries(mastersDoc.masters.map((rule) => [rule.option, {
+  life: rule.life.map((key) => starIds.get(key)),
+  body: rule.body.map((key) => starIds.get(key)),
+}]));
 
 const banner = `// Generated from the default Ziwei TOML resources. Do not edit by hand.\n`;
 const source = `${banner}
 export interface GeneratedStar { readonly id: number; readonly key: string; readonly category: string; readonly natal: boolean }
 export interface GeneratedPlacement { readonly starId: number; readonly inputs: readonly string[]; readonly shape: readonly number[]; readonly positions: readonly number[] }
 export interface GeneratedTransformSet { readonly lu: number; readonly quan: number; readonly ke: number; readonly ji: number }
+export interface GeneratedPlacementVariants { readonly starId: number; readonly starKey: string; readonly options: Readonly<Record<string, GeneratedPlacement>> }
+export interface GeneratedBrightnessVariants { readonly starId: number; readonly starKey: string; readonly options: Readonly<Record<string, readonly number[]>> }
+export interface GeneratedSihuaVariants { readonly stemIndex: number; readonly stemKey: string; readonly options: Readonly<Record<string, GeneratedTransformSet>> }
 
 export const GENERATED_STARS: readonly GeneratedStar[] = Object.freeze(${JSON.stringify(stars)});
 export const GENERATED_NATAL_STAR_COUNT = ${natalStars.length};
-export const GENERATED_NATAL_PLACEMENTS: readonly GeneratedPlacement[] = Object.freeze(${JSON.stringify(placements)});
-export const GENERATED_BRIGHTNESS: readonly (readonly number[])[] = Object.freeze(${JSON.stringify(brightnessByStar)});
-export const GENERATED_SIHUA: readonly GeneratedTransformSet[] = Object.freeze(${JSON.stringify(sihua)});
-export const GENERATED_MASTERS: Readonly<{ readonly life: readonly number[]; readonly body: readonly number[] }> = Object.freeze(${JSON.stringify(masterIds)});
+export const GENERATED_PLACEMENT_VARIANTS: readonly GeneratedPlacementVariants[] = Object.freeze(${JSON.stringify(placementVariants)} as unknown as GeneratedPlacementVariants[]);
+export const GENERATED_BRIGHTNESS_VARIANTS: readonly GeneratedBrightnessVariants[] = Object.freeze(${JSON.stringify(brightnessVariants)});
+export const GENERATED_SIHUA_VARIANTS: readonly GeneratedSihuaVariants[] = Object.freeze(${JSON.stringify(sihuaVariants)});
+export const GENERATED_MASTER_VARIANTS: Readonly<Record<string, { readonly life: readonly number[]; readonly body: readonly number[] }>> = Object.freeze(${JSON.stringify(masterVariants)});
 `;
 
 fs.mkdirSync(path.dirname(outputFile), { recursive: true });

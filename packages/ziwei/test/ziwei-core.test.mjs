@@ -6,6 +6,7 @@ import {
   STAR_TRANSFORM_MARK,
   ZIWEI_CLOCK_MODE,
   ZIWEI_GENDER,
+  ZIWEI_RULE_OPTION,
   ZiweiChart,
   ZiweiOptions,
   computeZiweiAnchors,
@@ -101,4 +102,52 @@ test('ZiweiOptions validates gender and solar-clock longitude', () => {
   const updated = original.with({ clockMode: ZIWEI_CLOCK_MODE.CIVIL });
   assert.notEqual(updated, original);
   assert.equal(updated.gender, ZIWEI_GENDER.FEMALE);
+});
+
+test('rule families switch independently and preserve unrelated placements', () => {
+  const birth = new ZonedTime({
+    year: 1990, month: 1, day: 13, hour: 14, minute: 0, second: 0, offsetMinutes: 480,
+  });
+  const defaultChart = ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({ gender: ZIWEI_GENDER.MALE }),
+  );
+  const alternateChart = ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({
+      gender: ZIWEI_GENDER.MALE,
+      rules: { longevity: ZIWEI_RULE_OPTION.OPTION_2 },
+    }),
+  );
+
+  assert.equal(defaultChart.anchors.bureau, BUREAU.EARTH_5);
+  assert.deepEqual(defaultChart.starPositions.slice(0, 103), alternateChart.starPositions.slice(0, 103));
+  assert.deepEqual(defaultChart.starPositions.slice(103, 115), [8, 7, 6, 5, 4, 3, 2, 1, 0, 11, 10, 9]);
+  assert.deepEqual(alternateChart.starPositions.slice(103, 115), [2, 1, 0, 11, 10, 9, 8, 7, 6, 5, 4, 3]);
+  assert.equal(alternateChart.options.rules.longevity, ZIWEI_RULE_OPTION.OPTION_2);
+});
+
+test('rule options merge deeply and unavailable variants fail clearly', () => {
+  const original = new ZiweiOptions({
+    gender: ZIWEI_GENDER.FEMALE,
+    rules: {
+      placement: { ziwei: ZIWEI_RULE_OPTION.OPTION_1 },
+      brightness: { taiyang: ZIWEI_RULE_OPTION.OPTION_1 },
+    },
+  });
+  const updated = original.with({ rules: { longevity: ZIWEI_RULE_OPTION.OPTION_2 } });
+  assert.equal(updated.rules.placement.ziwei, ZIWEI_RULE_OPTION.OPTION_1);
+  assert.equal(updated.rules.brightness.taiyang, ZIWEI_RULE_OPTION.OPTION_1);
+  assert.equal(updated.rules.longevity, ZIWEI_RULE_OPTION.OPTION_2);
+
+  const birth = new ZonedTime({
+    year: 2003, month: 1, day: 1, hour: 0, minute: 30, second: 0, offsetMinutes: 480,
+  });
+  assert.throws(
+    () => ZiweiChart.fromZonedTime(birth, new ZiweiOptions({
+      gender: ZIWEI_GENDER.MALE,
+      rules: { brightnessDefault: ZIWEI_RULE_OPTION.OPTION_2 },
+    })),
+    /brightness option "option2" is unavailable/,
+  );
 });

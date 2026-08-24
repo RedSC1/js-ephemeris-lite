@@ -1,13 +1,102 @@
 import { ganzhiBranch, ganzhiIndex, ganzhiStem, type Ganzhi } from 'js-ephemeris-lite';
 import type { ZiweiAnchors } from './anchors.js';
 import {
-  GENERATED_BRIGHTNESS,
-  GENERATED_MASTERS,
-  GENERATED_NATAL_PLACEMENTS,
-  GENERATED_SIHUA,
+  GENERATED_BRIGHTNESS_VARIANTS,
+  GENERATED_MASTER_VARIANTS,
+  GENERATED_PLACEMENT_VARIANTS,
+  GENERATED_SIHUA_VARIANTS,
   type GeneratedPlacement,
+  type GeneratedTransformSet,
 } from './generated/default-rules.js';
+import type { ZiweiRuleSelection } from './options.js';
 import type { Brightness, TransformSet, ZiweiCalendarFacts } from './types.js';
+
+const LONGEVITY_STAR_KEYS = new Set([
+  'changsheng',
+  'muyu',
+  'guandai',
+  'linguan',
+  'diwang',
+  'shuai',
+  'bing',
+  'si',
+  'mu',
+  'jue',
+  'tai',
+  'yang',
+]);
+
+export interface SelectedZiweiRules {
+  readonly natalPlacements: readonly GeneratedPlacement[];
+  readonly brightness: readonly (readonly number[])[];
+  readonly sihua: readonly TransformSet[];
+  readonly masters: Readonly<{
+    readonly life: readonly number[];
+    readonly body: readonly number[];
+  }>;
+}
+
+const selectionCache = new WeakMap<ZiweiRuleSelection, SelectedZiweiRules>();
+
+function selectedOption<T>(
+  component: string,
+  key: string,
+  option: string,
+  variants: Readonly<Record<string, T>>,
+): T {
+  const value = variants[option];
+  if (value !== undefined) return value;
+  const available = Object.keys(variants).join(', ') || '(none)';
+  throw new RangeError(
+    `Ziwei ${component} option "${option}" is unavailable for "${key}"; available: ${available}`,
+  );
+}
+
+function assertKnownOverrides(
+  component: string,
+  overrides: Readonly<Record<string, string>>,
+  knownKeys: ReadonlySet<string>,
+): void {
+  for (const key of Object.keys(overrides)) {
+    if (!knownKeys.has(key)) throw new RangeError(`unknown Ziwei ${component} rule key: "${key}"`);
+  }
+}
+
+/** Resolve all configured rule variants once, before chart placement begins. */
+export function selectZiweiRules(selection: ZiweiRuleSelection): SelectedZiweiRules {
+  const cached = selectionCache.get(selection);
+  if (cached !== undefined) return cached;
+
+  const placementKeys = new Set(GENERATED_PLACEMENT_VARIANTS.map((variant) => variant.starKey));
+  const brightnessKeys = new Set(GENERATED_BRIGHTNESS_VARIANTS.map((variant) => variant.starKey));
+  const stemKeys = new Set(GENERATED_SIHUA_VARIANTS.map((variant) => variant.stemKey));
+  assertKnownOverrides('placement', selection.placement, placementKeys);
+  assertKnownOverrides('brightness', selection.brightness, brightnessKeys);
+  assertKnownOverrides('sihua', selection.sihua, stemKeys);
+
+  const natalPlacements = Object.freeze(GENERATED_PLACEMENT_VARIANTS.map((variant) => {
+    const option = LONGEVITY_STAR_KEYS.has(variant.starKey)
+      ? selection.longevity
+      : selection.placement[variant.starKey] ?? selection.placementDefault;
+    return selectedOption('placement', variant.starKey, option, variant.options);
+  }));
+  const brightness = Object.freeze(GENERATED_BRIGHTNESS_VARIANTS.map((variant) => selectedOption(
+    'brightness',
+    variant.starKey,
+    selection.brightness[variant.starKey] ?? selection.brightnessDefault,
+    variant.options,
+  )));
+  const sihua = Object.freeze(GENERATED_SIHUA_VARIANTS.map((variant) => selectedOption(
+    'sihua',
+    variant.stemKey,
+    selection.sihua[variant.stemKey] ?? selection.sihuaDefault,
+    variant.options,
+  ) as GeneratedTransformSet));
+  const masters = selectedOption('masters', 'life/body', selection.masters, GENERATED_MASTER_VARIANTS);
+  const resolved = Object.freeze({ natalPlacements, brightness, sihua, masters });
+  selectionCache.set(selection, resolved);
+  return resolved;
+}
 
 function kongWang(ganzhi: Ganzhi, secondary: boolean): number {
   const index = ganzhiIndex(ganzhi);
@@ -86,12 +175,12 @@ export function evaluateNatalPlacement(
   return branch;
 }
 
-export const NATAL_PLACEMENT_RULES = GENERATED_NATAL_PLACEMENTS;
-export const SIHUA_BY_STEM: readonly TransformSet[] = GENERATED_SIHUA;
-export const MASTER_STARS = GENERATED_MASTERS;
-
-export function brightnessAt(starId: number, branch: number): Brightness {
-  const value = GENERATED_BRIGHTNESS[starId]?.[branch];
+export function brightnessAt(
+  rules: SelectedZiweiRules,
+  starId: number,
+  branch: number,
+): Brightness {
+  const value = rules.brightness[starId]?.[branch];
   if (value === undefined || value < -1 || value > 6) {
     throw new RangeError('invalid star or branch');
   }
