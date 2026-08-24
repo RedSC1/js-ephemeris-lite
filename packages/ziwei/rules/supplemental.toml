@@ -22,3 +22,53 @@ life = ["tanlang", "jumen", "lucun", "wenqu", "lianzhen", "wuqu", "pojun", "wuqu
 body = ["lingxing", "tianxiang", "tianliang", "tiantong", "wenchang", "tianji", "huoxing", "tianxiang", "tianliang", "tiantong", "wenchang", "tianji"]
 life_input = "lunar.year_branch"
 body_input = "master.year_branch"
+
+# Independent Four Transform variants. The option labels deliberately carry
+# no school/profile meaning; each stem may be selected separately.
+[[sihua]]
+stem = "wu"
+option = "option2"
+lu = "tanlang"
+quan = "taiyin"
+ke = "taiyang"
+ji = "tianji"
+
+[[sihua]]
+stem = "geng"
+option = "option2"
+lu = "taiyang"
+quan = "wuqu"
+ke = "tiantong"
+ji = "taiyin"
+
+[[sihua]]
+stem = "geng"
+option = "option3"
+lu = "taiyang"
+quan = "wuqu"
+ke = "tianfu"
+ji = "tiantong"
+
+[[sihua]]
+stem = "geng"
+option = "option4"
+lu = "taiyang"
+quan = "wuqu"
+ke = "tiantong"
+ji = "tianxiang"
+
+[[sihua]]
+stem = "ren"
+option = "option2"
+lu = "tianliang"
+quan = "ziwei"
+ke = "tianfu"
+ji = "wuqu"
+
+[[sihua]]
+stem = "gui"
+option = "option2"
+lu = "pojun"
+quan = "jumen"
+ke = "taiyang"
+ji = "tanlang"

@@ -11,6 +11,7 @@ import {
   ZiweiOptions,
   computeZiweiAnchors,
   findStarId,
+  selectZiweiRules,
 } from '../dist/index.js';
 import { ZonedTime, makeGanzhi } from 'js-ephemeris-lite';
 
@@ -209,4 +210,45 @@ test('Tian-Shang, Tian-Shi and master option2 conventions remain independent', (
   );
   assert.equal(yinFemale.starPositions[tianShang], defaults.starPositions[tianShang]);
   assert.equal(yinFemale.starPositions[tianShi], defaults.starPositions[tianShi]);
+});
+
+test('Four Transform variants are selected independently by heavenly stem', () => {
+  const stemIndex = Object.freeze({ wu: 4, geng: 6, ren: 8, gui: 9 });
+  const expected = [
+    ['wu', 'option1', ['tanlang', 'taiyin', 'youbi', 'tianji']],
+    ['wu', 'option2', ['tanlang', 'taiyin', 'taiyang', 'tianji']],
+    ['geng', 'option1', ['taiyang', 'wuqu', 'taiyin', 'tiantong']],
+    ['geng', 'option2', ['taiyang', 'wuqu', 'tiantong', 'taiyin']],
+    ['geng', 'option3', ['taiyang', 'wuqu', 'tianfu', 'tiantong']],
+    ['geng', 'option4', ['taiyang', 'wuqu', 'tiantong', 'tianxiang']],
+    ['ren', 'option1', ['tianliang', 'ziwei', 'zuofu', 'wuqu']],
+    ['ren', 'option2', ['tianliang', 'ziwei', 'tianfu', 'wuqu']],
+    ['gui', 'option1', ['pojun', 'jumen', 'taiyin', 'tanlang']],
+    ['gui', 'option2', ['pojun', 'jumen', 'taiyang', 'tanlang']],
+  ];
+
+  for (const [stem, option, keys] of expected) {
+    const options = new ZiweiOptions({
+      gender: ZIWEI_GENDER.MALE,
+      rules: { sihua: { [stem]: option } },
+    });
+    const transforms = selectZiweiRules(options.rules).sihua[stemIndex[stem]];
+    assert.deepEqual(
+      [transforms.lu, transforms.quan, transforms.ke, transforms.ji],
+      keys.map((key) => findStarId(key)),
+      `${stem}.${option}`,
+    );
+  }
+
+  const birth = new ZonedTime({
+    year: 2003, month: 3, day: 13, hour: 14, minute: 15, second: 0, offsetMinutes: 480,
+  });
+  const chart = ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({
+      gender: ZIWEI_GENDER.MALE,
+      rules: { sihua: { gui: ZIWEI_RULE_OPTION.OPTION_2 } },
+    }),
+  );
+  assert.equal(chart.birthYearTransformations.ke, findStarId('taiyang'));
 });

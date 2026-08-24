@@ -159,6 +159,9 @@ const options = new ZiweiOptions({
       tianshang: ZIWEI_RULE_OPTION.OPTION_2,
       tianshi: ZIWEI_RULE_OPTION.OPTION_2,
     },
+    sihua: {
+      gui: ZIWEI_RULE_OPTION.OPTION_2,
+    },
   },
 });
 ```
@@ -188,7 +191,10 @@ const options = new ZiweiOptions({
       tianshi: 'option2',
     },
     brightness: { taiyang: 'option1' },
-    sihua: { geng: 'option1' },
+    sihua: {
+      geng: ZIWEI_RULE_OPTION.OPTION_4,
+      gui: ZIWEI_RULE_OPTION.OPTION_2,
+    },
   },
 });
 ```
@@ -199,8 +205,17 @@ const options = new ZiweiOptions({
 - `placement.tianshang`、`placement.tianshi`：`option1` 固定天伤在交友、天使在疾厄；各自的 `option2` 按年干阴阳和性别选择交换后的宫位；
 - `masters`：`option1` 以命宫支取命主，`option2` 以农历生年支取命主；两套身主都按生年支。
 
+四化同样按天干独立选择，不绑定任何派别名称：
+
+| 天干 | `option1` | `option2` | `option3` | `option4` |
+| --- | --- | --- | --- | --- |
+| 戊 | 贪阴弼机 | 贪阴阳机 | — | — |
+| 庚 | 阳武阴同 | 阳武同阴 | 阳武府同 | 阳武同相 |
+| 壬 | 梁紫辅武 | 梁紫府武 | — | — |
+| 癸 | 破巨阴贪 | 破巨阳贪 | — | — |
+
 这些 `option2` 只是彼此独立的算法 variant，不代表或预设任何完整门派，亮度也不会跟随切换。
-普通本命星安星、亮度和十天干四化目前仍只有 `option1`。指定资源中不存在的 variant
+其余普通本命星安星、亮度和六个未列出的天干四化目前仍只有 `option1`。指定资源中不存在的 variant
 会在创建命盘时直接抛出带星曜/天干键的 `RangeError`，不会悄悄退回默认表。
 
 命盘创建时会一次性解析上述选择；实际安星和查询亮度仍然只是数组索引，不会在每颗星上重复做流派判断。

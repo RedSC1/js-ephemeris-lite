@@ -27,6 +27,8 @@ export type ZiweiClockMode = typeof ZIWEI_CLOCK_MODE[keyof typeof ZIWEI_CLOCK_MO
 export const ZIWEI_RULE_OPTION = Object.freeze({
   OPTION_1: 'option1',
   OPTION_2: 'option2',
+  OPTION_3: 'option3',
+  OPTION_4: 'option4',
 } as const);
 
 export interface ZiweiRuleSelectionInput {
