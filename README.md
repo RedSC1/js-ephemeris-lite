@@ -271,7 +271,7 @@ lite 时间层约定 `UTC ≈ UT1`，不携带闰秒、TAI 或 EOP 表；TT 仍�
 - `solarToLunar()`、`lunarToSolar()`、`instantToLunar()` 和 `getLunarMonthDays()`；
 - `historical`、`china-astronomical`、`local-astronomical` 三种日界/历史规则模式。
 
-`src/ganzhi.js` 把两类规则分开：农历结构继续由 `CALENDAR_MODE` 选择，可以使用中国标准/历史日期，也可以用 `LOCAL_ASTRONOMICAL` 按当地 UTC offset 或经度重新定气定朔。晚子时另由 `RAT_HOUR_MODE` 选择，不会偷偷改变农历月序。`calculateFourPillars()` 还刻意分开物理瞬时与 `virtualTime`，以后可在八字包中接入平太阳时或真太阳时，而不改动历法核心。
+`src/ganzhi.js` 把两类规则分开：农历结构继续由 `CALENDAR_MODE` 选择，可以使用中国标准/历史日期，也可以用 `LOCAL_ASTRONOMICAL` 按当地 UTC offset 或经度重新定气定朔。晚子时另由 `RAT_HOUR_MODE` 选择，不会偷偷改变农历月序。`calculateFourPillars()` 刻意分开物理瞬时与 `virtualTime`；八字包已通过 `BaziOptions.clockMode` 接入民用时、平太阳时和真太阳时，而不改动历法核心。
 
 历史表不是逐日数组。每个事件先由若干精确线性段或长尾线性式得到基准民用日；长尾只有在 `residualMask` 对应位为 1 时才读 `residualSigns`，修正 `+1` 或 `-1 day`。每 256 个事件保存一次 rank 前缀，因此符号位定位不需要从头数。C++ 的 `uint64_t` 在生成阶段按低 32 位、高 32 位拆入 `Uint32Array`，浏览器运行时只做精确的 32 位位运算，不依赖 `BigInt`，四组位图共 3648 bytes。
 

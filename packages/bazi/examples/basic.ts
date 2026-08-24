@@ -5,14 +5,13 @@ import {
   describeFourPillars,
 } from 'js-ephemeris-lite';
 import {
+  BAZI_CLOCK_MODE,
+  BaziChart,
+  BaziOptions,
   DAYUN_BOUNDARY_MODEL,
   GENDER,
   QIYUN_TIME_MODEL,
   SHEN_SHA,
-  baziForZonedTime,
-  calculateQiYun,
-  collectNatalShenSha,
-  generateDaYun,
   hasShenSha,
   shenShaNames,
   unpackPillar,
@@ -24,28 +23,23 @@ const birth = new ZonedTime({
   offsetMinutes: 480,
 });
 
-const chart = baziForZonedTime(birth, {
+const options = new BaziOptions({
   mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
   ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
+  gender: GENDER.MALE,
+  clockMode: BAZI_CLOCK_MODE.CIVIL,
+  qiYunTimeModel: QIYUN_TIME_MODEL.TRADITIONAL_CALENDAR,
+  daYunBoundaryModel: DAYUN_BOUNDARY_MODEL.CIVIL_YEARS,
+  daYunCount: 8,
 });
 
-const natalShenSha = collectNatalShenSha(chart, { gender: GENDER.MALE });
-const qiYun = calculateQiYun(
-  birth.toJulianTime(),
-  birth,
-  chart,
-  GENDER.MALE,
-  {
-    mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
-    timeModel: QIYUN_TIME_MODEL.TRADITIONAL_CALENDAR,
-  },
-);
-const daYun = generateDaYun(birth, chart, qiYun, {
-  count: 8,
-  boundaryModel: DAYUN_BOUNDARY_MODEL.CIVIL_YEARS,
-});
+const chart = BaziChart.fromZonedTime(birth, options);
+const natalShenSha = chart.getShenSha();
+const qiYun = chart.getQiYun();
+const daYun = chart.getDaYunTable();
 
 console.log(describeFourPillars(chart.pillars));
+console.log(qiYun.startCivilTime);
 console.log(shenShaNames(natalShenSha.day));
 console.log(hasShenSha(natalShenSha.day, SHEN_SHA.KUI_GANG));
 console.log(daYun.map((item) => unpackPillar(item.pillar).name));

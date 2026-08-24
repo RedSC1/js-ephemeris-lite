@@ -29,7 +29,7 @@ import {
   type RenyuanSilingOrigin,
   type RenyuanSilingTable,
 } from './constants.js';
-import type { BaziChart } from './chart.js';
+import type { BaziPillarAnalysis } from './chart.js';
 
 function positiveMod(value: number, divisor: number): number {
   return ((value % divisor) + divisor) % divisor;
@@ -62,7 +62,7 @@ export function calculateLuckDirection(yearPillar: Ganzhi, gender: Gender): -1 |
   return ((ganzhiStem(yearPillar) & 1) === 0) === (gender === GENDER.MALE) ? 1 : -1;
 }
 
-export function calculateXiaoYun(chart: BaziChart, direction: -1 | 1, age: number): Ganzhi {
+export function calculateXiaoYun(chart: BaziPillarAnalysis, direction: -1 | 1, age: number): Ganzhi {
   if (direction !== -1 && direction !== 1) throw new RangeError('direction must be -1 or 1');
   if (!Number.isInteger(age) || age < 1) throw new RangeError('age must be a positive integer');
   return advanceGanzhi(chart.pillars.hour, direction * age);
@@ -74,7 +74,7 @@ export interface XiaoYunEntry {
 }
 
 export function generateXiaoYun(
-  chart: BaziChart,
+  chart: BaziPillarAnalysis,
   direction: -1 | 1,
   count: number,
   startAge = 1,
@@ -95,7 +95,7 @@ export interface DaYunPillar {
 
 /** Pure rule layer. Astronomical Qi-Yun time is intentionally a separate operation. */
 export function generateDaYunPillars(
-  chart: BaziChart,
+  chart: BaziPillarAnalysis,
   direction: -1 | 1,
   count = 8,
   firstStartVirtualAge = 1,
@@ -213,7 +213,7 @@ function addCalendarComponents(
 export function calculateQiYun(
   instant: Ut1Input,
   birthCivilTime: CivilDateTime,
-  chart: BaziChart,
+  chart: BaziPillarAnalysis,
   gender: Gender,
   rawOptions: QiYunOptions = {},
 ): QiYunResult {
@@ -283,7 +283,7 @@ export interface DaYunOptions {
 
 export function generateDaYun(
   birthCivilTime: CivilDateTime,
-  chart: BaziChart,
+  chart: BaziPillarAnalysis,
   qiYun: QiYunResult,
   options: DaYunOptions = {},
 ): readonly DaYunEntry[] {

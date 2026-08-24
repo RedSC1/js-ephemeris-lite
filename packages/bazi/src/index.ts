@@ -1,6 +1,7 @@
 export * from './chart.js';
 export * from './constants.js';
 export * from './fortune.js';
+export * from './options.js';
 export * from './pillar.js';
 export * from './relations.js';
 export * from './rules.js';

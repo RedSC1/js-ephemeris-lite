@@ -1,22 +1,39 @@
 import {
+  asUt1JulianDay,
   calculateFourPillars,
-  fourPillarsForZonedTime,
   getNayinId,
   ganzhiBranch,
   ganzhiStem,
-  type FourPillars,
-  type FourPillarsOptions,
-  type Ganzhi,
+  meanSolarTime,
+  trueSolarTime,
   type CivilDateTime,
+  type FourPillars,
+  type Ganzhi,
   type Ut1Input,
   type ZonedTime,
 } from 'js-ephemeris-lite';
 import {
-  EARTH_PALACE_MODE,
-  type EarthPalaceMode,
-  type LifeStageId,
-  type TenGodId,
-} from './constants.js';
+  type DaYunEntry,
+  type QiYunResult,
+  calculateQiYun,
+  generateDaYun,
+  getRenyuanSilingSegments,
+  type RenyuanSilingSegment,
+} from './fortune.js';
+import {
+  type NatalShenShaBitsets,
+  type ShenShaBitset,
+  type ShenShaTarget,
+  collectNatalShenSha,
+  collectTargetShenSha,
+} from './shen-sha.js';
+import {
+  BAZI_CLOCK_MODE,
+  BaziOptions,
+  resolveBaziOptions,
+  type BaziOptionsInput,
+} from './options.js';
+import { type LifeStageId, type TenGodId } from './constants.js';
 import { calculateExtraPillars, getHiddenStems, getLifeStage, getTenGod } from './rules.js';
 import { unpackPillar, type DecodedPillar } from './pillar.js';
 
@@ -31,7 +48,27 @@ export interface BaziColumn extends DecodedPillar {
   readonly nayinId: number;
 }
 
-export interface BaziChart {
+function freezePillars(pillars: FourPillars): Readonly<FourPillars> {
+  ganzhiStem(pillars.year);
+  ganzhiStem(pillars.month);
+  ganzhiStem(pillars.day);
+  ganzhiStem(pillars.hour);
+  return Object.freeze({ ...pillars });
+}
+
+function freezeCivilTime(value: CivilDateTime): Readonly<CivilDateTime> {
+  return Object.freeze({
+    year: value.year,
+    month: value.month,
+    day: value.day,
+    hour: value.hour,
+    minute: value.minute,
+    second: value.second,
+  });
+}
+
+/** Rule-layer interpretation of four known pillars; it has no birth context. */
+export interface BaziPillarAnalysis {
   readonly pillars: Readonly<FourPillars>;
   readonly extraPillars: Readonly<{
     mingGong: Ganzhi;
@@ -43,25 +80,17 @@ export interface BaziChart {
   readonly columns: readonly [BaziColumn, BaziColumn, BaziColumn, BaziColumn];
 }
 
-export interface BaziChartOptions {
-  earthPalaceMode?: EarthPalaceMode;
+export interface BaziPillarAnalysisOptions {
+  earthPalaceMode?: BaziOptionsInput['earthPalaceMode'];
 }
 
-function freezePillars(pillars: FourPillars): Readonly<FourPillars> {
-  // Calling the validators prevents a malformed byte from entering a chart.
-  ganzhiStem(pillars.year);
-  ganzhiStem(pillars.month);
-  ganzhiStem(pillars.day);
-  ganzhiStem(pillars.hour);
-  return Object.freeze({ ...pillars });
-}
-
-export function calculateBaziChart(
+/** Interpret known pillars without pretending that a birth instant is known. */
+export function analyzePillars(
   rawPillars: FourPillars,
-  options: BaziChartOptions = {},
-): BaziChart {
+  rawOptions: BaziPillarAnalysisOptions = {},
+): BaziPillarAnalysis {
+  const options = resolveBaziOptions(rawOptions);
   const pillars = freezePillars(rawPillars);
-  const earthPalaceMode = options.earthPalaceMode ?? EARTH_PALACE_MODE.FIRE_EARTH;
   const dayMaster = ganzhiStem(pillars.day);
   const keys = ['year', 'month', 'day', 'hour'] as const;
   const values = [pillars.year, pillars.month, pillars.day, pillars.hour] as const;
@@ -74,7 +103,7 @@ export function calculateBaziChart(
       visibleTenGod: getTenGod(dayMaster, ganzhiStem(value)),
       hiddenStems,
       hiddenTenGods: Object.freeze(hiddenStems.map((stem) => getTenGod(dayMaster, stem))),
-      lifeStage: getLifeStage(dayMaster, ganzhiBranch(value), earthPalaceMode),
+      lifeStage: getLifeStage(dayMaster, ganzhiBranch(value), options.earthPalaceMode),
       nayinId: getNayinId(value),
     });
   })) as unknown as readonly [BaziColumn, BaziColumn, BaziColumn, BaziColumn];
@@ -86,30 +115,116 @@ export function calculateBaziChart(
   });
 }
 
-export const createBaziChart = calculateBaziChart;
+/** A complete BaZi chart backed by a real birth instant and resolved clock. */
+export class BaziChart implements BaziPillarAnalysis {
+  readonly pillars: Readonly<FourPillars>;
+  readonly extraPillars: BaziPillarAnalysis['extraPillars'];
+  readonly dayMaster: number;
+  readonly columns: BaziPillarAnalysis['columns'];
+  readonly options: BaziOptions;
+  readonly birthJdUT1: number;
+  readonly birthCivilTime: Readonly<CivilDateTime>;
 
-export interface CalculateBaziOptions extends FourPillarsOptions, BaziChartOptions {}
+  private constructor(
+    analysis: BaziPillarAnalysis,
+    options: BaziOptions,
+    birthJdUT1: number,
+    birthCivilTime: Readonly<CivilDateTime>,
+  ) {
+    this.pillars = analysis.pillars;
+    this.extraPillars = analysis.extraPillars;
+    this.dayMaster = analysis.dayMaster;
+    this.columns = analysis.columns;
+    this.options = options;
+    this.birthJdUT1 = birthJdUT1;
+    this.birthCivilTime = birthCivilTime;
+    Object.freeze(this);
+  }
 
-/** Resolve four pillars with the astronomy core, then interpret the BaZi chart. */
+  static fromInstant(
+    instant: Ut1Input,
+    virtualTime: CivilDateTime,
+    options: BaziOptions | BaziOptionsInput = {},
+  ): BaziChart {
+    const resolved = resolveBaziOptions(options);
+    const jdUT1 = asUt1JulianDay(instant);
+    const pillars = calculateFourPillars(jdUT1, virtualTime, resolved.toFourPillarsOptions());
+    return new BaziChart(
+      analyzePillars(pillars, { earthPalaceMode: resolved.earthPalaceMode }),
+      resolved,
+      jdUT1,
+      freezeCivilTime(virtualTime),
+    );
+  }
+
+  static fromZonedTime(
+    zonedTime: ZonedTime,
+    options: BaziOptions | BaziOptionsInput = {},
+  ): BaziChart {
+    const resolved = resolveBaziOptions(options);
+    let virtualTime: CivilDateTime = zonedTime;
+    if (resolved.clockMode === BAZI_CLOCK_MODE.MEAN_SOLAR) {
+      virtualTime = meanSolarTime(zonedTime, resolved.longitudeDeg!);
+    } else if (resolved.clockMode === BAZI_CLOCK_MODE.TRUE_SOLAR) {
+      virtualTime = trueSolarTime(zonedTime, resolved.longitudeDeg!);
+    }
+    return BaziChart.fromInstant(zonedTime.toJulianTime(), virtualTime, resolved);
+  }
+
+  getQiYun(): QiYunResult {
+    const gender = this.requireGender();
+    return calculateQiYun(
+      this.birthJdUT1,
+      this.birthCivilTime,
+      this,
+      gender,
+      this.options.toQiYunOptions(),
+    );
+  }
+
+  getDaYunTable(): readonly DaYunEntry[] {
+    return generateDaYun(
+      this.birthCivilTime,
+      this,
+      this.getQiYun(),
+      this.options.toDaYunOptions(),
+    );
+  }
+
+  getShenSha(): NatalShenShaBitsets {
+    return collectNatalShenSha(this, { gender: this.options.gender });
+  }
+
+  getTargetShenSha(target: Ganzhi, targetKind: ShenShaTarget): ShenShaBitset {
+    return collectTargetShenSha(this, target, targetKind, { gender: this.options.gender });
+  }
+
+  getRenyuanSiling(): readonly RenyuanSilingSegment[] {
+    return getRenyuanSilingSegments(
+      ganzhiBranch(this.pillars.month),
+      this.options.renyuanSilingTable,
+    );
+  }
+
+  private requireGender(): NonNullable<BaziOptions['gender']> {
+    if (this.options.gender === undefined) throw new Error('Qi-Yun requires options.gender');
+    return this.options.gender;
+  }
+}
+
+export type CalculateBaziOptions = BaziOptionsInput;
+
 export function calculateBazi(
   instant: Ut1Input,
   virtualTime: CivilDateTime,
-  options: CalculateBaziOptions = {},
+  options: BaziOptions | BaziOptionsInput = {},
 ): BaziChart {
-  const { earthPalaceMode, ...fourPillarsOptions } = options;
-  return calculateBaziChart(
-    calculateFourPillars(instant, virtualTime, fourPillarsOptions),
-    { earthPalaceMode },
-  );
+  return BaziChart.fromInstant(instant, virtualTime, options);
 }
 
 export function baziForZonedTime(
   zonedTime: ZonedTime,
-  options: CalculateBaziOptions = {},
+  options: BaziOptions | BaziOptionsInput = {},
 ): BaziChart {
-  const { earthPalaceMode, ...fourPillarsOptions } = options;
-  return calculateBaziChart(
-    fourPillarsForZonedTime(zonedTime, fourPillarsOptions),
-    { earthPalaceMode },
-  );
+  return BaziChart.fromZonedTime(zonedTime, options);
 }

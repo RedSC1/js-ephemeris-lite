@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  BAZI_CLOCK_MODE,
+  BaziChart,
+  BaziOptions,
   BRANCH_RELATION_FLAG,
   BRANCH_TRIPLE_RELATION_FLAG,
   EARTH_PALACE_MODE,
@@ -11,7 +14,7 @@ import {
   SHEN_SHA,
   SHEN_SHA_TARGET,
   WUXING,
-  calculateBaziChart,
+  analyzePillars,
   calculateBranchRelation,
   calculateBranchTripleRelation,
   calculateFlowHour,
@@ -33,7 +36,7 @@ import {
   packPillar,
   unpackPillar,
 } from '../dist/index.js';
-import { ZonedTime } from 'js-ephemeris-lite';
+import { CALENDAR_MODE, RAT_HOUR_MODE, ZonedTime } from 'js-ephemeris-lite';
 
 test('uint8-compatible pillar encoding covers the whole sexagenary cycle', () => {
   for (let index = 0; index < 60; index += 1) {
@@ -103,7 +106,7 @@ test('life-stage rules exhaust both earth-palace modes', () => {
 });
 
 test('chart interpretation matches the C++ chart oracle', () => {
-  const chart = calculateBaziChart({ year: 0x26, month: 0x62, day: 0x42, hour: 0x35 });
+  const chart = analyzePillars({ year: 0x26, month: 0x62, day: 0x42, hour: 0x35 });
   assert.deepEqual(chart.extraPillars, {
     mingGong: 0x4a,
     shenGong: 0x28,
@@ -128,13 +131,13 @@ test('flow and luck-cycle primitives match native behavior', () => {
   assert.equal(calculateLuckDirection(0x04, GENDER.MALE), 1);
   assert.equal(calculateLuckDirection(0x04, GENDER.FEMALE), -1);
 
-  const chart = calculateBaziChart({ year: 0x26, month: 0x62, day: 0x42, hour: 0x35 });
+  const chart = analyzePillars({ year: 0x26, month: 0x62, day: 0x42, hour: 0x35 });
   assert.deepEqual(generateDaYunPillars(chart, 1, 3).map((item) => item.pillar),
     [0x73, 0x84, 0x95]);
 });
 
 test('relation aggregation suppresses pairs inside complete triples', () => {
-  const chart = calculateBaziChart({ year: 0x68, month: 0x20, day: 0x44, hour: 0x55 });
+  const chart = analyzePillars({ year: 0x68, month: 0x20, day: 0x44, hour: 0x55 });
   const relations = collectChartRelations(chart);
   const tripleMask = PILLAR_MASK.YEAR | PILLAR_MASK.MONTH | PILLAR_MASK.DAY;
   assert.ok(relations.some((relation) => relation.kind === RELATION_KIND.BRANCH_TRIPLE_COMBINATION
@@ -169,7 +172,7 @@ test('Qi-Yun and timed Da-Yun reproduce the native integration oracle', () => {
   const birth = new ZonedTime({
     year: 2026, month: 2, day: 19, hour: 23, minute: 28, second: 0, offsetMinutes: 480,
   });
-  const chart = calculateBaziChart({ year: 0x26, month: 0x62, day: 0x11, hour: 0x20 });
+  const chart = analyzePillars({ year: 0x26, month: 0x62, day: 0x11, hour: 0x20 });
   const qiYun = calculateQiYun(birth.toJulianTime(), birth, chart, GENDER.MALE);
   assert.equal(qiYun.direction, 1);
   assert.ok(qiYun.jieIntervalDays > 13 && qiYun.jieIntervalDays < 15);
@@ -189,8 +192,33 @@ test('Qi-Yun and timed Da-Yun reproduce the native integration oracle', () => {
     [5, 15, 25, 35, 45, 55, 65, 75]);
 });
 
+test('BaziOptions keeps chart, Qi-Yun, Da-Yun and Shen-Sha conventions together', () => {
+  const birth = new ZonedTime({
+    year: 2026, month: 2, day: 19, hour: 23, minute: 28, second: 0, offsetMinutes: 480,
+  });
+  const options = new BaziOptions({
+    mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
+    ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
+    gender: GENDER.MALE,
+    daYunCount: 3,
+  });
+  const chart = BaziChart.fromZonedTime(birth, options);
+
+  assert.equal(chart.options, options);
+  assert.equal(chart.getQiYun().direction, 1);
+  assert.equal(chart.getDaYunTable().length, 3);
+  assert.equal(typeof chart.getShenSha().day, 'bigint');
+  assert.equal(chart.getRenyuanSiling().at(-1).endDay, 30);
+  assert.throws(
+    () => new BaziOptions({ clockMode: BAZI_CLOCK_MODE.TRUE_SOLAR }),
+    /longitudeDeg/,
+  );
+  assert.equal(options.with({ daYunCount: 10 }).daYunCount, 10);
+
+});
+
 test('Shen-Sha bigint bitset preserves stable IDs and target restrictions', () => {
-  const chart = calculateBaziChart({ year: 0x00, month: 0x22, day: 0x42, hour: 0x20 });
+  const chart = analyzePillars({ year: 0x00, month: 0x22, day: 0x42, hour: 0x20 });
   const noble = collectTargetShenSha(chart, 0x51, SHEN_SHA_TARGET.YEAR);
   assert.equal(typeof noble, 'bigint');
   assert.ok(hasShenSha(noble, SHEN_SHA.TIAN_YI_GUI_REN));

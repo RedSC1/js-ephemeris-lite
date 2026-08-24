@@ -15,8 +15,13 @@ import {
   ZonedTime,
 } from 'js-ephemeris-lite';
 import {
+  BAZI_CLOCK_MODE,
+  BaziChart,
+  BaziOptions,
+  DAYUN_BOUNDARY_MODEL,
   EARTH_PALACE_MODE,
-  baziForZonedTime,
+  GENDER,
+  QIYUN_TIME_MODEL,
 } from '@opendestiny/bazi-lite';
 
 const birth = new ZonedTime({
@@ -29,61 +34,78 @@ const birth = new ZonedTime({
   offsetMinutes: 480,
 });
 
-const chart = baziForZonedTime(birth, {
+const options = new BaziOptions({
   mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
   ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
   earthPalaceMode: EARTH_PALACE_MODE.FIRE_EARTH,
+  gender: GENDER.MALE,
+  clockMode: BAZI_CLOCK_MODE.CIVIL,
+  qiYunTimeModel: QIYUN_TIME_MODEL.TRADITIONAL_CALENDAR,
+  daYunBoundaryModel: DAYUN_BOUNDARY_MODEL.CIVIL_YEARS,
+  daYunCount: 8,
 });
+
+const chart = BaziChart.fromZonedTime(birth, options);
 ```
 
-`baziForZonedTime()` 完成两步：先根据出生瞬间计算年、月、日、时四柱，再生成八字命盘。
-
-所有设置都可以省略，最短写法是 `const chart = baziForZonedTime(birth)`；此时采用本文“默认设置总表”中的配置。
-
-如果已经有四柱，可直接创建命盘：
+`BaziOptions` 集中保存历法、钟表、子时、性别、起运、大运和人元司令设置。`BaziChart` 会持有同一个不可变实例，后续不必重复传入一组容易写岔的参数：
 
 ```ts
-import { calculateBaziChart, packPillar } from '@opendestiny/bazi-lite';
+chart.options === options; // true
 
-const chart = calculateBaziChart({
-  year: packPillar(2, 6),  // 丙午
-  month: packPillar(6, 2), // 庚寅
-  day: packPillar(4, 2),   // 戊寅
-  hour: packPillar(3, 5),  // 丁巳
-});
+const shenSha = chart.getShenSha();
+const qiYun = chart.getQiYun();
+const daYun = chart.getDaYunTable();
+const renyuan = chart.getRenyuanSiling();
 ```
+
+所有设置都可以省略，最短写法是：
+
+```ts
+const chart = BaziChart.fromZonedTime(birth);
+```
+
+此时内部仍会创建并持有一个采用默认值的 `BaziOptions`。
+
+需要基于旧配置调整少数选项时使用 `with()`，原对象不会改变：
+
+```ts
+const tenSteps = options.with({ daYunCount: 10 });
+```
+
+兼容用的 `baziForZonedTime(birth, options)` 和底层纯函数仍然保留。
 
 ### 真太阳时排盘
 
-真太阳时是用于日柱、时柱边界的“虚拟钟表”，真实出生瞬间不变。`trueSolarTime()` 会自动处理修正后落入昨天或明天的情况。
+真太阳时是用于日柱、时柱边界的“虚拟钟表”，真实出生瞬间不变。配置类会自动处理修正后落入昨天或明天的情况。
 
 ```ts
 import {
-  CALENDAR_MODE,
-  RAT_HOUR_MODE,
-  ZonedTime,
-  trueSolarTime,
-} from 'js-ephemeris-lite';
-import { calculateBazi } from '@opendestiny/bazi-lite';
+  BAZI_CLOCK_MODE,
+  BaziChart,
+  BaziOptions,
+} from '@opendestiny/bazi-lite';
 
-const birth = new ZonedTime({
-  year: 2000, month: 1, day: 1,
-  hour: 23, minute: 30, second: 0,
-  offsetMinutes: 480,
-});
-const solarClock = trueSolarTime(birth, 116.4); // 东经为正
-
-const chart = calculateBazi(
-  birth.toJulianTime(), // 真实瞬间：用于节气边界
-  solarClock,           // 虚拟钟表：用于日柱、时柱
-  {
-    mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
-    ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
-  },
-);
+const chart = BaziChart.fromZonedTime(birth, new BaziOptions({
+  gender: GENDER.MALE,
+  clockMode: BAZI_CLOCK_MODE.TRUE_SOLAR,
+  longitudeDeg: 116.4, // 东经为正
+}));
 ```
 
-地方平太阳时把 `trueSolarTime()` 换成 `meanSolarTime()` 即可。库不会根据经度偷偷启用太阳时，必须由调用方显式选择。
+地方平太阳时使用 `BAZI_CLOCK_MODE.MEAN_SOLAR`。`CIVIL` 是默认值；库不会仅因为传了经度就偷偷启用太阳时。
+
+高级用法仍可自行构造虚拟钟表，再调用底层入口：
+
+```ts
+import { trueSolarTime } from 'js-ephemeris-lite';
+import { calculateBazi } from '@opendestiny/bazi-lite';
+
+const solarClock = trueSolarTime(birth, 116.4);
+const chart = calculateBazi(birth.toJulianTime(), solarClock, options);
+```
+
+`BaziChart` 不提供 `fromPillars()`：只有四柱无法反推出出生 JD、节令间隔和起运时刻。纯规则层确实需要分析已知四柱时可使用底层 `analyzePillars()`，它返回明确命名的 `BaziPillarAnalysis`，不会冒充能够起运的完整命盘。
 
 ## 2. 读取命盘
 
@@ -129,17 +151,13 @@ console.log({
 
 ```ts
 import {
-  GENDER,
   SHEN_SHA,
-  collectNatalShenSha,
   hasShenSha,
   shenShaIds,
   shenShaNames,
 } from '@opendestiny/bazi-lite';
 
-const natalShenSha = collectNatalShenSha(chart, {
-  gender: GENDER.MALE,
-});
+const natalShenSha = chart.getShenSha();
 
 console.log(shenShaNames(natalShenSha.year));
 console.log(shenShaNames(natalShenSha.month));
@@ -153,25 +171,21 @@ if (hasShenSha(natalShenSha.day, SHEN_SHA.KUI_GANG)) {
 console.log(shenShaIds(natalShenSha.day));
 ```
 
-不传 `gender` 时只计算性别无关规则；这不是默认男性或默认女性。传入性别后才会追加勾煞、绞煞、元辰、金神、童子、三奇、天罗地网、拱禄、拱贵等相关规则。
+`getShenSha()` 自动读取 `chart.options.gender`。配置中不传 `gender` 时只计算性别无关规则；这不是默认男性或默认女性。传入性别后才会追加勾煞、绞煞、元辰、金神、童子、三奇、天罗地网、拱禄、拱贵等相关规则。
 
 计算大运或流年等任意目标柱：
 
 ```ts
 import {
-  GENDER,
   SHEN_SHA_TARGET,
   calculateFlowYear,
-  collectTargetShenSha,
   shenShaNames,
 } from '@opendestiny/bazi-lite';
 
 const flowYearPillar = calculateFlowYear(2026);
-const flowYearShenSha = collectTargetShenSha(
-  chart,
+const flowYearShenSha = chart.getTargetShenSha(
   flowYearPillar,
   SHEN_SHA_TARGET.FLOW_YEAR,
-  { gender: GENDER.MALE },
 );
 
 console.log(shenShaNames(flowYearShenSha));
@@ -183,32 +197,12 @@ console.log(shenShaNames(flowYearShenSha));
 
 ## 4. 起运与大运
 
-起运分为两步：
-
-1. `calculateQiYun()` 根据性别、年干阴阳和前后节计算交运时刻；
-2. `generateDaYun()` 从月柱顺排或逆排大运，并生成每步时间边界。
+`BaziOptions` 中已经保存性别、起运模型、大运边界模型和步数。命盘会复用创建时的出生瞬间和虚拟钟表，不需要调用方再次拼装参数：
 
 ```ts
-import { CALENDAR_MODE } from 'js-ephemeris-lite';
-import {
-  DAYUN_BOUNDARY_MODEL,
-  GENDER,
-  QIYUN_TIME_MODEL,
-  calculateQiYun,
-  generateDaYun,
-  unpackPillar,
-} from '@opendestiny/bazi-lite';
+import { unpackPillar } from '@opendestiny/bazi-lite';
 
-const qiYun = calculateQiYun(
-  birth.toJulianTime(),
-  birth, // 必须与创建四柱时采用同一种钟表口径
-  chart,
-  GENDER.MALE,
-  {
-    mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
-    timeModel: QIYUN_TIME_MODEL.TRADITIONAL_CALENDAR,
-  },
-);
+const qiYun = chart.getQiYun();
 
 console.log({
   direction: qiYun.direction, // 1 顺排，-1 逆排
@@ -220,10 +214,7 @@ console.log({
   startCivilTime: qiYun.startCivilTime,
 });
 
-const daYun = generateDaYun(birth, chart, qiYun, {
-  count: 8,
-  boundaryModel: DAYUN_BOUNDARY_MODEL.CIVIL_YEARS,
-});
+const daYun = chart.getDaYunTable();
 
 for (const item of daYun) {
   console.log({
@@ -239,20 +230,7 @@ for (const item of daYun) {
 }
 ```
 
-四柱和起运的 `mode`、`utcOffsetMinutes`、`meridianDeg` 应保持一致，确保两处使用同一套节令口径。
-
-如果四柱使用真太阳时，起运也应传同一个 `solarClock`：
-
-```ts
-const qiYun = calculateQiYun(
-  birth.toJulianTime(),
-  solarClock,
-  chart,
-  GENDER.MALE,
-);
-
-const daYun = generateDaYun(solarClock, chart, qiYun);
-```
+`getQiYun()` 缺少 `options.gender` 时会抛错。底层 `calculateQiYun()` 和 `generateDaYun()` 仍然公开，供批处理或特殊算法直接调用。
 
 ### 三种起运时刻模型
 
@@ -301,10 +279,11 @@ const daYun = generateDaYun(solarClock, chart, qiYun);
 | 土寄宫 | `EARTH_PALACE_MODE.FIRE_EARTH` | 戊己随火土长生表 |
 | 起运时刻 | `QIYUN_TIME_MODEL.TRADITIONAL_CALENDAR` | 传统三天一岁民历分量模型 |
 | 大运边界 | `DAYUN_BOUNDARY_MODEL.CIVIL_YEARS` | 每十个民历年一步 |
-| 大运数量 | `8` | `generateDaYun()` 默认返回八步 |
+| 大运数量 | `8` | `getDaYunTable()` 默认返回八步 |
 | 神煞性别 | 无 | 不传只计算性别无关规则 |
 | 人元司令表 | `RENYUAN_SILING_TABLE.SAN_MING_TONG_HUI` | 另一套为 `COMMON` |
-| 太阳时 | 不自动启用 | 显式调用 `meanSolarTime()` 或 `trueSolarTime()` |
+| 钟表模式 | `BAZI_CLOCK_MODE.CIVIL` | 默认使用出生地民用钟表，不自动启用太阳时 |
+| 经度 | 无 | 平太阳时或真太阳时模式必须提供 `longitudeDeg` |
 
 如果不需要历史分配日、希望年柱和月柱始终在精确立春/节令瞬间切换，可传：
 
@@ -314,10 +293,12 @@ import {
   PILLAR_HISTORICAL_MODE,
 } from 'js-ephemeris-lite';
 
-const chart = baziForZonedTime(birth, {
+const options = new BaziOptions({
   mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
   pillarHistoricalMode: PILLAR_HISTORICAL_MODE.OFF,
 });
+
+const chart = BaziChart.fromZonedTime(birth, options);
 ```
 
 `CALENDAR_MODE.LOCAL_ASTRONOMICAL` 用于按当地 offset 或经度处理地方天文历法；它与“只把日时柱钟表改成真太阳时”是两个不同选择，不应混为一个隐式开关。
@@ -330,7 +311,6 @@ import {
   RELATION_KIND,
   collectChartRelations,
   generateXiaoYun,
-  getRenyuanSilingSegments,
 } from '@opendestiny/bazi-lite';
 
 const relations = collectChartRelations(chart, {
@@ -341,7 +321,7 @@ const relations = collectChartRelations(chart, {
 });
 
 const xiaoYun = generateXiaoYun(chart, qiYun.direction, 8);
-const siling = getRenyuanSilingSegments(chart.pillars.month & 0x0f);
+const siling = chart.getRenyuanSiling();
 ```
 
 `collectChartRelations()` 不传设置时分析原局年月日时，并启用全部关系类型。附加柱只有在 `pillarMask` 显式加入时才参与。

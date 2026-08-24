@@ -8,7 +8,7 @@ import {
   type RelationKind,
   type WuxingId,
 } from './constants.js';
-import type { BaziChart } from './chart.js';
+import type { BaziPillarAnalysis } from './chart.js';
 import {
   BRANCH_TRIPLE_COMBINATION,
   BRANCH_TRIPLE_DIRECTION,
@@ -37,7 +37,7 @@ interface PendingRelation {
   valueMask: number;
 }
 
-function pillarValues(chart: BaziChart): readonly number[] {
+function pillarValues(chart: BaziPillarAnalysis): readonly number[] {
   return [
     chart.pillars.year,
     chart.pillars.month,
@@ -50,7 +50,7 @@ function pillarValues(chart: BaziChart): readonly number[] {
   ];
 }
 
-function buildNodes(chart: BaziChart, pillarMask: number, useStem: boolean): Node[] {
+function buildNodes(chart: BaziPillarAnalysis, pillarMask: number, useStem: boolean): Node[] {
   return pillarValues(chart).flatMap((pillar, sourceId) => (
     (pillarMask & (1 << sourceId)) === 0 ? [] : [{
       value: useStem ? ganzhiStem(pillar) : ganzhiBranch(pillar),
@@ -222,7 +222,7 @@ export interface CollectRelationsOptions {
 }
 
 export function collectChartRelations(
-  chart: BaziChart,
+  chart: BaziPillarAnalysis,
   options: CollectRelationsOptions = {},
 ): readonly BaziRelation[] {
   const pillarMask = options.pillarMask ?? PILLAR_MASK.PRIMARY;
