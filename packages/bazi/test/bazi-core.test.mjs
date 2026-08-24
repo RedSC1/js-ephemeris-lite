@@ -8,6 +8,8 @@ import {
   PILLAR_MASK,
   RELATION_KIND,
   STEM_RELATION_FLAG,
+  SHEN_SHA,
+  SHEN_SHA_TARGET,
   WUXING,
   calculateBaziChart,
   calculateBranchRelation,
@@ -26,6 +28,8 @@ import {
   getLifeStage,
   getRenyuanSilingSegments,
   getTenGod,
+  collectTargetShenSha,
+  hasShenSha,
   packPillar,
   unpackPillar,
 } from '../dist/index.js';
@@ -183,4 +187,24 @@ test('Qi-Yun and timed Da-Yun reproduce the native integration oracle', () => {
     [0x73, 0x84, 0x95, 0x06, 0x17, 0x28, 0x39, 0x4a]);
   assert.deepEqual(daYun.map((item) => item.startVirtualAge),
     [5, 15, 25, 35, 45, 55, 65, 75]);
+});
+
+test('Shen-Sha bigint bitset preserves stable IDs and target restrictions', () => {
+  const chart = calculateBaziChart({ year: 0x00, month: 0x22, day: 0x42, hour: 0x20 });
+  const noble = collectTargetShenSha(chart, 0x51, SHEN_SHA_TARGET.YEAR);
+  assert.equal(typeof noble, 'bigint');
+  assert.ok(hasShenSha(noble, SHEN_SHA.TIAN_YI_GUI_REN));
+
+  const horse = collectTargetShenSha(chart, 0x68, SHEN_SHA_TARGET.FLOW_YEAR);
+  assert.ok(hasShenSha(horse, SHEN_SHA.YI_MA));
+
+  const kuiGangDay = collectTargetShenSha(chart, packPillar(6, 4), SHEN_SHA_TARGET.DAY);
+  assert.ok(hasShenSha(kuiGangDay, SHEN_SHA.KUI_GANG));
+  const kuiGangFlow = collectTargetShenSha(chart, packPillar(6, 4), SHEN_SHA_TARGET.FLOW_YEAR);
+  assert.ok(!hasShenSha(kuiGangFlow, SHEN_SHA.KUI_GANG));
+
+  const genderAware = collectTargetShenSha(chart, chart.pillars.day, SHEN_SHA_TARGET.DAY, {
+    gender: GENDER.MALE,
+  });
+  assert.ok((genderAware & ~((1n << 66n) - 1n)) === 0n);
 });

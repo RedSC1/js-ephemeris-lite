@@ -4,5 +4,7 @@ coverage/
 packages/*/dist/
 out/
 tools/
+!packages/bazi/tools/
+!packages/bazi/tools/shen-sha-fingerprint.mjs
 EXPERIMENT.md
 *.tgz
