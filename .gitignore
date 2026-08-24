@@ -4,6 +4,8 @@ coverage/
 packages/*/dist/
 out/
 tools/
+!packages/ziwei/tools/
+!packages/ziwei/tools/*.mjs
 !packages/bazi/tools/
 !packages/bazi/tools/shen-sha-fingerprint.mjs
 EXPERIMENT.md

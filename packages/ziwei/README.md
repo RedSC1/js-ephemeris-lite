@@ -1,5 +1,167 @@
 # @opendestiny/ziwei-lite
 
-紫微斗数规则层的内部 workspace。当前保持 `private: true`，依赖同一仓库根目录的 `js-ephemeris-lite`；最终 npm 包名在首次发布前确定。
+基于 `js-ephemeris-lite` 的 TypeScript 紫微斗数规则层。当前是仓库内部 workspace，尚未发布到 npm。
 
-本包负责命盘、宫位、星曜、四化和限运规则，不复制农历、定气定朔、太阳时或干支历天文计算。
+当前版本已经能从带时区的出生时间创建本命盘，计算历史/天文农历、31 个稳定 anchor、十二宫、五行局、115 颗本命星、庙旺亮度、命主身主，以及本命、自化和向心四化。默认规则表在构建前离线编译进包，浏览器运行时不解析 TOML。
+
+## 创建命盘
+
+```ts
+import { ZonedTime } from 'js-ephemeris-lite';
+import {
+  ZIWEI_GENDER,
+  ZiweiChart,
+  ZiweiOptions,
+} from '@opendestiny/ziwei-lite';
+
+const birth = new ZonedTime({
+  year: 2003,
+  month: 3,
+  day: 13,
+  hour: 14,
+  minute: 15,
+  second: 0,
+  offsetMinutes: 480,
+});
+
+const options = new ZiweiOptions({
+  gender: ZIWEI_GENDER.MALE,
+});
+
+const chart = ZiweiChart.fromZonedTime(birth, options);
+```
+
+紫微的性别稳定编码沿用 C++：`MALE = 0`、`FEMALE = 1`。它与八字包历史编码的顺序不同，不要直接混用数字。
+
+`ZiweiChart` 必须从真实出生瞬间创建，因此始终持有：
+
+```ts
+chart.facts.jdUT1;
+chart.facts.virtualTime;
+chart.facts.lunarDate;
+chart.facts.solarTermPillars;
+chart.facts.lunarPillars;
+chart.options;
+```
+
+## 读取十二宫
+
+内部宫位状态按照物理地支 `0..11` 排列；宫职通过 `palaceId` 标注。
+
+```ts
+import { PALACE, PALACE_NAMES } from '@opendestiny/ziwei-lite';
+
+const lifePalace = chart.getPalace(PALACE.LIFE);
+console.log(lifePalace.branch, lifePalace.stem);
+
+for (const palace of chart.palaces) {
+  console.log({
+    palace: PALACE_NAMES[palace.palaceId],
+    branch: palace.branch,
+    stem: palace.stem,
+    starIds: palace.starIds,
+    starBitset: palace.starBitset,
+  });
+}
+```
+
+常用 anchor 和命盘元数据：
+
+```ts
+chart.anchors.bureau;          // 五行局稳定 ID
+chart.anchors.ziwei;           // 紫微星所在物理地支
+chart.anchors.tianfu;          // 天府星所在物理地支
+chart.anchors.palacePositions; // 按 PALACE id 索引
+chart.bodyPalace;
+chart.lifeMaster;              // StarId
+chart.bodyMaster;              // StarId
+```
+
+## 读取星曜
+
+星曜采用稳定数字 ID；`key` 是不随语言变化的展示键。
+
+```ts
+import {
+  STAR_CATALOG,
+  brightnessName,
+  findStarId,
+  getStar,
+} from '@opendestiny/ziwei-lite';
+
+const ziweiId = findStarId('ziwei')!;
+const ziwei = chart.getStarPosition(ziweiId)!;
+
+console.log({
+  metadata: getStar(ziweiId),
+  branch: ziwei.branch,
+  palaceId: ziwei.palaceId,
+  brightness: brightnessName(ziwei.brightness),
+});
+
+console.log(chart.getStarsInPalace(PALACE.LIFE));
+console.log(STAR_CATALOG.length); // 本命星和预留流曜共 159 个稳定 ID
+```
+
+`starBitset` 是 `bigint`，bit `n` 表示 StarId `n`。需要 JSON 时使用 `starIds`，不要直接 `JSON.stringify(bigint)`。
+
+## 读取四化
+
+每颗星的 `transformMask` 是十二位 mask：
+
+- bit `0..3`：生年禄、权、科、忌；
+- bit `4..7`：本宫宫干引发的自化禄、权、科、忌；
+- bit `8..11`：对宫宫干引发的向心禄、权、科、忌。
+
+```ts
+import { STAR_TRANSFORM_MARK } from '@opendestiny/ziwei-lite';
+
+chart.birthYearTransformations; // { lu, quan, ke, ji }，值均为 StarId
+
+if (chart.hasTransform(ziweiId, STAR_TRANSFORM_MARK.BIRTH_YEAR_QUAN)) {
+  console.log('紫微化权');
+}
+```
+
+## 统一设置
+
+所有持续影响命盘的口径集中在不可变的 `ZiweiOptions` 中：
+
+```ts
+import {
+  CALENDAR_MODE,
+  RAT_HOUR_MODE,
+} from 'js-ephemeris-lite';
+import {
+  LEAP_MONTH_STRATEGY,
+  PILLAR_BOUNDARY,
+  ZIWEI_CHART_MODE,
+  ZIWEI_CLOCK_MODE,
+} from '@opendestiny/ziwei-lite';
+
+const options = new ZiweiOptions({
+  gender: ZIWEI_GENDER.FEMALE,
+  mode: CALENDAR_MODE.HISTORICAL,
+  utcOffsetMinutes: 480,
+  ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
+  clockMode: ZIWEI_CLOCK_MODE.TRUE_SOLAR,
+  longitudeDeg: 116.4,
+  leapMonthStrategy: LEAP_MONTH_STRATEGY.SPLIT_AFTER_FIFTEENTH,
+  chartMode: ZIWEI_CHART_MODE.TIAN_PAN,
+  wuHuDunYearBoundary: PILLAR_BOUNDARY.LUNAR,
+  sihuaYearBoundary: PILLAR_BOUNDARY.LUNAR,
+  bodyMasterYearBoundary: PILLAR_BOUNDARY.LUNAR,
+});
+```
+
+默认值与 C++ 默认 profile 对齐：历史中国历法、UTC+8、晚子时进入次日、民用钟表、闰月十五后作下月、天盘，以及五虎遁/生年四化/身主均采用农历年界。太阳时不会自动启用。
+
+使用 `options.with({ ... })` 可从现有配置派生新实例，不会修改旧命盘的口径。
+
+## 当前范围
+
+已经完成：本命出生解析、anchors、十二宫、默认 `option1` 本命星规则、亮度、命主身主和十二位四化 mask。
+
+尚未移植：独立 `option2` 规则选择、大限/小限、流年流月流日流时栈、反推时辰和中文展示词典。
+
+规则层已对照 C++ 有限命盘 oracle 连续检查 10,000 张，并对物理日历命盘做逐字段差分。可运行示例见 `examples/basic.ts`。

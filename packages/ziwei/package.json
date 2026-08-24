@@ -19,7 +19,9 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build"
+    "generate:rules": "node tools/generate-rules.mjs ../../../taiyin-ephemeris/ziwei_astrology/rules src/generated/default-rules.ts",
+    "test:examples": "tsc -p tsconfig.examples.json",
+    "test": "npm run build && npm run test:examples && node --test test/*.test.mjs"
   },
   "dependencies": {
     "js-ephemeris-lite": "file:../.."
