@@ -1,6 +1,7 @@
-import type { CivilDateTime, JulianTime, Ut1Input } from './time.js';
+import type { CivilDateTime, JulianTime, Ut1Input, ZonedTime } from './time.js';
 
 export type SolarClockMode = 'mean' | 'apparent';
+export type SolarTimeInput = Ut1Input | ZonedTime;
 
 export interface EquationOfTimeResult {
   readonly jdUT1: number;
@@ -23,6 +24,7 @@ export class SolarClock implements CivilDateTime {
   readonly longitudeDeg: number;
   readonly jdSolar: number;
   readonly instant: JulianTime;
+  readonly sourceClock: ZonedTime | null;
   readonly equationOfTimeSeconds: number;
   toJSON(): CivilDateTime & {
     mode: SolarClockMode;
@@ -30,13 +32,19 @@ export class SolarClock implements CivilDateTime {
     jdSolar: number;
     jdUT1: number;
     jdTT: number;
+    sourceClock: (CivilDateTime & { offsetMinutes: number }) | null;
     equationOfTimeSeconds: number;
   };
 }
 
-export function equationOfTime(time: Ut1Input): EquationOfTimeResult;
-export function meanSolarTime(time: Ut1Input, longitudeDeg: number): SolarClock;
-export function trueSolarTime(time: Ut1Input, longitudeDeg: number): SolarClock;
+export type SourcedSolarClock = SolarClock & { readonly sourceClock: ZonedTime };
+export type UnsourcedSolarClock = SolarClock & { readonly sourceClock: null };
+
+export function equationOfTime(time: SolarTimeInput): EquationOfTimeResult;
+export function meanSolarTime(time: ZonedTime, longitudeDeg: number): SourcedSolarClock;
+export function meanSolarTime(time: Ut1Input, longitudeDeg: number): UnsourcedSolarClock;
+export function trueSolarTime(time: ZonedTime, longitudeDeg: number): SourcedSolarClock;
+export function trueSolarTime(time: Ut1Input, longitudeDeg: number): UnsourcedSolarClock;
 export const localMeanSolarTime: typeof meanSolarTime;
 export const localApparentSolarTime: typeof trueSolarTime;
 export function localMeanToApparentSolarTime(jdLocalMean: number, longitudeDeg: number): number;

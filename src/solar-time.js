@@ -6,9 +6,9 @@ import {
 } from './solar-core.js';
 import {
   JulianTime,
+  ZonedTime,
   asUt1JulianDay,
   calendarDateFromJulianDay,
-  ut1ToTt,
 } from './time.js';
 
 const TWO_PI = 2 * Math.PI;
@@ -23,19 +23,26 @@ function validateLongitude(longitudeDeg) {
   }
 }
 
-function instantFrom(value) {
-  return value instanceof JulianTime ? value : JulianTime.fromUT1(asUt1JulianDay(value));
+function resolveInput(value) {
+  if (value instanceof ZonedTime) {
+    return { instant: value.toJulianTime(), sourceClock: value };
+  }
+  const instant = value instanceof JulianTime
+    ? value
+    : JulianTime.fromUT1(asUt1JulianDay(value));
+  return { instant, sourceClock: null };
 }
 
 /** A virtual solar clock. It deliberately has no UTC offset or instant conversion method. */
 export class SolarClock {
-  constructor({ mode, longitudeDeg, jdSolar, instant, equationOfTimeSeconds }) {
+  constructor({ mode, longitudeDeg, jdSolar, instant, sourceClock, equationOfTimeSeconds }) {
     const fields = calendarDateFromJulianDay(jdSolar);
     Object.assign(this, fields, {
       mode,
       longitudeDeg,
       jdSolar,
       instant,
+      sourceClock,
       equationOfTimeSeconds,
     });
     Object.freeze(this);
@@ -54,6 +61,7 @@ export class SolarClock {
       jdSolar: this.jdSolar,
       jdUT1: this.instant.jdUT1,
       jdTT: this.instant.jdTT,
+      sourceClock: this.sourceClock?.toJSON() ?? null,
       equationOfTimeSeconds: this.equationOfTimeSeconds,
     };
   }
@@ -61,8 +69,9 @@ export class SolarClock {
 
 /** Apparent solar time minus mean solar time at the same physical instant. */
 export function equationOfTime(time) {
-  const jdUT1 = asUt1JulianDay(time);
-  const jdTT = time instanceof JulianTime ? time.jdTT : ut1ToTt(jdUT1);
+  const { instant } = resolveInput(time);
+  const jdUT1 = instant.jdUT1;
+  const jdTT = instant.jdTT;
   const sun = apparentSunEquatorial(jdTT);
   const rightAscension = normalizeRadians(Math.atan2(sun.position[1], sun.position[0]));
   const gast = greenwichApparentSiderealTimeRadians(jdUT1, jdTT, sun.nutation);
@@ -84,12 +93,13 @@ export function equationOfTime(time) {
 /** Local mean solar clock: LMT = UT1 + east-positive longitude / 360°. */
 export function meanSolarTime(time, longitudeDeg) {
   validateLongitude(longitudeDeg);
-  const instant = instantFrom(time);
+  const { instant, sourceClock } = resolveInput(time);
   return new SolarClock({
     mode: 'mean',
     longitudeDeg,
     jdSolar: instant.jdUT1 + longitudeDeg / 360,
     instant,
+    sourceClock,
     equationOfTimeSeconds: 0,
   });
 }
@@ -97,13 +107,14 @@ export function meanSolarTime(time, longitudeDeg) {
 /** Local apparent/true solar clock: LAT = LMT + equation of time. */
 export function trueSolarTime(time, longitudeDeg) {
   validateLongitude(longitudeDeg);
-  const instant = instantFrom(time);
+  const { instant, sourceClock } = resolveInput(time);
   const equation = equationOfTime(instant);
   return new SolarClock({
     mode: 'apparent',
     longitudeDeg,
     jdSolar: instant.jdUT1 + longitudeDeg / 360 + equation.equationDays,
     instant,
+    sourceClock,
     equationOfTimeSeconds: equation.equationSeconds,
   });
 }

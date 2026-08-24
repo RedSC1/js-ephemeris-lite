@@ -188,12 +188,13 @@ const civilClock = new ZonedTime({
 });
 const instant = civilClock.toJulianTime();
 
-const meanClock = meanSolarTime(instant, 116.4);
-const trueClock = trueSolarTime(instant, 116.4);
+const meanClock = meanSolarTime(civilClock, 116.4);
+const trueClock = trueSolarTime(civilClock, 116.4);
 console.log(equationOfTime(instant).equationSeconds);
 console.log(meanClock, trueClock);
+console.log(trueClock.sourceClock.offsetMinutes); // 原民用钟仍为 UTC+08
 
-const pillars = calculateFourPillars(instant, trueClock, {
+const pillars = calculateFourPillars(trueClock.instant, trueClock, {
   mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
   ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
 });
@@ -201,7 +202,7 @@ const pillars = calculateFourPillars(instant, trueClock, {
 
 经度采用东正西负 degree。定义与 C++ 层一致：`LMT = UT1 + longitude / 360°`，`LAT = LMT + equationOfTime`；`trueSolarTime()` 即地方视太阳时。均时差不是现代日期拟合，而是由同一套地心视太阳赤经和 GAST 计算。
 
-`SolarClock` 是专供日柱、时柱等规则使用的**虚拟钟面**，没有 `offsetMinutes`、`toDate()` 或 `toJulianTime()`，不会伪装成物理瞬时。经度差和均时差修正使用完整 Julian Day，因此结果跨过午夜时，年月日会自然落到前一天或后一天。调用 `calculateFourPillars()` 时仍应把原始 `instant` 作为第一个参数判定立春和节令，把 `SolarClock` 作为第二个参数判定日柱和时柱。
+`SolarClock` 是专供日柱、时柱等规则使用的**虚拟钟面**，没有自己的 `offsetMinutes`、`toDate()` 或 `toJulianTime()`，不会伪装成物理瞬时。传入 `ZonedTime` 时，原民用钟及其 offset 完整保存在 `sourceClock`；传数值 JD 或 `JulianTime` 时，因为没有来源时区，`sourceClock` 为 `null`。经度差和均时差修正使用完整 Julian Day，因此结果跨过午夜时，年月日会自然落到前一天或后一天。调用 `calculateFourPillars()` 时用 `solarClock.instant` 判定立春和节令，用 `SolarClock` 自身判定日柱和时柱。
 
 底层另提供 `localMeanToApparentSolarTime()` 与 `localApparentToMeanSolarTime()`，输入输出都是虚拟太阳钟的数值 JD；后者按 C++ 路径迭代反解。
 

@@ -52,7 +52,9 @@ const pillars = fourPillarsForZonedTime(clock, {
   pillarHistoricalMode: PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR,
 });
 const names: string = describeFourPillars(pillars).day;
-const solarClock: SolarClock = trueSolarTime(instant, 116.4);
+const solarClock: SolarClock = trueSolarTime(clock, 116.4);
+const sourcedSolarClock = trueSolarTime(clock, 116.4);
+const sourceOffset: number = sourcedSolarClock.sourceClock.offsetMinutes;
 const solarPillars = calculateFourPillars(instant, solarClock, {
   ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
 });
@@ -82,7 +84,7 @@ calculateDayPillar(clock);
 computeSolarRiseSetFast(instant, { longitudeDeg: 0, latitudeDeg: 0 });
 deltaTSeconds(2025);
 
-void [vector, moonVector, earth, moon, calendar, root, names, solarClock, solarPillars,
+void [vector, moonVector, earth, moon, calendar, root, names, solarClock, sourceOffset, solarPillars,
   riseSet, numericRiseSet, altitude];
 
 // @ts-expect-error invalid late-Zi convention must be rejected by the declarations

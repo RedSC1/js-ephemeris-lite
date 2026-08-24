@@ -42,6 +42,8 @@ test('mean and true solar clocks follow the C++ convention and round trip', () =
   const apparent = trueSolarTime(jdUT1, longitudeDeg);
   assert.ok(mean instanceof SolarClock);
   assert.ok(apparent instanceof SolarClock);
+  assert.equal(mean.sourceClock, null);
+  assert.equal(apparent.sourceClock, null);
   assert.equal(mean.mode, 'mean');
   assert.equal(apparent.mode, 'apparent');
   near(mean.jdSolar, jdUT1 + longitudeDeg / 360, 0);
@@ -56,14 +58,16 @@ test('mean and true solar clocks follow the C++ convention and round trip', () =
 test('solar clocks naturally cross into the previous or next calendar date', () => {
   const lateUtc = new ZonedTime({
     year: 2024, month: 1, day: 1, hour: 23, minute: 30, second: 0, offsetMinutes: 0,
-  }).toJulianTime();
+  });
   const earlyUtc = new ZonedTime({
     year: 2024, month: 1, day: 2, hour: 0, minute: 30, second: 0, offsetMinutes: 0,
-  }).toJulianTime();
+  });
   const next = trueSolarTime(lateUtc, 180);
   const previous = trueSolarTime(earlyUtc, -180);
   assert.deepEqual([next.year, next.month, next.day], [2024, 1, 2]);
   assert.deepEqual([previous.year, previous.month, previous.day], [2024, 1, 1]);
+  assert.equal(next.sourceClock, lateUtc);
+  assert.equal(previous.sourceClock, earlyUtc);
 });
 
 test('four pillars keep the physical instant while using the true-solar virtual day and hour', () => {
@@ -71,7 +75,8 @@ test('four pillars keep the physical instant while using the true-solar virtual 
     year: 2000, month: 1, day: 1, hour: 23, minute: 10, second: 0, offsetMinutes: 480,
   });
   const instant = civilClock.toJulianTime();
-  const solarClock = trueSolarTime(instant, 116.4);
+  const solarClock = trueSolarTime(civilClock, 116.4);
+  assert.equal(solarClock.sourceClock, civilClock);
   assert.deepEqual(
     [solarClock.year, solarClock.month, solarClock.day, solarClock.hour],
     [2000, 1, 1, 22],
