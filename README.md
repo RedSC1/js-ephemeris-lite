@@ -32,49 +32,26 @@ node src/ephemeris.js 2451545.0
 npm test
 ```
 
-核心导出在 `src/ephemeris.js`：
+## 快速开始
 
 ```js
 import {
-  earthPosition,
-  moonPosition,
-  embPosition,
-  iau2000bNutation,
-  vondrak2011PrecessionMatrix,
-} from './src/ephemeris.js';
-
-import {
-  solveSolarLongitude,
-  solveNewMoon,
-} from './src/calendar-events.js';
-
-import {
-  deltaTSeconds,
   JulianTime,
   ZonedTime,
-  ttToUt1,
-} from './src/time.js';
-
-import {
+  moonGeocentricPosition,
+  solveSolarLongitude,
+  solveNewMoon,
   CALENDAR_MODE,
-  calculateChineseCalendarYear,
-  findSolarTerm,
   solarToLunar,
   lunarToSolar,
-} from './src/chinese-calendar.js';
-
-import {
   RAT_HOUR_MODE,
   fourPillarsForZonedTime,
   describeFourPillars,
-} from './src/ganzhi.js';
+} from 'js-ephemeris-lite';
 
-const moonKm = moonPosition(2451545.0);
-const embAu = embPosition(2451545.0);
+const moonKm = moonGeocentricPosition(2451545.0);
 const springEquinox = solveSolarLongitude(0, 2451623.0);
 const newMoon = solveNewMoon(2451550.0);
-const deltaT = deltaTSeconds(2024.25);
-const equinoxUt1 = ttToUt1(springEquinox.jdTT);
 const lunarNewYear = solarToLunar({ year: 2025, month: 1, day: 29 });
 const solarDate = lunarToSolar({ year: 2033, month: 11, day: 1, isLeap: true });
 
@@ -100,10 +77,48 @@ const pillars = fourPillarsForZonedTime(birthClock, {
 console.log(describeFourPillars(pillars));
 ```
 
-日出日落：
+## 太阳、地球和月球位置
+
+位置函数接收 TT 的 Julian Day（`jdTT`），返回 `[x, y, z]`；对应的 `*State()` 返回 `{ position, velocity }`。速度单位中的时间均为 day。
+
+| API | 原点 → 目标 | 位置单位 | 速度单位 |
+| --- | --- | --- | --- |
+| `earthHeliocentricPosition/State` | 太阳 → 地球 | AU | AU/day |
+| `sunGeocentricPosition/State` | 地球 → 太阳 | AU | AU/day |
+| `moonGeocentricPosition/State` | 地球 → 月球 | km | km/day |
+| `moonHeliocentricPosition/State` | 太阳 → 月球 | AU | AU/day |
+| `embHeliocentricPosition/State` | 太阳 → 地月质心 | AU | AU/day |
 
 ```js
-import { solarRiseSetForDate } from './src/solar-visibility.js';
+import {
+  JulianTime,
+  earthHeliocentricState,
+  sunGeocentricPosition,
+  moonGeocentricPosition,
+  moonHeliocentricPosition,
+} from 'js-ephemeris-lite';
+
+const time = JulianTime.fromDate(new Date());
+const earth = earthHeliocentricState(time.jdTT);
+const sunFromEarthAu = sunGeocentricPosition(time.jdTT);
+const moonFromEarthKm = moonGeocentricPosition(time.jdTT);
+const moonFromSunAu = moonHeliocentricPosition(time.jdTT);
+
+console.log(earth.position, earth.velocity);
+```
+
+这些是 J2000 黄道/春分坐标架中的**几何位置**，不含光行时、光行差、章动、大气折射或观测者视差。`sunGeocentricPosition()` 因而就是日心地球向量的反向；日心太阳的位置按定义恒为零，不单设 API。需要视太阳高度或日出日落时，应使用下面的观测 API。
+
+旧名称继续兼容：`earthPosition/State`、`moonPosition/State`、`embPosition/State` 分别等价于日心地球、地心月球、日心地月质心。所有模型均可传 `{ corrections: false }` 关闭本库的 DE441 经验修正；这与视位置修正无关。
+
+## 日出日落与太阳高度
+
+```js
+import {
+  SOLAR_LIMB,
+  solarAltitude,
+  solarRiseSetForDate,
+} from 'js-ephemeris-lite';
 
 const riseSet = solarRiseSetForDate(
   { year: 2025, month: 1, day: 1 },
@@ -112,20 +127,73 @@ const riseSet = solarRiseSetForDate(
     latitudeDeg: 39.9,
     heightMeters: 50,
     offsetMinutes: 480,
-    // 默认 limb: 'upper'、refraction: true
+    limb: SOLAR_LIMB.UPPER,
+    refraction: true,
+    pressureMbar: 1013.25,
+    temperatureCelsius: 15,
+    horizonDegrees: 0,
   },
 );
 
-console.log(riseSet.rise, riseSet.set);             // JulianTime
-console.log(riseSet.riseZoned, riseSet.setZoned);   // ZonedTime
-console.log(riseSet.altitudeState);                 // crosses / always-above / always-below
+console.log(riseSet.rise, riseSet.set);           // JulianTime | null
+console.log(riseSet.riseZoned, riseSet.setZoned); // ZonedTime | null
+console.log(riseSet.altitudeState);               // crosses / always-above / always-below / tangent
+
+const altitude = solarAltitude(
+  JulianTime.fromDate(new Date()),
+  { longitudeDeg: 116.4, latitudeDeg: 39.9, heightMeters: 50 },
+  { limb: SOLAR_LIMB.CENTER, refraction: true },
+);
+console.log(altitude.apparentAltitudeRad, altitude.azimuthRad);
 ```
 
-星历与事件求根输入都是 TT 的 Julian Day；事件结果同时给出 `jdTT`、估算的 `jdUT1` 和 `deltaTSeconds`。Earth/EMB 输出 AU，Moon 输出 km；三者都是 J2000 平黄道/平春分直角坐标。经验修正可用 `{ corrections: false }` 关闭。
+`solarRiseSetForDate(date, observer)` 中 `offsetMinutes` 是该民用日期的固定 UTC offset，必须提供。经纬度单位为 degree，东经/北纬为正；高度单位为 metre。返回的 `path` 是 `analytic-newton` 或 `fallback-window`，`sampleCount`/`refineCount` 可用于检查是否走了高纬退化路径。极昼极夜时 `rise`/`set` 为 `null`，原因由 `altitudeState` 给出。
+
+默认大气为 `1013.25 mbar`、`15°C`，默认太阳上边缘和 hybrid 折射。`hybridAtmosphericRefraction()` 使用 `≤14°` Bennett、`≥16°` Smart、其间线性混合，真高度低于 `-1°` 时关闭折射。还可传 `fixedDiscSize: true` 固定太阳视半径，或用 `horizonDegrees` 表示地平遮挡高度。
+
+`solarAltitude()` 返回 `centerAltitudeRad`、`apparentAltitudeRad`、`azimuthRad`、相对目标地平的 `residualRad` 和解析斜率 `slopeRadPerDay`。它和日出日落求解器使用同一套地心太阳、太阳光行差、章动、地球自转、观测者视差、太阳视半径和折射链路。
+
+## 干支历与四柱
+
+普通固定时区墙钟可直接调用 `fourPillarsForZonedTime()`：
+
+```js
+import {
+  CALENDAR_MODE,
+  PILLAR_HISTORICAL_MODE,
+  RAT_HOUR_MODE,
+  ZonedTime,
+  describeFourPillars,
+  fourPillarsForZonedTime,
+} from 'js-ephemeris-lite';
+
+const clock = new ZonedTime({
+  year: 2000, month: 1, day: 1,
+  hour: 23, minute: 30, second: 0,
+  offsetMinutes: 480,
+});
+
+const packed = fourPillarsForZonedTime(clock, {
+  mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
+  ratHourMode: RAT_HOUR_MODE.TOMORROW_STEM,
+  pillarHistoricalMode: PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR,
+});
+
+console.log(packed);                        // 年月日时：压缩数值干支
+console.log(describeFourPillars(packed));   // { year: '己卯', ... }
+```
+
+年柱以立春为界，月柱以十二节为界，日柱按民用日，时柱使用五鼠遁；另导出 `calculateDayPillar()`、`getMonthGanzhi()`、`getHourGanzhi()`、`ganzhiName()`、`getNayinId()` 和 `getNayinElement()` 等底层函数。
+
+`RAT_HOUR_MODE` 只决定 23:00～00:00 的日柱/时干规则：`NO_SPLIT`、`TODAY_STEM`、`TOMORROW_STEM`。它不会改变农历月份。`PILLAR_HISTORICAL_MODE` 决定年月柱节界是否采用历史分配日；历史分配日固定为 UTC+08 的中国历日，不能随本地时区平移。
+
+需要真太阳时或平太阳时时，调用 `calculateFourPillars(instant, virtualTime, options)`：`instant` 保留真实物理瞬时供立春节界使用，`virtualTime` 放已经换算好的当地太阳钟字段，二者不会被库偷偷混成一个时间。
+
+## 时间约定
+
+星历与事件求根输入都是 TT 的 Julian Day；事件结果同时给出 `jdTT`、估算的 `jdUT1` 和 `deltaTSeconds`。
 
 lite 时间层约定 `UTC ≈ UT1`，不携带闰秒、TAI 或 EOP 表；TT 仍通过 `TT = UT1 + ΔT` 单独计算。`JulianTime` 保存 `jdUT1`、`jdTT` 和 `deltaTSeconds`，`ZonedTime` 表示强制带 `offsetMinutes` 的民用时间。`JulianTime.fromDate()` 只读取原生 `Date.getTime()`，不会拆分或重新解释原生 Date 的年月日。历法查询可直接接收 `JulianTime`，事件结果也附带 `event.time`，原有数值 JD 字段继续保留。
-
-日出日落默认大气为 C++ 的 standard atmosphere（`1013.25 mbar`、`15°C`），也可传 `pressureMbar` 和 `temperatureCelsius`。`hybridAtmosphericRefraction()` 原样采用 C++ 的分段：`≤14°` Bennett、`≥16°` Smart、其间线性混合，真高度低于 `-1°` 时关闭折射。`horizonDegrees`、`upper/center/lower` 边缘和固定太阳视半径均可单独切换。
 
 `src/generated/model-data.js` 和历史日期数据已提交在发布包中，安装及运行不需要上游 VSOP87B、ELP/MPP02、DE441 或 C++ 项目。
 

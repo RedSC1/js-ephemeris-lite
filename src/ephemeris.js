@@ -415,6 +415,72 @@ export function embState(jdTT, options = {}) {
   };
 }
 
+/** Explicit alias: heliocentric Earth, J2000 ecliptic, AU and AU/day. */
+export function earthHeliocentricState(jdTT, options = {}) {
+  return earthState(jdTT, options);
+}
+
+export function earthHeliocentricPosition(jdTT, options = {}) {
+  return earthHeliocentricState(jdTT, options).position;
+}
+
+/** Geometric geocentric Sun, J2000 ecliptic, AU and AU/day. */
+export function sunGeocentricState(jdTT, options = {}) {
+  const earth = earthState(jdTT, options);
+  return {
+    position: earth.position.map(value => -value),
+    velocity: earth.velocity.map(value => -value),
+  };
+}
+
+export function sunGeocentricPosition(jdTT, options = {}) {
+  return sunGeocentricState(jdTT, options).position;
+}
+
+/** Explicit alias: geocentric Moon, J2000 ecliptic, km and km/day. */
+export function moonGeocentricState(jdTT, options = {}) {
+  return moonState(jdTT, options);
+}
+
+export function moonGeocentricPosition(jdTT, options = {}) {
+  return moonGeocentricState(jdTT, options).position;
+}
+
+/** Heliocentric Moon, J2000 ecliptic, AU and AU/day. */
+export function moonHeliocentricState(jdTT, options = {}) {
+  const earth = earthState(jdTT, options);
+  const moon = moonState(jdTT, options);
+  return {
+    position: earth.position.map((value, index) => value + moon.position[index] / AU_KM),
+    velocity: earth.velocity.map((value, index) => value + moon.velocity[index] / AU_KM),
+  };
+}
+
+export function moonHeliocentricPosition(jdTT, options = {}) {
+  return moonHeliocentricState(jdTT, options).position;
+}
+
+/** Explicit alias: heliocentric Earth-Moon barycentre, J2000 ecliptic, AU and AU/day. */
+export function embHeliocentricState(jdTT, options = {}) {
+  return embState(jdTT, options);
+}
+
+export function embHeliocentricPosition(jdTT, options = {}) {
+  return embHeliocentricState(jdTT, options).position;
+}
+
+export const EPHEMERIS_FRAME_INFO = Object.freeze({
+  frame: 'J2000 mean/dynamical ecliptic and equinox',
+  geometric: true,
+  lightTimeApplied: false,
+  earthHeliocentricUnit: 'AU',
+  sunGeocentricUnit: 'AU',
+  moonGeocentricUnit: 'km',
+  moonHeliocentricUnit: 'AU',
+  embHeliocentricUnit: 'AU',
+  velocityTimeUnit: 'day',
+});
+
 function vectorSummary(vector, unit) {
   return { x: vector[0], y: vector[1], z: vector[2], unit };
 }

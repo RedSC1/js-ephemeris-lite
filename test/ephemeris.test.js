@@ -6,10 +6,20 @@ import {
   EARTH_MOON_MASS_RATIO,
   MOON_MODEL_INFO,
   correctionWeight,
+  earthHeliocentricPosition,
+  earthHeliocentricState,
   earthPosition,
+  moonGeocentricPosition,
+  moonGeocentricState,
+  moonHeliocentricPosition,
+  moonHeliocentricState,
   moonDirectionState,
   moonElpLongitudeState,
   moonPosition,
+  sunGeocentricPosition,
+  sunGeocentricState,
+  embHeliocentricPosition,
+  embHeliocentricState,
   embPosition,
   iau2000bNutation,
   vondrak2011PrecessionMatrix,
@@ -74,6 +84,31 @@ test('EMB is Earth plus the lunar mass-weighted displacement', () => {
     const emb = embPosition(jd);
     const scale = 1 / ((1 + EARTH_MOON_MASS_RATIO) * AU_KM);
     emb.forEach((value, index) => near(value, earth[index] + moon[index] * scale, 2e-15));
+  }
+});
+
+test('explicit center-named APIs preserve vector, velocity and unit relationships', () => {
+  for (const jd of [J2000, 2415020.5, 3182029.5]) {
+    const earth = earthHeliocentricState(jd);
+    const sun = sunGeocentricState(jd);
+    const moonGeo = moonGeocentricState(jd);
+    const moonHelio = moonHeliocentricState(jd);
+
+    assert.deepEqual(earthHeliocentricPosition(jd), earth.position);
+    assert.deepEqual(earth.position, earthPosition(jd));
+    assert.deepEqual(moonGeocentricPosition(jd), moonGeo.position);
+    assert.deepEqual(moonGeo.position, moonPosition(jd));
+    assert.deepEqual(moonHeliocentricPosition(jd), moonHelio.position);
+    assert.deepEqual(sunGeocentricPosition(jd), sun.position);
+    assert.deepEqual(embHeliocentricPosition(jd), embHeliocentricState(jd).position);
+    assert.deepEqual(embHeliocentricPosition(jd), embPosition(jd));
+
+    for (let axis = 0; axis < 3; axis += 1) {
+      near(sun.position[axis], -earth.position[axis], 0);
+      near(sun.velocity[axis], -earth.velocity[axis], 0);
+      near(moonHelio.position[axis], earth.position[axis] + moonGeo.position[axis] / AU_KM, 0);
+      near(moonHelio.velocity[axis], earth.velocity[axis] + moonGeo.velocity[axis] / AU_KM, 0);
+    }
   }
 });
 
