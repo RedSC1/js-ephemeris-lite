@@ -2,6 +2,7 @@ import { ganzhiBranch, ganzhiIndex, ganzhiStem, type Ganzhi } from 'js-ephemeris
 import type { ZiweiAnchors } from './anchors.js';
 import {
   GENERATED_BRIGHTNESS_VARIANTS,
+  GENERATED_FLOW_PLACEMENT_VARIANTS,
   GENERATED_MASTER_VARIANTS,
   GENERATED_PLACEMENT_VARIANTS,
   GENERATED_SIHUA_VARIANTS,
@@ -11,6 +12,7 @@ import {
 } from './generated/default-rules.js';
 import type { ZiweiRuleSelection } from './options.js';
 import type { Brightness, TransformSet, ZiweiCalendarFacts } from './types.js';
+import { requireStarId } from './stars.js';
 
 const LONGEVITY_STAR_KEYS = new Set([
   'changsheng',
@@ -29,7 +31,9 @@ const LONGEVITY_STAR_KEYS = new Set([
 
 export interface SelectedZiweiRules {
   readonly natalPlacements: readonly GeneratedPlacement[];
+  readonly flowPlacements: readonly GeneratedPlacement[];
   readonly brightness: readonly (readonly number[])[];
+  readonly brightnessLabels: Readonly<Record<string, string>>;
   readonly sihua: readonly TransformSet[];
   readonly masters: GeneratedMasterVariant;
 }
@@ -65,35 +69,125 @@ export function selectZiweiRules(selection: ZiweiRuleSelection): SelectedZiweiRu
   const cached = selectionCache.get(selection);
   if (cached !== undefined) return cached;
 
-  const placementKeys = new Set(GENERATED_PLACEMENT_VARIANTS.map((variant) => variant.starKey));
+  const placementKeys = new Set([
+    ...GENERATED_PLACEMENT_VARIANTS.map((variant) => variant.starKey),
+    ...GENERATED_FLOW_PLACEMENT_VARIANTS.map((variant) => variant.starKey),
+  ]);
   const brightnessKeys = new Set(GENERATED_BRIGHTNESS_VARIANTS.map((variant) => variant.starKey));
   const stemKeys = new Set(GENERATED_SIHUA_VARIANTS.map((variant) => variant.stemKey));
   assertKnownOverrides('placement', selection.placement, placementKeys);
   assertKnownOverrides('brightness', selection.brightness, brightnessKeys);
   assertKnownOverrides('sihua', selection.sihua, stemKeys);
 
-  const natalPlacements = Object.freeze(GENERATED_PLACEMENT_VARIANTS.map((variant) => {
+  const natalPlacements = GENERATED_PLACEMENT_VARIANTS.map((variant) => {
     const option = LONGEVITY_STAR_KEYS.has(variant.starKey)
       ? selection.longevity
       : selection.placement[variant.starKey] ?? selection.placementDefault;
     return selectedOption('placement', variant.starKey, option, variant.options);
-  }));
-  const brightness = Object.freeze(GENERATED_BRIGHTNESS_VARIANTS.map((variant) => selectedOption(
+  });
+  const flowPlacements = GENERATED_FLOW_PLACEMENT_VARIANTS.map((variant) => {
+    const option = selection.placement[variant.starKey] ?? selection.placementDefault;
+    return selectedOption('placement', variant.starKey, option, variant.options);
+  });
+  const brightness = GENERATED_BRIGHTNESS_VARIANTS.map((variant) => selectedOption(
     'brightness',
     variant.starKey,
     selection.brightness[variant.starKey] ?? selection.brightnessDefault,
     variant.options,
-  )));
-  const sihua = Object.freeze(GENERATED_SIHUA_VARIANTS.map((variant) => selectedOption(
+  ));
+  const sihua = GENERATED_SIHUA_VARIANTS.map((variant) => selectedOption(
     'sihua',
     variant.stemKey,
     selection.sihua[variant.stemKey] ?? selection.sihuaDefault,
     variant.options,
-  ) as GeneratedTransformSet));
-  const masters = selectedOption('masters', 'life/body', selection.masters, GENERATED_MASTER_VARIANTS);
-  const resolved = Object.freeze({ natalPlacements, brightness, sihua, masters });
+  ) as GeneratedTransformSet);
+  let masters = selectedOption('masters', 'life/body', selection.masters, GENERATED_MASTER_VARIANTS);
+
+  const patch = selection.ruleset.patch;
+  for (const [key, rule] of Object.entries(patch.natalPlacements ?? {})) {
+    const id = requireStarId(key);
+    if (id >= natalPlacements.length) throw new RangeError(`${key} is not a natal star`);
+    natalPlacements[id] = Object.freeze({ starId: id, ...rule });
+  }
+  for (const [key, rule] of Object.entries(patch.flowPlacements ?? {})) {
+    const id = requireStarId(key);
+    const index = GENERATED_FLOW_PLACEMENT_VARIANTS.findIndex((variant) => variant.starId === id);
+    if (index < 0) throw new RangeError(`${key} is not a flow star`);
+    flowPlacements[index] = Object.freeze({ starId: id, ...rule });
+  }
+  for (const [key, values] of Object.entries(patch.brightness ?? {})) {
+    brightness[requireStarId(key)] = values;
+  }
+  for (const [stem, set] of Object.entries(patch.sihua ?? {})) {
+    const index = ['jia', 'yi', 'bing', 'ding', 'wu', 'ji', 'geng', 'xin', 'ren', 'gui'].indexOf(stem);
+    if (index < 0) throw new RangeError(`unknown sihua stem: ${stem}`);
+    sihua[index] = Object.freeze({ ...sihua[index]!, ...set }) as GeneratedTransformSet;
+  }
+  if (patch.masters !== undefined) {
+    masters = Object.freeze({
+      life: (patch.masters.life ?? masters.life) as GeneratedMasterVariant['life'],
+      body: (patch.masters.body ?? masters.body) as GeneratedMasterVariant['body'],
+    });
+  }
+  const resolved = Object.freeze({
+    natalPlacements: Object.freeze(natalPlacements),
+    flowPlacements: Object.freeze(flowPlacements),
+    brightness: Object.freeze(brightness),
+    brightnessLabels: Object.freeze({
+      '-1': '', '0': '陷', '1': '不', '2': '平', '3': '利', '4': '得', '5': '旺', '6': '庙',
+      ...patch.brightnessLabels,
+    }),
+    sihua: Object.freeze(sihua),
+    masters,
+  });
   selectionCache.set(selection, resolved);
   return resolved;
+}
+
+/** Evaluate a flow-star table against the formal layer coordinate. */
+export function evaluateFlowPlacement(
+  rule: GeneratedPlacement,
+  coordinate: { readonly stem: number; readonly branch: number },
+  gender: number,
+  anchors?: {
+    readonly bureau: number;
+    readonly ziwei: number;
+    readonly tianfu: number;
+    readonly life: number;
+    readonly body: number;
+  },
+): number {
+  let index = 0;
+  for (let input = 0; input < rule.inputs.length; input += 1) {
+    const source = rule.inputs[input]!;
+    const value = source === 'lunar.year_stem' || source === 'solar.year_stem'
+      ? coordinate.stem
+      : source === 'lunar.year_branch' || source === 'solar.year_branch'
+        ? coordinate.branch
+        : source === 'birth.gender'
+          ? gender
+          : source === 'anchor.bureau'
+            ? anchors?.bureau
+            : source === 'anchor.ziwei'
+              ? anchors?.ziwei
+              : source === 'anchor.tianfu'
+                ? anchors?.tianfu
+                : source === 'anchor.life'
+                  ? anchors?.life
+                  : source === 'anchor.body'
+                    ? anchors?.body
+                    : Number.NaN;
+    const domain = rule.shape[input]!;
+    if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value >= domain) {
+      throw new Error(`unsupported or invalid flow rule input: ${source}`);
+    }
+    index = index * domain + value;
+  }
+  const branch = rule.positions[index];
+  if (branch === undefined || branch < 0 || branch >= 12) {
+    throw new Error(`invalid flow placement result for star ${rule.starId}`);
+  }
+  return branch;
 }
 
 function kongWang(ganzhi: Ganzhi, secondary: boolean): number {
@@ -154,7 +248,7 @@ export function evaluateNatalPlacement(
   anchors: ZiweiAnchors,
   bodyPalace: number,
 ): number {
-  if (rule.inputs.length === 0 || rule.inputs.length !== rule.shape.length) {
+  if (rule.inputs.length !== rule.shape.length) {
     throw new Error(`invalid placement rule for star ${rule.starId}`);
   }
   let index = 0;

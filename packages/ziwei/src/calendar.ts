@@ -13,6 +13,7 @@ import {
   trueSolarTime,
   type CivilDateTime,
   type FourPillars,
+  type ResolvedLunarDate,
   type Ut1Input,
   type ZonedTime,
 } from 'js-ephemeris-lite';
@@ -45,7 +46,7 @@ function freezeCivilTime(value: CivilDateTime): Readonly<CivilDateTime> {
   });
 }
 
-function resolveVirtualTime(zonedTime: ZonedTime, options: ZiweiOptions): CivilDateTime {
+export function resolveZiweiVirtualTime(zonedTime: ZonedTime, options: ZiweiOptions): CivilDateTime {
   if (options.clockMode === ZIWEI_CLOCK_MODE.MEAN_SOLAR) {
     return meanSolarTime(zonedTime, options.longitudeDeg!);
   }
@@ -61,6 +62,17 @@ function logicalDateForLunar(virtualTime: CivilDateTime, options: ZiweiOptions):
     logicalJd += 1 / 24;
   }
   return calendarDateFromJulianDay(logicalJd);
+}
+
+export function resolveZiweiLogicalLunarDate(
+  virtualTime: CivilDateTime,
+  options: ZiweiOptions,
+): ResolvedLunarDate {
+  const logicalDate = logicalDateForLunar(virtualTime, options);
+  return solarToLunar(
+    { year: logicalDate.year, month: logicalDate.month, day: logicalDate.day },
+    options.toCalendarOptions(),
+  );
 }
 
 function makeLunarPillars(
@@ -80,7 +92,7 @@ function makeLunarPillars(
   });
 }
 
-function solarDayFromPreviousJie(
+export function solarDayFromPreviousJie(
   jdUT1: number,
   virtualTime: CivilDateTime,
   options: ZiweiOptions,
@@ -113,12 +125,7 @@ export function resolveZiweiBirthFromInstant(
   const options = resolveZiweiOptions(rawOptions);
   const jdUT1 = asUt1JulianDay(instant);
   const calendarOptions = options.toCalendarOptions();
-  const logicalDate = logicalDateForLunar(virtualTime, options);
-  const resolvedLunar = solarToLunar({
-    year: logicalDate.year,
-    month: logicalDate.month,
-    day: logicalDate.day,
-  }, calendarOptions);
+  const resolvedLunar = resolveZiweiLogicalLunarDate(virtualTime, options);
   const lunarDate: ZiweiLunarDateFacts = Object.freeze({
     year: resolvedLunar.year,
     month: resolvedLunar.month,
@@ -159,7 +166,7 @@ export function resolveZiweiBirth(
   const resolved = resolveZiweiOptions(options);
   return resolveZiweiBirthFromInstant(
     zonedTime.toJulianTime(),
-    resolveVirtualTime(zonedTime, resolved),
+    resolveZiweiVirtualTime(zonedTime, resolved),
     resolved,
   );
 }

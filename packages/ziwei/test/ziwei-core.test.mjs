@@ -8,6 +8,7 @@ import {
   ZIWEI_GENDER,
   ZIWEI_RULE_OPTION,
   ZiweiChart,
+  ZiweiConfigLoader,
   ZiweiOptions,
   computeZiweiAnchors,
   findStarId,
@@ -45,6 +46,37 @@ test('finite natal rule core matches the native C++ oracle fixture', () => {
   assert.equal(chart.bodyMaster, 25);
   assert.deepEqual(chart.starPositions.slice(0, 14), [9, 8, 6, 5, 4, 1, 7, 8, 9, 10, 11, 0, 1, 5]);
   assert.deepEqual(chart.transformationMasks.slice(0, 14), [0, 512, 24, 20, 0, 1, 0, 0, 128, 0, 0, 0, 0, 2]);
+});
+
+test('runtime rulesets patch former Dart JSON profiles without mutating defaults', () => {
+  const defaults = ZiweiConfigLoader.getDefault();
+  const custom = ZiweiConfigLoader.overrideWith(defaults, {
+    starsJson: JSON.stringify([{ key: 'ziwei', rule: { type: 'constant', value: 0 } }]),
+    brightnessJson: JSON.stringify({
+      brightness_labels: { 6: '超亮' },
+      static_stars: { ziwei: Array(12).fill(6) },
+    }),
+    sihuaJson: JSON.stringify({ jia: { lu: 'ziwei' } }),
+  });
+  const birth = new ZonedTime({
+    year: 2004, month: 8, day: 1, hour: 12, minute: 0, second: 0, offsetMinutes: 480,
+  });
+  const baseChart = ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({ gender: ZIWEI_GENDER.MALE, rules: { ruleset: defaults } }),
+  );
+  const chart = ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({ gender: ZIWEI_GENDER.MALE, rules: { ruleset: custom } }),
+  );
+  const ziwei = findStarId('ziwei');
+  assert.notEqual(baseChart.starPositions[ziwei], 0);
+  assert.equal(chart.starPositions[ziwei], 0);
+  assert.equal(chart.getStarPosition(ziwei).brightness, 6);
+  assert.equal(chart.getBrightnessLabel(6), '超亮');
+  assert.equal(chart.birthYearTransformations.lu, ziwei);
+  assert.equal(chart.birthYearTransformations.quan, baseChart.birthYearTransformations.quan);
+  assert.equal(selectZiweiRules(new ZiweiOptions({ gender: 0 }).rules).natalPlacements[ziwei].positions.length > 1, true);
 });
 
 test('calendar-backed chart matches the native 2003 historical-China fixture', () => {

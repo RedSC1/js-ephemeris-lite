@@ -3,6 +3,26 @@ import type { CivilDateTime, FourPillars } from 'js-ephemeris-lite';
 export const ZIWEI_GENDER = Object.freeze({ MALE: 0, FEMALE: 1 } as const);
 export type ZiweiGender = typeof ZIWEI_GENDER[keyof typeof ZIWEI_GENDER];
 
+export const FLOW_LEVEL = Object.freeze({
+  DECADE: 0,
+  YEAR: 1,
+  MONTH: 2,
+  DAY: 3,
+  HOUR: 4,
+} as const);
+export type FlowLevel = typeof FLOW_LEVEL[keyof typeof FLOW_LEVEL];
+
+export const RAT_HOUR_SEGMENT = Object.freeze({
+  NONE: 0,
+  UNIFIED: 1,
+  EARLY: 2,
+  LATE: 3,
+} as const);
+export type RatHourSegment = typeof RAT_HOUR_SEGMENT[keyof typeof RAT_HOUR_SEGMENT];
+
+export const CHILDHOOD_STRATEGY = Object.freeze({ SKIP: 0, SEQUENTIAL: 1 } as const);
+export type ChildhoodStrategy = typeof CHILDHOOD_STRATEGY[keyof typeof CHILDHOOD_STRATEGY];
+
 export const BUREAU = Object.freeze({
   WATER_2: 0,
   WOOD_3: 1,
@@ -108,6 +128,18 @@ export interface TransformSet {
   readonly quan: number;
   readonly ke: number;
   readonly ji: number;
+}
+
+/** A flow coordinate is intentionally not a sexagenary Ganzhi pair. */
+export interface FlowCoordinate {
+  readonly stem: number;
+  readonly branch: number;
+}
+
+export interface LimitCoordinate {
+  readonly level: FlowLevel;
+  readonly coordinate: Readonly<FlowCoordinate>;
+  readonly natalPalaceId: PalaceId;
 }
 
 export function bureauNumber(bureau: Bureau): number {

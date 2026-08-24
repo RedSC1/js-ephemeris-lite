@@ -89,6 +89,21 @@ const placementVariants = natalStars.map((star) => ({
       positions: rule.positions,
     }])),
 }));
+const flowPlacementVariants = flowStars.map((star) => ({
+  starId: starIds.get(star.key),
+  starKey: star.key,
+  options: Object.fromEntries(placementRules
+    .filter((rule) => rule.star === star.key)
+    .map((rule) => [rule.option, {
+      starId: starIds.get(rule.star),
+      inputs: rule.inputs,
+      shape: rule.shape,
+      positions: rule.positions,
+    }])),
+}));
+if (flowPlacementVariants.some((variant) => Object.keys(variant.options).length === 0)) {
+  throw new Error('every flow star must have at least one placement variant');
+}
 
 const brightnessVariants = stars.map((star) => ({
   starId: star.id,
@@ -131,12 +146,13 @@ export interface GeneratedTransformSet { readonly lu: number; readonly quan: num
 export interface GeneratedPlacementVariants { readonly starId: number; readonly starKey: string; readonly options: Readonly<Record<string, GeneratedPlacement>> }
 export interface GeneratedBrightnessVariants { readonly starId: number; readonly starKey: string; readonly options: Readonly<Record<string, readonly number[]>> }
 export interface GeneratedSihuaVariants { readonly stemIndex: number; readonly stemKey: string; readonly options: Readonly<Record<string, GeneratedTransformSet>> }
-export interface GeneratedMasterLookup { readonly input: 'anchor.life' | 'lunar.year_branch' | 'master.year_branch'; readonly stars: readonly number[] }
+export interface GeneratedMasterLookup { readonly input: 'anchor.life' | 'lunar.year_branch' | 'solar.year_branch' | 'master.year_branch'; readonly stars: readonly number[] }
 export interface GeneratedMasterVariant { readonly life: GeneratedMasterLookup; readonly body: GeneratedMasterLookup }
 
 export const GENERATED_STARS: readonly GeneratedStar[] = Object.freeze(${JSON.stringify(stars)});
 export const GENERATED_NATAL_STAR_COUNT = ${natalStars.length};
 export const GENERATED_PLACEMENT_VARIANTS: readonly GeneratedPlacementVariants[] = Object.freeze(${JSON.stringify(placementVariants)} as unknown as GeneratedPlacementVariants[]);
+export const GENERATED_FLOW_PLACEMENT_VARIANTS: readonly GeneratedPlacementVariants[] = Object.freeze(${JSON.stringify(flowPlacementVariants)} as unknown as GeneratedPlacementVariants[]);
 export const GENERATED_BRIGHTNESS_VARIANTS: readonly GeneratedBrightnessVariants[] = Object.freeze(${JSON.stringify(brightnessVariants)} as unknown as GeneratedBrightnessVariants[]);
 export const GENERATED_SIHUA_VARIANTS: readonly GeneratedSihuaVariants[] = Object.freeze(${JSON.stringify(sihuaVariants)} as unknown as GeneratedSihuaVariants[]);
 export const GENERATED_MASTER_VARIANTS: Readonly<Record<string, GeneratedMasterVariant>> = Object.freeze(${JSON.stringify(masterVariants)});
@@ -144,4 +160,4 @@ export const GENERATED_MASTER_VARIANTS: Readonly<Record<string, GeneratedMasterV
 
 fs.mkdirSync(path.dirname(outputFile), { recursive: true });
 fs.writeFileSync(outputFile, source);
-console.log(`generated ${placements.length} natal placements for ${stars.length} stars`);
+console.log(`generated ${placements.length} natal and ${flowPlacementVariants.length} flow placements for ${stars.length} stars`);

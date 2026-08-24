@@ -15,7 +15,10 @@ import {
   type PillarBoundary,
   type ZiweiChartMode,
   type ZiweiGender,
+  CHILDHOOD_STRATEGY,
+  type ChildhoodStrategy,
 } from './types.js';
+import { ZiweiRuleset } from './ruleset.js';
 
 export const ZIWEI_CLOCK_MODE = Object.freeze({
   CIVIL: 'civil',
@@ -44,6 +47,8 @@ export interface ZiweiRuleSelectionInput {
   brightness?: Readonly<Record<string, string>>;
   /** Per-heavenly-stem Four Transform overrides (`jia` ... `gui`). */
   sihua?: Readonly<Record<string, string>>;
+  /** Optional immutable runtime resource patch, applied after bundled variants. */
+  ruleset?: ZiweiRuleset;
 }
 
 export interface ZiweiRuleSelection {
@@ -55,6 +60,7 @@ export interface ZiweiRuleSelection {
   readonly placement: Readonly<Record<string, string>>;
   readonly brightness: Readonly<Record<string, string>>;
   readonly sihua: Readonly<Record<string, string>>;
+  readonly ruleset: ZiweiRuleset;
 }
 
 export interface ZiweiOptionsInput {
@@ -71,6 +77,9 @@ export interface ZiweiOptionsInput {
   wuHuDunYearBoundary?: PillarBoundary;
   sihuaYearBoundary?: PillarBoundary;
   bodyMasterYearBoundary?: PillarBoundary;
+  /** Calendar boundary used to resolve flow year/month/day. */
+  flowLimitBoundary?: PillarBoundary;
+  childhoodStrategy?: ChildhoodStrategy;
   rules?: ZiweiRuleSelectionInput;
 }
 
@@ -99,6 +108,9 @@ function ruleOverrides(
 }
 
 function normalizeRuleSelection(input: ZiweiRuleSelectionInput = {}): ZiweiRuleSelection {
+  if (input.ruleset !== undefined && !(input.ruleset instanceof ZiweiRuleset)) {
+    throw new TypeError('rules.ruleset must be a ZiweiRuleset');
+  }
   return Object.freeze({
     placementDefault: ruleOption(input.placementDefault, ZIWEI_RULE_OPTION.OPTION_1, 'placementDefault'),
     brightnessDefault: ruleOption(input.brightnessDefault, ZIWEI_RULE_OPTION.OPTION_1, 'brightnessDefault'),
@@ -108,8 +120,11 @@ function normalizeRuleSelection(input: ZiweiRuleSelectionInput = {}): ZiweiRuleS
     placement: ruleOverrides(input.placement, 'placement'),
     brightness: ruleOverrides(input.brightness, 'brightness'),
     sihua: ruleOverrides(input.sihua, 'sihua'),
+    ruleset: input.ruleset ?? ZiweiConfigDefaults.ruleset,
   });
 }
+
+const ZiweiConfigDefaults = Object.freeze({ ruleset: new ZiweiRuleset() });
 
 export class ZiweiOptions {
   readonly gender: ZiweiGender;
@@ -125,6 +140,8 @@ export class ZiweiOptions {
   readonly wuHuDunYearBoundary: PillarBoundary;
   readonly sihuaYearBoundary: PillarBoundary;
   readonly bodyMasterYearBoundary: PillarBoundary;
+  readonly flowLimitBoundary: PillarBoundary;
+  readonly childhoodStrategy: ChildhoodStrategy;
   readonly rules: ZiweiRuleSelection;
 
   constructor(input: ZiweiOptionsInput) {
@@ -143,6 +160,8 @@ export class ZiweiOptions {
     this.wuHuDunYearBoundary = input.wuHuDunYearBoundary ?? PILLAR_BOUNDARY.LUNAR;
     this.sihuaYearBoundary = input.sihuaYearBoundary ?? PILLAR_BOUNDARY.LUNAR;
     this.bodyMasterYearBoundary = input.bodyMasterYearBoundary ?? PILLAR_BOUNDARY.LUNAR;
+    this.flowLimitBoundary = input.flowLimitBoundary ?? PILLAR_BOUNDARY.LUNAR;
+    this.childhoodStrategy = input.childhoodStrategy ?? CHILDHOOD_STRATEGY.SKIP;
     this.rules = normalizeRuleSelection(input.rules);
 
     if (!includes(Object.values(ZIWEI_GENDER), this.gender)) throw new RangeError('unknown Ziwei gender');
@@ -174,8 +193,12 @@ export class ZiweiOptions {
       this.wuHuDunYearBoundary,
       this.sihuaYearBoundary,
       this.bodyMasterYearBoundary,
+      this.flowLimitBoundary,
     ]) {
       if (!includes(Object.values(PILLAR_BOUNDARY), boundary)) throw new RangeError('unknown pillar boundary');
+    }
+    if (!includes(Object.values(CHILDHOOD_STRATEGY), this.childhoodStrategy)) {
+      throw new RangeError('unknown childhood strategy');
     }
     Object.freeze(this);
   }
@@ -220,6 +243,8 @@ export class ZiweiOptions {
       wuHuDunYearBoundary: this.wuHuDunYearBoundary,
       sihuaYearBoundary: this.sihuaYearBoundary,
       bodyMasterYearBoundary: this.bodyMasterYearBoundary,
+      flowLimitBoundary: this.flowLimitBoundary,
+      childhoodStrategy: this.childhoodStrategy,
       rules: this.rules,
     };
   }

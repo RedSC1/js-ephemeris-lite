@@ -1,4 +1,4 @@
-import { ganzhiBranch, ganzhiStem, type ZonedTime } from 'js-ephemeris-lite';
+import { ZonedTime, ganzhiBranch, ganzhiStem, lunarToSolar, type LunarDate } from 'js-ephemeris-lite';
 import { computePalaceStems, type ZiweiAnchors } from './anchors.js';
 import { resolveZiweiBirth, type ResolvedZiweiBirth } from './calendar.js';
 import { ZiweiOptions, type ZiweiOptionsInput } from './options.js';
@@ -18,6 +18,11 @@ import {
   type TransformSet,
   type ZiweiCalendarFacts,
 } from './types.js';
+import { dynamicChartForTime, resolveZiweiFlow, type ResolvedZiweiFlow } from './flow-calendar.js';
+import type { ZiweiDynamicChart } from './flow.js';
+import { ZiweiLimitManager } from './limit-manager.js';
+import { ZiweiTimelineProvider } from './timeline.js';
+import type { FlowLevel } from './types.js';
 
 export interface ZiweiPalaceState {
   readonly branch: number;
@@ -48,6 +53,7 @@ function masterLookupBranch(
   switch (input) {
     case 'anchor.life': return lifeBranch;
     case 'lunar.year_branch': return ganzhiBranch(anchors.lunar.year);
+    case 'solar.year_branch': return ganzhiBranch(anchors.solarTerm.year);
     case 'master.year_branch': return ganzhiBranch(configuredYear);
   }
 }
@@ -151,6 +157,21 @@ export class ZiweiChart {
     return new ZiweiChart(resolveZiweiBirth(birth, options));
   }
 
+  static fromLunar(
+    lunar: LunarDate & { hour?: number; minute?: number; second?: number },
+    rawOptions: ZiweiOptions | ZiweiOptionsInput,
+  ): ZiweiChart {
+    const options = rawOptions instanceof ZiweiOptions ? rawOptions : new ZiweiOptions(rawOptions);
+    const solar = lunarToSolar(lunar, options.toCalendarOptions());
+    return ZiweiChart.fromZonedTime(new ZonedTime({
+      ...solar,
+      hour: lunar.hour ?? 0,
+      minute: lunar.minute ?? 0,
+      second: lunar.second ?? 0,
+      offsetMinutes: options.utcOffsetMinutes,
+    }), options);
+  }
+
   /** Advanced rule-core entry for already normalized calendar facts. */
   static fromResolvedBirth(birth: ResolvedZiweiBirth): ZiweiChart {
     return new ZiweiChart(birth);
@@ -189,8 +210,51 @@ export class ZiweiChart {
     return this.getStarsAtBranch(this.getPalace(palaceId).branch);
   }
 
+  getBrightnessLabel(value: Brightness): string | null {
+    if (value < -1 || value > 6) throw new RangeError('brightness must be -1..6');
+    const label = this.ruleTables.brightnessLabels[String(value)];
+    return value === -1 || label === undefined || label.length === 0 ? null : label;
+  }
+
   hasTransform(starId: number, mark: StarTransformMark): boolean {
     if (!Number.isInteger(mark) || mark < 0 || mark >= 12) return false;
     return (((this.transformationMasks[starId] ?? 0) >>> mark) & 1) === 1;
+  }
+
+  timeline(): ZiweiTimelineProvider {
+    return new ZiweiTimelineProvider(this);
+  }
+
+  createLimitManager(): ZiweiLimitManager {
+    return new ZiweiLimitManager(this);
+  }
+
+  resolveFlow(target: ZonedTime): ResolvedZiweiFlow {
+    return resolveZiweiFlow(this, target);
+  }
+
+  dynamicForTime(target: ZonedTime, deepestLevel?: FlowLevel): ZiweiDynamicChart {
+    return dynamicChartForTime(this, target, deepestLevel).chart;
+  }
+
+  toJSON(): object {
+    return {
+      facts: this.facts,
+      anchors: this.anchors,
+      bodyPalace: this.bodyPalace,
+      lifeMaster: this.lifeMaster,
+      bodyMaster: this.bodyMaster,
+      palaceStems: this.palaceStems,
+      starPositions: this.starPositions,
+      birthYearTransformations: this.birthYearTransformations,
+      transformationMasks: this.transformationMasks,
+      palaces: this.palaces.map((palace) => ({
+        branch: palace.branch,
+        stem: palace.stem,
+        palaceId: palace.palaceId,
+        starIds: palace.starIds,
+      })),
+      options: this.options.toJSON(),
+    };
   }
 }
