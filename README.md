@@ -281,6 +281,19 @@ lite 时间层约定 `UTC ≈ UT1`，不携带闰秒、TAI 或 EOP 表；TT 仍�
 
 `src/generated/historical-calendar-data.js` 已提交，可直接使用。
 
+`src/qi-shuo.js` 的 `getQiShuoYear(civilYear, options)` 按固定时区的民用年汇总二十四节气、七十二候和任意月相角。默认返回节气与朔；可用 `lunarPhaseAnglesDeg: [0, 90, 180, 270]` 加入朔、上弦、望和下弦，或用 `includePentads: true` 加入七十二候。每个事件同时返回精确 `jdTT` / `jdUT1`、当地钟表时间、ΔT、求根诊断和历法归日；历史模式会保留历书归日与真实天象日的差异。
+
+```js
+const qishuo = getQiShuoYear(2026, {
+  utcOffsetMinutes: 480,
+  mode: CALENDAR_MODE.HISTORICAL,
+  includeSolarTerms: true,
+  includePentads: false,
+  lunarPhaseAnglesDeg: [0, 90, 180, 270],
+});
+console.log(qishuo.events);
+```
+
 `src/chinese-era.js` 的 `getChineseEraNames(jdUT1)` 返回该物理瞬时同时有效的全部中国历史纪年。每条记录都带 double JD 的 `startJd`、`endJdExclusive`，以及 `instant`、`day` 或 `year` 边界精度；月日无从确定的寿星记录只按相应农历年首兜底。中华民国从 `1912-01-01 00:00 UTC+8` 起算；当代公元纪年覆盖完整的 1949 年，因此从 `1949-01-01 00:00 UTC+8` 起显示，并与民国三十八年并存至 `1949-10-01 15:00 UTC+8`，该时刻起仅保留当代公元纪年。项目另补充了少量可核对的历史边界与历史政权，并继续按同一规则返回同时有效的纪年候选。
 
 历史月份制度规则也从本人的 C++ 项目按语义迁移，包括早期三套岁首、秦汉至武周改月名、同名月份结构化区分，以及 237 年景初历交接的记录性 28 日月。没有逐字复制寿星万年历实现。

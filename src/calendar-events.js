@@ -286,20 +286,27 @@ export function solveSolarLongitude(targetLongitude, nearJdTT, { toleranceSecond
   return addUt1({ estimateJdTT: estimate, ...solveSafeguarded(solarLongitudeState, target, estimate, 3, toleranceSeconds) });
 }
 
-/** Nearest astronomical new moon to nearJdTT. */
-export function solveNewMoon(nearJdTT, {
+/** Nearest occurrence of the requested apparent lunar-solar elongation. */
+export function solveLunarPhase(targetElongation, nearJdTT, {
   toleranceSeconds = 0.01,
   moonLatitudeTerms = DEFAULT_NEW_MOON_LATITUDE_TERMS,
 } = {}) {
+  if (!Number.isFinite(targetElongation)) throw new TypeError('targetElongation must be finite');
+  const target = wrapRadians(targetElongation);
   // From an arbitrary date the lunar phase can start almost half a synodic
-  // month from zero; a third cheap low-model step removes that curvature.
-  const estimate = estimateRoot(lowElongationState, 0, nearJdTT, 3);
+  // month from its target; a third cheap low-model step removes that curvature.
+  const estimate = estimateRoot(lowElongationState, target, nearJdTT, 3);
   const evaluator = jdTT => elongationState(jdTT, { moonLatitudeTerms });
   return addUt1({
     estimateJdTT: estimate,
     moonLatitudeTerms,
-    ...solveSafeguarded(evaluator, 0, estimate, 2, toleranceSeconds),
+    ...solveSafeguarded(evaluator, target, estimate, 2, toleranceSeconds),
   });
+}
+
+/** Nearest astronomical new moon to nearJdTT. */
+export function solveNewMoon(nearJdTT, options = {}) {
+  return solveLunarPhase(0, nearJdTT, options);
 }
 
 export const LOW_MODEL_INFO = Object.freeze({

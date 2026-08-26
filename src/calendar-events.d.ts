@@ -43,6 +43,11 @@ export function solveSolarLongitude(
   nearJdTT: number,
   options?: { toleranceSeconds?: number },
 ): EventRoot;
+export function solveLunarPhase(
+  targetElongation: number,
+  nearJdTT: number,
+  options?: { toleranceSeconds?: number; moonLatitudeTerms?: MoonLatitudeTerms },
+): NewMoonRoot;
 export function solveNewMoon(
   nearJdTT: number,
   options?: { toleranceSeconds?: number; moonLatitudeTerms?: MoonLatitudeTerms },

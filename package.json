@@ -46,6 +46,10 @@
       "types": "./src/ganzhi.d.ts",
       "default": "./src/ganzhi.js"
     },
+    "./qi-shuo": {
+      "types": "./src/qi-shuo.d.ts",
+      "default": "./src/qi-shuo.js"
+    },
     "./solar-visibility": {
       "types": "./src/solar-visibility.d.ts",
       "default": "./src/solar-visibility.js"
