@@ -31,22 +31,25 @@ function near(actual, expected, tolerance, message = '') {
     `${message}: ${actual} != ${expected} (tol ${tolerance})`);
 }
 
-test('modern correction gate is exactly closed and smoothly opens', () => {
+test('modern and long-span correction layers use a smooth complementary blend', () => {
   assert.equal(correctionWeight(J2000), 0);
-  assert.equal(correctionWeight(J2000 + 200 * 365.25), 0);
-  assert.equal(correctionWeight(J2000 - 200 * 365.25), 0);
-  near(correctionWeight(J2000 + 600 * 365.25), 0.5, 1e-15);
+  assert.equal(correctionWeight(J2000 + 800 * 365.25), 0);
+  assert.equal(correctionWeight(J2000 - 800 * 365.25), 0);
+  near(correctionWeight(J2000 + 900 * 365.25), 0.5, 1e-15);
   assert.equal(correctionWeight(J2000 + 1000 * 365.25), 1);
 });
 
-test('J2000 truncated Earth and Moon regression values', () => {
+test('J2000 modern-corrected and raw truncated Earth and Moon values', () => {
   const earth = earthPosition(J2000);
   const moon = moonPosition(J2000);
-  const expectedEarth = [-0.17713539623857041, 0.9672416027622578, -0.000003945988425422161];
-  const expectedMoon = [-291608.5374584195, -274979.66456961766, 36271.36061049973];
+  const expectedEarth = [-0.17713506845664023, 0.9672416627904105, -0.000003945988425422161];
+  const expectedMoon = [-291608.52118138445, -274979.68183097447, 36271.36061049973];
   earth.forEach((value, index) => near(value, expectedEarth[index], 2e-15, `earth[${index}]`));
   moon.forEach((value, index) => near(value, expectedMoon[index], 2e-9, `moon[${index}]`));
-  assert.deepEqual(moonPosition(J2000, { corrections: false }), moon);
+  assert.deepEqual(earthPosition(J2000, { corrections: false }),
+    [-0.17713539623857041, 0.9672416027622578, -0.000003945988425422161]);
+  assert.deepEqual(moonPosition(J2000, { corrections: false }),
+    [-291608.5374584195, -274979.66456961766, 36271.36061049973]);
 });
 
 test('event direction skips radius while matching the complete Moon state', () => {

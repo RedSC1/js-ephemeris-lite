@@ -18,6 +18,10 @@ const TWO_PI = 2 * Math.PI;
 const DAYS_PER_CENTURY = 36525;
 const DAYS_PER_MILLENNIUM = 365250;
 const SOLAR_ABERRATION_RAD = 20.4898 * ARCSEC_TO_RAD;
+// Geocentric lunar light-time longitude correction.  Its residual variation
+// is below about 0.07 arcsecond for calendar work; keeping the conventional
+// constant avoids a radius evaluation in every phase-solver iteration.
+const LUNAR_LIGHT_TIME_LONGITUDE_RAD = -3.4e-6;
 const LOW_INTERVAL_YEARS = 8000;
 export const DEFAULT_NEW_MOON_LATITUDE_TERMS = 10;
 
@@ -185,7 +189,10 @@ export function moonLongitudeState(jdTT, { latitudeTerms = 'full' } = {}) {
   );
   const longitude = longitudeState(date);
   const nutation = iau2000bNutationState(jdTT);
-  return { value: longitude.value + nutation.dpsi, rate: longitude.rate + nutation.dpsiRate };
+  return {
+    value: longitude.value + nutation.dpsi + LUNAR_LIGHT_TIME_LONGITUDE_RAD,
+    rate: longitude.rate + nutation.dpsiRate,
+  };
 }
 
 export function elongationState(jdTT, { moonLatitudeTerms = 'full' } = {}) {
@@ -205,7 +212,7 @@ export function elongationState(jdTT, { moonLatitudeTerms = 'full' } = {}) {
   // exactly in their elongation.  Computing it twice was pure event-path work.
   const aberration = SOLAR_ABERRATION_RAD / radius.value;
   return {
-    value: wrapRadians(moon.value - sun.value + aberration),
+    value: wrapRadians(moon.value - sun.value + LUNAR_LIGHT_TIME_LONGITUDE_RAD + aberration),
     rate: moon.rate - sun.rate - SOLAR_ABERRATION_RAD * radius.rate / (radius.value * radius.value),
   };
 }
@@ -224,7 +231,8 @@ function fastElongationState(jdTT, moonLatitudeTerms) {
   const tau = (jdTT - J2000) / DAYS_PER_MILLENNIUM;
   const radius = lowVsopCoordinateState(FAST_EARTH_RADIUS_TERMS, tau, 1 / DAYS_PER_MILLENNIUM);
   return {
-    value: wrapRadians(moon.value - sun.value + SOLAR_ABERRATION_RAD / radius.value),
+    value: wrapRadians(moon.value - sun.value
+      + LUNAR_LIGHT_TIME_LONGITUDE_RAD + SOLAR_ABERRATION_RAD / radius.value),
     rate: moon.rate - sun.rate - SOLAR_ABERRATION_RAD * radius.rate / (radius.value * radius.value),
   };
 }
@@ -258,7 +266,10 @@ export function lowElongationState(jdTT, { withDrift = true, moonTermCount = 10,
   // elongation, so do not also inject the separate solar-only fit here.
   const sun = lowSolarLongitudeState(jdTT, { withDrift: false, termCount: earthTermCount });
   const drift = withDrift ? lowDriftState(LOW_ELONGATION_DRIFT, jdTT) : { value: 0, rate: 0 };
-  return { value: wrapRadians(moon.value - sun.value + drift.value), rate: moon.rate - sun.rate + drift.rate };
+  return {
+    value: wrapRadians(moon.value - sun.value + LUNAR_LIGHT_TIME_LONGITUDE_RAD + drift.value),
+    rate: moon.rate - sun.rate + drift.rate,
+  };
 }
 
 function estimateRoot(evaluator, target, nearJdTT, iterations = 2) {

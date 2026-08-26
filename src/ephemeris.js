@@ -35,6 +35,22 @@ const EARTH_PHASE_TERMS = [
   [0, 0.03341656453, 4.66925680415, 6283.0758499914],
   [1, 0.00206058863, 2.67823455808, 6283.0758499914],
 ];
+// Full-model geometric longitude residuals (model minus DE441), fitted over
+// J2000 +/- 1000 Julian years.  These fill the modern interval deliberately
+// excluded from the long-span correction above.  The Earth degree-6 and Moon
+// degree-3 fits use disjoint 11-day training/validation samples in the same
+// mean-ecliptic-of-date frame as the public event pipeline.
+const MODERN_FIT_YEARS = 1000;
+const MODERN_BLEND_START_YEARS = 800;
+const MODERN_EARTH_RESIDUAL_ARCSEC = [
+  0.25123223802477024, -0.0779777358781651, 0.14163730890132534,
+  0.043524218484122204, -0.0360863394314185, -0.00809574585604611,
+  0.003608914123020952,
+];
+const MODERN_MOON_RESIDUAL_ARCSEC = [
+  -0.38235475729836893, -2.224841789085838,
+  -0.37014520216499897, -0.7897903837786208,
+];
 
 function polynomial(coefficients, x) {
   let result = 0;
@@ -75,22 +91,37 @@ function smoothstep01(x) {
   return value * value * (3 - 2 * value);
 }
 
-/** Weight for empirical DE441 corrections: exactly zero within 200 years of J2000. */
+/** Blend weight of the long-span DE441 correction over the modern fit. */
 export function correctionWeight(jdTT) {
   const distanceYears = Math.abs(jdTT - J2000) / 365.25;
-  return smoothstep01((distanceYears - 200) / 800);
+  return smoothstep01(
+    (distanceYears - MODERN_BLEND_START_YEARS)
+    / (MODERN_FIT_YEARS - MODERN_BLEND_START_YEARS),
+  );
 }
 
 function correctionWeightState(jdTT) {
   const delta = jdTT - J2000;
   const distanceYears = Math.abs(delta) / 365.25;
-  const x = (distanceYears - 200) / 800;
+  const blendYears = MODERN_FIT_YEARS - MODERN_BLEND_START_YEARS;
+  const x = (distanceYears - MODERN_BLEND_START_YEARS) / blendYears;
   if (x <= 0) return { value: 0, rate: 0 };
   if (x >= 1) return { value: 1, rate: 0 };
   return {
     value: x * x * (3 - 2 * x),
-    rate: 6 * x * (1 - x) * Math.sign(delta) / (800 * 365.25),
+    rate: 6 * x * (1 - x) * Math.sign(delta) / (blendYears * 365.25),
   };
+}
+
+function modernCorrectionWeightState(jdTT, corrections) {
+  if (!corrections) return { value: 0, rate: 0 };
+  const longSpan = correctionWeightState(jdTT);
+  return { value: 1 - longSpan.value, rate: -longSpan.rate };
+}
+
+function modernResidualState(coefficients, jdTT) {
+  const x = (jdTT - J2000) / (MODERN_FIT_YEARS * 365.25);
+  return chebyshevState(coefficients, x, 1 / (MODERN_FIT_YEARS * 365.25));
 }
 
 function rotateLongitudeState(position, velocity, angle, angleRate) {
@@ -202,6 +233,7 @@ export function moonCorrectionState(jdTT, corrections = true) {
   const tRate = 1 / DAYS_PER_CENTURY;
   const year = 2000 + t * 100;
   const weight = corrections ? correctionWeightState(jdTT) : { value: 0, rate: 0 };
+  const modernWeight = modernCorrectionWeightState(jdTT, corrections);
   const fitX = (year - 1995.75) / 15195.05;
   const fitXRate = 100 * tRate / 15195.05;
   const shifts = MOON_PHASE.map(row => {
@@ -212,11 +244,15 @@ export function moonCorrectionState(jdTT, corrections = true) {
   const parityX = (year - 2000) / 15199.3;
   const parity = moonParityResidualState(t, tRate, parityX, 100 * tRate / 15199.3);
   const correction = { value: drift.value + parity.value, rate: drift.rate + parity.rate };
+  const modernResidual = modernResidualState(MODERN_MOON_RESIDUAL_ARCSEC, jdTT);
   return {
     shifts,
     rotation: {
-      value: -correction.value * weight.value * ARCSEC_TO_RAD,
-      rate: -(correction.rate * weight.value + correction.value * weight.rate) * ARCSEC_TO_RAD,
+      value: -(correction.value * weight.value
+        + modernResidual.value * modernWeight.value) * ARCSEC_TO_RAD,
+      rate: -(correction.rate * weight.value + correction.value * weight.rate
+        + modernResidual.rate * modernWeight.value
+        + modernResidual.value * modernWeight.rate) * ARCSEC_TO_RAD,
     },
   };
 }
@@ -379,11 +415,13 @@ export function earthLongitudeCorrectionState(jdTT, corrections = true) {
   const tauRate = 1 / DAYS_PER_MILLENNIUM;
   const year = 2000 + tau * 1000;
   const weight = corrections ? correctionWeightState(jdTT) : { value: 0, rate: 0 };
-  if (weight.value === 0 && weight.rate === 0) return { value: 0, rate: 0 };
+  const modernWeight = modernCorrectionWeightState(jdTT, corrections);
+  if (weight.value === 0 && weight.rate === 0
+      && modernWeight.value === 0 && modernWeight.rate === 0) return { value: 0, rate: 0 };
   const x = (year - 2643.5) / 7355.5;
   const xRate = 1000 * tauRate / 7355.5;
   const drift = chebyshevState(EARTH_DRIFT, x, xRate);
-  const result = {
+  const longSpan = {
     value: drift.value * weight.value,
     rate: drift.rate * weight.value + drift.value * weight.rate,
   };
@@ -400,10 +438,17 @@ export function earthLongitudeCorrectionState(jdTT, corrections = true) {
     const trigRate = -Math.sin(argument + shift.value) * (argumentRate + shift.rate) + Math.sin(argument) * argumentRate;
     const envelope = tau ** power;
     const envelopeRate = power === 0 ? 0 : power * tau ** (power - 1) * tauRate;
-    result.value += amplitude * envelope * trig;
-    result.rate += amplitude * (envelopeRate * trig + envelope * trigRate);
+    longSpan.value += amplitude * envelope * trig;
+    longSpan.rate += amplitude * (envelopeRate * trig + envelope * trigRate);
   }
-  return result;
+  const modernResidual = modernResidualState(MODERN_EARTH_RESIDUAL_ARCSEC, jdTT);
+  return {
+    value: longSpan.value
+      - modernResidual.value * modernWeight.value * ARCSEC_TO_RAD,
+    rate: longSpan.rate
+      - (modernResidual.rate * modernWeight.value
+        + modernResidual.value * modernWeight.rate) * ARCSEC_TO_RAD,
+  };
 }
 
 /** Heliocentric physical Earth, J2000 dynamical ecliptic/equinox, AU. */

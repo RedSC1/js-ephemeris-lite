@@ -549,3 +549,33 @@ test('tier-1 reverse lookup verifies candidates through the forward chart engine
   assert.ok(candidates.length >= 1);
   assert.equal(candidates[0].chart.starPositions[lucun], chart.starPositions[lucun]);
 });
+
+test('complete tier-1 constraints use the direct inverse across a century', () => {
+  const birth = zoned(2000, 1, 1, 12);
+  const options = new ZiweiOptions({ gender: ZIWEI_GENDER.MALE });
+  const chart = ZiweiChart.fromZonedTime(birth, options);
+  const branchOf = (key) => chart.starPositions[findStarId(key)];
+  const candidates = reverseLookupZiweiTier1({
+    start: zoned(1950, 1, 1, 0),
+    end: zoned(2050, 12, 31, 23, 59),
+    options,
+    query: {
+      lucunBranch: branchOf('lucun'),
+      hongluanBranch: branchOf('hongluan'),
+      zuofuBranch: branchOf('zuofu'),
+      wenchangBranch: branchOf('wenchang'),
+      santaiBranch: branchOf('santai'),
+    },
+  });
+  assert.ok(candidates.some((candidate) => Math.abs(
+    candidate.jdUT1 - birth.toJulianTime().jdUT1,
+  ) < 1e-7));
+});
+
+test('a 33rd civil day after Jie remains a valid natal chart day', () => {
+  const chart = ZiweiChart.fromZonedTime(
+    zoned(1999, 8, 8, 0),
+    new ZiweiOptions({ gender: ZIWEI_GENDER.MALE }),
+  );
+  assert.equal(chart.facts.solarDayFromPreviousJie, 33);
+});

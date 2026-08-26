@@ -69,7 +69,7 @@ const INPUT_DOMAINS: Readonly<Record<string, number>> = Object.freeze({
   'solar.zheng_kong': 12,
   'solar.fu_kong': 12,
   'solar.month_index': 12,
-  'solar.day_index': 32,
+  'solar.day_index': 33,
 });
 
 type JsonObject = Record<string, unknown>;

@@ -41,8 +41,8 @@ test('event angular rates agree with centered numerical diagnostics', () => {
 test('J2000-era spring equinox and new moon converge from low estimators', () => {
   const equinox = solveSolarLongitude(0, 2451623);
   const newMoon = solveNewMoon(2451550);
-  near(equinox.jdTT, 2451623.81686673, 2e-8);
-  near(newMoon.jdTT, 2451550.26019776, 2e-8);
+  near(equinox.jdTT, 2451623.8168862653, 2e-8);
+  near(newMoon.jdTT, 2451550.260213573, 2e-8);
   assert.ok(equinox.jdUT1 < equinox.jdTT);
   assert.ok(newMoon.jdUT1 < newMoon.jdTT);
   near((equinox.jdTT - equinox.jdUT1) * 86400, equinox.deltaTSeconds, 3e-5);
@@ -51,6 +51,38 @@ test('J2000-era spring equinox and new moon converge from low estimators', () =>
   assert.ok(newMoon.iterations <= 3);
   assert.ok(Math.abs(equinox.residualRadians) < 1e-9);
   assert.ok(Math.abs(newMoon.residualRadians) < 1e-9);
+});
+
+test('2026 solar terms and new moons track raw DE441 C++ event fixtures', () => {
+  const solar = [
+    [285, 2461045.850215711], [300, 2461060.57367191],
+    [315, 2461075.335614743], [330, 2461090.161859854],
+    [345, 2461105.08342922], [0, 2461120.116048963],
+    [15, 2461135.278569083], [30, 2461150.569625891],
+    [45, 2461165.992972783], [60, 2461181.526313748],
+    [75, 2461197.159387425], [90, 2461212.851151956],
+    [105, 2461228.582020279], [120, 2461244.301555634],
+    [135, 2461259.988816218], [150, 2461275.597194592],
+    [165, 2461291.112805841], [180, 2461306.50442536],
+    [195, 2461321.771142145], [210, 2461336.902146769],
+    [225, 2461351.911962071], [240, 2461366.808677635],
+    [255, 2461381.620609406], [270, 2461396.369020347],
+  ];
+  const solarErrors = solar.map(([degrees, oracle]) => (
+    solveSolarLongitude(degrees * Math.PI / 180, oracle).jdTT - oracle
+  ) * 86400);
+  assert.ok(Math.max(...solarErrors.map(Math.abs)) < 1);
+  assert.ok(solarErrors.reduce((sum, value) => sum + Math.abs(value), 0) / solarErrors.length < 0.4);
+
+  const newMoons = [
+    2461059.328565991, 2461089.001600085, 2461118.558772093,
+    2461147.995109024, 2461177.334860878, 2461206.621751109,
+    2461235.906089245, 2461265.234654732, 2461294.644549851,
+    2461324.160581602, 2461353.793936349, 2461383.536808932,
+  ];
+  const lunarErrors = newMoons.map(oracle => (solveNewMoon(oracle).jdTT - oracle) * 86400);
+  assert.ok(Math.max(...lunarErrors.map(Math.abs)) < 0.7);
+  assert.ok(lunarErrors.reduce((sum, value) => sum + Math.abs(value), 0) / lunarErrors.length < 0.2);
 });
 
 test('new-moon latitude budget is an explicit runtime switch', () => {

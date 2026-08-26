@@ -112,7 +112,7 @@ export function solarDayFromPreviousJie(
     jieLogical += 1 / 24;
   }
   const day = Math.floor(currentLogical + 0.5) - Math.floor(jieLogical + 0.5) + 1;
-  if (!Number.isInteger(day) || day < 1 || day > 32) {
+  if (!Number.isInteger(day) || day < 1 || day > 33) {
     throw new Error(`invalid solar day from previous Jie: ${day}`);
   }
   return day;

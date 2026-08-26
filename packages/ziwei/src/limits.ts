@@ -355,7 +355,7 @@ export function makeFlowDay(
   day: number,
   physicalDayStem: number,
 ): FlowDayLimit {
-  if (!Number.isSafeInteger(day) || day < 1 || day > 32) throw new RangeError('flow day must be 1..32');
+  if (!Number.isSafeInteger(day) || day < 1 || day > 33) throw new RangeError('flow day must be 1..33');
   if (!Number.isInteger(physicalDayStem) || physicalDayStem < 0 || physicalDayStem >= 10) {
     throw new RangeError('physicalDayStem must be 0..9');
   }
