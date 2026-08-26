@@ -1,8 +1,10 @@
-import { ganzhiBranch, ganzhiStem } from 'js-ephemeris-lite';
+import { MONTH_NAME, ganzhiBranch, ganzhiStem } from 'js-ephemeris-lite';
 import type { ZiweiChart } from './chart.js';
 import {
   CHILDHOOD_STRATEGY,
+  FLOW_MONTH_PALACE_STRATEGY,
   FLOW_LEVEL,
+  LEAP_MONTH_STRATEGY,
   PALACE,
   PILLAR_BOUNDARY,
   RAT_HOUR_SEGMENT,
@@ -45,8 +47,14 @@ export interface FlowMonthLimit {
   readonly month: number;
   /** Chronological slot within the labelled year; a leap month consumes one. */
   readonly sequence: number;
+  /** Effective month used for month stem, transformations and flow stars. */
+  readonly effectiveMonth: number;
+  /** Effective year paired with effectiveMonth; may cross a year at month 12. */
+  readonly effectiveYear: number;
   readonly isLeap: boolean;
   readonly monthBuildingBranch: number;
+  /** Month index actually used to advance from Liu-Nian Dou-Jun. */
+  readonly palaceMonthIndex: number;
   readonly doujun: number;
 }
 
@@ -98,7 +106,7 @@ export function getEffectiveBirthYear(
   chart: ZiweiChart,
   boundary = chart.options.flowLimitBoundary,
 ): number {
-  if (boundary === PILLAR_BOUNDARY.LUNAR) return chart.facts.lunarDate.year;
+  if (boundary === PILLAR_BOUNDARY.LUNAR) return chart.facts.effectiveLunarYear;
   const civilYear = chart.facts.virtualTime.year;
   const pillarStem = ganzhiStem(chart.facts.solarTermPillars.year);
   if (yearStem(civilYear) === pillarStem) return civilYear;
@@ -209,27 +217,60 @@ function makeFlowMonthWithOffset(
   isLeap: boolean,
   monthStemOffset: number,
   monthBuildingBranch: number,
+  effectiveYear: number,
+  effectiveMonth: number,
+  palaceMonthIndex: number,
 ): FlowMonthLimit {
   if (!Number.isSafeInteger(logicalMonth) || logicalMonth < 1 || logicalMonth > 12) {
     throw new RangeError('logicalMonth must be 1..12');
   }
-  if (!Number.isSafeInteger(sequence) || sequence < 1 || sequence > 13) {
-    throw new RangeError('month sequence must be 1..13');
+  if (!Number.isSafeInteger(sequence) || sequence < 1 || sequence > 15) {
+    throw new RangeError('month sequence must be 1..15');
+  }
+  if (!Number.isSafeInteger(palaceMonthIndex) || palaceMonthIndex < 1 || palaceMonthIndex > 15) {
+    throw new RangeError('palaceMonthIndex must be 1..15');
   }
   const birthMonth = chart.facts.effectiveLunarMonth;
   const birthHour = ganzhiBranch(chart.facts.solarTermPillars.hour);
-  const doujun = advanceBranch(yearBranch(year), -(birthMonth - 1) + birthHour);
-  const branch = advanceBranch(doujun, sequence - 1);
-  const startTiger = yearStem(year) % 5 * 2 + 2;
+  const doujun = advanceBranch(yearBranch(effectiveYear), -(birthMonth - 1) + birthHour);
+  const branch = advanceBranch(doujun, palaceMonthIndex - 1);
+  const startTiger = yearStem(effectiveYear) % 5 * 2 + 2;
+  // The caller owns the stem-offset convention. Calendar-backed construction
+  // may inherit an effective month, while the legacy/Dart entry point always
+  // advances Wu-Hu-Dun by the physical sequence.
   const coordinate = Object.freeze({ stem: mod(startTiger + monthStemOffset, 10), branch });
   return Object.freeze({
     year,
     month: logicalMonth,
     sequence,
+    effectiveYear,
+    effectiveMonth,
     isLeap,
     monthBuildingBranch,
+    palaceMonthIndex,
     doujun,
     limit: limitCoordinate(chart, FLOW_LEVEL.MONTH, coordinate),
+  });
+}
+
+function resolveFlowEffectivePeriod(
+  chart: ZiweiChart,
+  effectiveBaseYear: number,
+  logicalMonth: number,
+  isLeap: boolean,
+  day: number,
+  monthName: number,
+): Readonly<{ year: number; month: number }> {
+  const advance = isLeap && (
+    chart.options.leapMonthStrategy === LEAP_MONTH_STRATEGY.AS_NEXT
+    || (chart.options.leapMonthStrategy === LEAP_MONTH_STRATEGY.SPLIT_AFTER_FIFTEENTH && day > 15)
+  );
+  const isLaterNine = monthName === MONTH_NAME.LATER_NINE;
+  return Object.freeze({
+    year: advance && (logicalMonth === 12 || isLaterNine)
+      ? effectiveBaseYear + 1
+      : effectiveBaseYear,
+    month: advance ? (isLaterNine ? 10 : logicalMonth % 12 + 1) : logicalMonth,
   });
 }
 
@@ -241,19 +282,48 @@ export function makeFlowMonthFromBuildingBranch(
   sequence: number,
   isLeap: boolean,
   monthBuildingBranch: number,
+  day = 1,
+  effectiveMonthOverride?: number,
+  effectiveYearOverride?: number,
+  monthName: number = MONTH_NAME.NORMAL,
+  effectiveBaseYear = lunarYear,
 ): FlowMonthLimit {
   if (!Number.isInteger(monthBuildingBranch) || monthBuildingBranch < 0 || monthBuildingBranch >= 12) {
     throw new RangeError('monthBuildingBranch must be 0..11');
   }
   const offset = mod(monthBuildingBranch - 2, 12);
+  const resolvedEffective = resolveFlowEffectivePeriod(
+    chart,
+    effectiveBaseYear,
+    logicalMonth,
+    isLeap,
+    day,
+    monthName,
+  );
+  const effectiveMonth = effectiveMonthOverride ?? resolvedEffective.month;
+  const effectiveYear = effectiveYearOverride ?? resolvedEffective.year;
+  if (!Number.isInteger(effectiveMonth) || effectiveMonth < 1 || effectiveMonth > 12) {
+    throw new RangeError('effectiveMonth must be 1..12');
+  }
+  const palaceMonthIndex = chart.options.flowMonthPalaceStrategy
+    === FLOW_MONTH_PALACE_STRATEGY.EFFECTIVE_MONTH
+    ? effectiveMonth
+    : sequence;
+  // A leap month assigned to the previous/next effective month inherits that
+  // effective month's stem. Non-leap historical months retain their physical
+  // winter-solstice-anchored month-building position.
+  const effectiveStemOffset = isLeap ? effectiveMonth - 1 : offset;
   return makeFlowMonthWithOffset(
     chart,
     lunarYear,
     logicalMonth,
     sequence,
     isLeap,
-    offset,
+    effectiveStemOffset,
     monthBuildingBranch,
+    effectiveYear,
+    effectiveMonth,
+    palaceMonthIndex,
   );
 }
 
@@ -273,6 +343,9 @@ export function makeFlowMonth(
     isLeap,
     sequence - 1,
     advanceBranch(2, sequence - 1),
+    year,
+    logicalMonth,
+    sequence,
   );
 }
 

@@ -58,6 +58,7 @@ export function getHourGanzhi(dayStem: number, hourIndex: number): Ganzhi;
 export function getNayinId(value: Ganzhi): number;
 export function getNayinElement(value: Ganzhi): number;
 export function calculateDayPillar(civilDate: CivilDate): Ganzhi;
+export function normalizeChartVirtualTime(virtualTime: CivilDateTime): Readonly<CivilDateTime>;
 export function calculateFourPillars(
   instant: Ut1Input,
   virtualTime: CivilDateTime,

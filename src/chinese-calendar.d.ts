@@ -45,6 +45,8 @@ export interface NewMoonEvent {
 
 export interface LunarMonth {
   lunarYear: number;
+  /** Historical calendar/ganzhi year; can differ from the source label at reforms. */
+  historicalYear: number;
   month: number;
   isLeap: boolean;
   dayCount: number;
@@ -74,6 +76,7 @@ export interface LunarDate {
 
 export interface ResolvedLunarDate {
   year: number;
+  historicalYear: number;
   month: number;
   day: number;
   isLeap: boolean;

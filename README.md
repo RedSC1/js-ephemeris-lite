@@ -51,6 +51,7 @@ import {
   CALENDAR_MODE,
   solarToLunar,
   lunarToSolar,
+  getChineseEraNames,
   RAT_HOUR_MODE,
   fourPillarsForZonedTime,
   describeFourPillars,
@@ -71,6 +72,7 @@ const birth = new ZonedTime({
   hour: 12, minute: 0, second: 0,
   offsetMinutes: 480,
 }).toJulianTime();
+const eraNames = getChineseEraNames(birth);
 
 const birthClock = new ZonedTime({
   year: 2000, month: 1, day: 1,
@@ -278,6 +280,8 @@ lite 时间层约定 `UTC ≈ UT1`，不携带闰秒、TAI 或 EOP 表；TT 仍�
 历史表不是逐日数组。每个事件先由若干精确线性段或长尾线性式得到基准民用日；长尾只有在 `residualMask` 对应位为 1 时才读 `residualSigns`，修正 `+1` 或 `-1 day`。每 256 个事件保存一次 rank 前缀，因此符号位定位不需要从头数。C++ 的 `uint64_t` 在生成阶段按低 32 位、高 32 位拆入 `Uint32Array`，浏览器运行时只做精确的 32 位位运算，不依赖 `BigInt`，四组位图共 3648 bytes。
 
 `src/generated/historical-calendar-data.js` 已提交，可直接使用。
+
+`src/chinese-era.js` 的 `getChineseEraNames(jdUT1)` 返回该物理瞬时同时有效的全部中国历史纪年。每条记录都带 double JD 的 `startJd`、`endJdExclusive`，以及 `instant`、`day` 或 `year` 边界精度；月日无从确定的寿星记录只按相应农历年首兜底。中华民国从 `1912-01-01 00:00 UTC+8` 起算；当代公元纪年覆盖完整的 1949 年，因此从 `1949-01-01 00:00 UTC+8` 起显示，并与民国三十八年并存至 `1949-10-01 15:00 UTC+8`，该时刻起仅保留当代公元纪年。项目另补充了少量可核对的历史边界与历史政权，并继续按同一规则返回同时有效的纪年候选。
 
 历史月份制度规则也从本人的 C++ 项目按语义迁移，包括早期三套岁首、秦汉至武周改月名、同名月份结构化区分，以及 237 年景初历交接的记录性 28 日月。没有逐字复制寿星万年历实现。
 

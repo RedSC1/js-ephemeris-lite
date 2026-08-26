@@ -47,6 +47,7 @@ export class ZiweiLimitManager {
   readonly baseChart: ZiweiChart;
   readonly timeline: ZiweiTimelineProvider;
   private contextValue: ZiweiLimitContext = Object.freeze({});
+  private timelineYearValue: number | undefined;
   private targetValue: ZiweiFlowTarget | null = null;
   private resolvedValue: ResolvedZiweiFlow | null = null;
 
@@ -58,6 +59,16 @@ export class ZiweiLimitManager {
   get context(): ZiweiLimitContext { return this.contextValue; }
   get currentTarget(): ZiweiFlowTarget | null { return this.targetValue; }
   get resolvedFlow(): ResolvedZiweiFlow | null { return this.resolvedValue; }
+  /** Labelled year whose month/day cards are currently open. */
+  get timelineYear(): number | undefined { return this.timelineYearValue; }
+  get timelineDecadeIndex(): number | undefined {
+    if (this.timelineYearValue === undefined) return this.contextValue.decade?.index;
+    return makeDecadeForYear(
+      this.baseChart,
+      getEffectiveBirthYear(this.baseChart),
+      this.timelineYearValue,
+    ).index;
+  }
 
   get dynamicChart(): ZiweiDynamicChart {
     const limits = [
@@ -83,17 +94,21 @@ export class ZiweiLimitManager {
   }
 
   get manifest(): TimelineManifest {
+    const timelineYear = this.timelineYearValue;
     return this.timeline.getManifest({
-      year: this.contextValue.year?.year,
-      decadeIndex: this.contextValue.decade?.index,
+      year: timelineYear,
+      decadeIndex: this.timelineDecadeIndex,
       month: this.contextValue.month?.month,
       isLeap: this.contextValue.month?.isLeap,
+      effectiveMonth: this.contextValue.month?.effectiveMonth,
+      effectiveYear: this.contextValue.month?.effectiveYear,
       day: this.contextValue.day?.day,
     });
   }
 
   reset(): void {
     this.contextValue = Object.freeze({});
+    this.timelineYearValue = undefined;
     this.targetValue = null;
     this.resolvedValue = null;
   }
@@ -104,6 +119,7 @@ export class ZiweiLimitManager {
       ? makeChildhoodDecade(this.baseChart, birthYear, targetChildhoodYear ?? birthYear)
       : makeDecadeByIndex(this.baseChart, birthYear, index);
     this.contextValue = frozenContext({ decade });
+    this.timelineYearValue = undefined;
     this.targetValue = null;
     this.resolvedValue = null;
   }
@@ -122,40 +138,56 @@ export class ZiweiLimitManager {
       smallLimit,
       year: makeFlowYear(this.baseChart, year),
     });
+    this.timelineYearValue = year;
     this.targetValue = null;
     this.resolvedValue = null;
   }
 
   addYear(delta: number): void {
-    if (this.contextValue.year === undefined) return;
-    this.setYear(this.contextValue.year.year + delta);
+    if (this.timelineYearValue === undefined) return;
+    this.setYear(this.timelineYearValue + delta);
   }
 
   selectMonth(node: MonthNode): void {
-    const year = this.contextValue.year?.year;
+    const year = this.timelineYearValue;
     if (year === undefined) throw new Error('select a flow year first');
     const month = makeFlowMonthFromBuildingBranch(
       this.baseChart,
-      year,
+      node.lunarYear,
       node.month,
       node.sequence,
       node.isLeap,
       node.monthBuildingBranch,
+      node.dayStart,
+      node.effectiveMonth,
+      node.effectiveYear,
+      node.monthName,
+    );
+    const birthYear = getEffectiveBirthYear(this.baseChart);
+    const virtualAge = node.effectiveYear - birthYear + 1;
+    const decade = makeDecadeForYear(this.baseChart, birthYear, node.effectiveYear);
+    const smallLimit = makeSmallLimit(
+      this.baseChart,
+      ganzhiBranch(this.baseChart.facts.solarTermPillars.year),
+      virtualAge,
     );
     this.contextValue = frozenContext({
-      decade: this.contextValue.decade,
-      smallLimit: this.contextValue.smallLimit,
-      year: this.contextValue.year,
+      decade,
+      smallLimit,
+      year: makeFlowYear(this.baseChart, node.effectiveYear),
       month,
     });
     this.targetValue = null;
     this.resolvedValue = null;
   }
 
-  setMonth(month: number, isLeap = false): void {
-    const year = this.contextValue.year?.year;
+  setMonth(month: number, isLeap = false, effectiveMonth?: number, effectiveYear?: number): void {
+    const year = this.timelineYearValue;
     if (year === undefined) throw new Error('select a flow year first');
-    const node = this.timeline.getMonths(year).find((value) => value.month === month && value.isLeap === isLeap);
+    const node = this.timeline.getMonths(year).find((value) => value.month === month
+      && value.isLeap === isLeap
+      && (effectiveMonth === undefined || value.effectiveMonth === effectiveMonth)
+      && (effectiveYear === undefined || value.effectiveYear === effectiveYear));
     if (node === undefined) throw new RangeError('requested flow month does not exist');
     this.selectMonth(node);
   }
@@ -165,12 +197,14 @@ export class ZiweiLimitManager {
     if (!Number.isSafeInteger(delta)) throw new RangeError('month delta must be a safe integer');
     if (delta === 0) return;
     const current = this.contextValue.month;
-    const currentYear = this.contextValue.year?.year;
+    const currentYear = this.timelineYearValue;
     if (current === undefined || currentYear === undefined) return;
     let year = currentYear;
     let months = this.timeline.getMonths(year);
     let index = months.findIndex((node) => node.month === current.month
-      && node.sequence === current.sequence && node.isLeap === current.isLeap);
+      && node.sequence === current.sequence && node.isLeap === current.isLeap
+      && node.effectiveMonth === current.effectiveMonth
+      && node.effectiveYear === current.effectiveYear);
     if (index < 0) throw new Error('current flow month is absent from the timeline');
     const direction = Math.sign(delta);
     for (let step = 0; step < Math.abs(delta); step += 1) {
@@ -206,10 +240,17 @@ export class ZiweiLimitManager {
   }
 
   setDay(day: number): void {
-    const year = this.contextValue.year?.year;
+    const year = this.timelineYearValue;
     const month = this.contextValue.month;
     if (year === undefined || month === undefined) throw new Error('select a flow month first');
-    const node = this.timeline.getDays(year, month.month, month.isLeap)[day - 1];
+    const node = this.timeline.getDays(
+      year,
+      month.month,
+      month.isLeap,
+      month.effectiveMonth,
+      month.effectiveYear,
+    )
+      .find((value) => value.day === day);
     if (node === undefined) throw new RangeError('requested flow day does not exist');
     this.selectDay(node);
   }
@@ -259,6 +300,7 @@ export class ZiweiLimitManager {
 
   private installResolved(flow: ResolvedZiweiFlow, deepestLevel: FlowLevel): void {
     this.resolvedValue = flow;
+    this.timelineYearValue = flow.year.year;
     this.contextValue = frozenContext({
       decade: flow.decade,
       smallLimit: flow.smallLimit,
@@ -299,6 +341,7 @@ export class ZiweiLimitManager {
   }
 
   clear(level: FlowLevel): void {
+    if (level <= FLOW_LEVEL.YEAR) this.timelineYearValue = undefined;
     const keep = level;
     const entries = [
       this.contextValue.decade,
@@ -307,11 +350,12 @@ export class ZiweiLimitManager {
       this.contextValue.day,
       this.contextValue.hour,
     ].slice(0, keep);
+    const keptMonth = entries[2] as FlowMonthLimit | undefined;
     this.contextValue = frozenContext({
       decade: entries[0] as DecadeLimit | undefined,
       smallLimit: keep > FLOW_LEVEL.YEAR ? this.contextValue.smallLimit : undefined,
       year: entries[1] as FlowYearLimit | undefined,
-      month: entries[2] as FlowMonthLimit | undefined,
+      month: keptMonth,
       day: entries[3] as FlowDayLimit | undefined,
       hour: entries[4] as FlowHourLimit | undefined,
     });
@@ -322,7 +366,11 @@ export class ZiweiLimitManager {
 
   clearDecade(): void { this.clear(FLOW_LEVEL.DECADE); }
   clearYear(): void { this.clear(FLOW_LEVEL.YEAR); }
-  clearMonth(): void { this.clear(FLOW_LEVEL.MONTH); }
+  clearMonth(): void {
+    const timelineYear = this.timelineYearValue;
+    if (timelineYear === undefined) this.clear(FLOW_LEVEL.MONTH);
+    else this.setYear(timelineYear);
+  }
   clearDay(): void { this.clear(FLOW_LEVEL.DAY); }
   clearHour(): void { this.clear(FLOW_LEVEL.HOUR); }
 }

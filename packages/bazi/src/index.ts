@@ -4,6 +4,7 @@ export * from './fortune.js';
 export * from './options.js';
 export * from './pillar.js';
 export * from './relations.js';
+export * from './reverse-lookup.js';
 export * from './rules.js';
 export * from './shen-sha.js';
 

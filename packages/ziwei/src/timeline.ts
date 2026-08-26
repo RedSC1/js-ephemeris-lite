@@ -22,7 +22,7 @@ import {
   makeFlowMonthFromBuildingBranch,
   makeFlowYear,
 } from './limits.js';
-import { PILLAR_BOUNDARY } from './types.js';
+import { LEAP_MONTH_STRATEGY, PILLAR_BOUNDARY, advanceBranch } from './types.js';
 
 export interface ChildhoodNode {
   readonly age: number;
@@ -48,14 +48,23 @@ export interface YearNode {
 }
 
 export interface MonthNode {
+  /** Calendar-labelled source year; may differ from effectiveYear for a carried segment. */
+  readonly lunarYear: number;
   readonly month: number;
   readonly sequence: number;
+  readonly effectiveMonth: number;
+  readonly effectiveYear: number;
+  readonly dayStart: number;
+  readonly dayEnd: number;
   readonly monthName: number;
   readonly displayLabel: string;
   readonly isLeap: boolean;
   readonly monthBuildingBranch: number;
   readonly stem: number;
+  /** Flow-month Life Palace branch. */
   readonly branch: number;
+  /** Month branch used only for the displayed month Ganzhi label. */
+  readonly displayBranch: number;
   readonly solarStartJd: number;
   readonly solarEndJdExclusive: number;
   readonly firstCivilDayNumber: number;
@@ -103,6 +112,38 @@ function monthLabel(month: number, monthName: number, isLeap: boolean): string {
   if (monthName === MONTH_NAME.ALT_ONE) return '改正月';
   if (monthName === MONTH_NAME.LATER_SAME_NAME) return `后${MONTH_LABELS[month - 1] ?? month}月`;
   return `${isLeap ? '闰' : ''}${MONTH_LABELS[month - 1] ?? month}月`;
+}
+
+function monthSegments(
+  chart: ZiweiChart,
+  effectiveBaseYear: number,
+  logicalMonth: number,
+  isLeap: boolean,
+  dayCount: number,
+  monthName: number,
+): readonly Readonly<{ effectiveYear: number; effectiveMonth: number; dayStart: number; dayEnd: number }>[] {
+  if (!isLeap) return Object.freeze([{
+    effectiveYear: effectiveBaseYear, effectiveMonth: logicalMonth, dayStart: 1, dayEnd: dayCount,
+  }]);
+  const isLaterNine = monthName === MONTH_NAME.LATER_NINE;
+  const nextMonth = isLaterNine ? 10 : logicalMonth % 12 + 1;
+  const nextYear = logicalMonth === 12 || isLaterNine
+    ? effectiveBaseYear + 1
+    : effectiveBaseYear;
+  if (chart.options.leapMonthStrategy === LEAP_MONTH_STRATEGY.AS_NEXT) {
+    return Object.freeze([{
+      effectiveYear: nextYear, effectiveMonth: nextMonth, dayStart: 1, dayEnd: dayCount,
+    }]);
+  }
+  if (chart.options.leapMonthStrategy === LEAP_MONTH_STRATEGY.SPLIT_AFTER_FIFTEENTH && dayCount > 15) {
+    return Object.freeze([
+      Object.freeze({ effectiveYear: effectiveBaseYear, effectiveMonth: logicalMonth, dayStart: 1, dayEnd: 15 }),
+      Object.freeze({ effectiveYear: nextYear, effectiveMonth: nextMonth, dayStart: 16, dayEnd: dayCount }),
+    ]);
+  }
+  return Object.freeze([{
+    effectiveYear: effectiveBaseYear, effectiveMonth: logicalMonth, dayStart: 1, dayEnd: dayCount,
+  }]);
 }
 
 function collectLunarYearMonths(chart: ZiweiChart, targetYear: number): LunarMonth[] {
@@ -183,34 +224,81 @@ export class ZiweiTimelineProvider {
     if (this.chart.options.flowLimitBoundary === PILLAR_BOUNDARY.SOLAR_TERM) {
       return this.getSolarTermMonths(targetYear);
     }
-    return Object.freeze(collectLunarYearMonths(this.chart, targetYear).map((month, index) => {
-      const overflow = index + 1 > 13;
-      const sequence = Math.min(index + 1, 13);
-      const logicalMonth = overflow ? 12 : month.month === 13 ? 12 : month.month;
-      const isLeap = overflow || month.isLeap;
-      const flow = makeFlowMonthFromBuildingBranch(
+    // Calendar source labels can straddle a historical reform. Build a
+    // chronological pool first, then number months inside historicalYear.
+    // This avoids merging two historical years merely because they share the
+    // same source lunarYear label at a reform boundary.
+    const rawByFirstDay = new Map<number, LunarMonth>();
+    for (const lunarYear of [targetYear - 2, targetYear - 1, targetYear]) {
+      try {
+        for (const month of collectLunarYearMonths(this.chart, lunarYear)) {
+          if (!rawByFirstDay.has(month.firstCivilDayNumber)) {
+            rawByFirstDay.set(month.firstCivilDayNumber, month);
+          }
+        }
+      } catch (error) {
+        if (lunarYear === targetYear) throw error;
+        continue;
+      }
+    }
+    const rawMonths = [...rawByFirstDay.values()]
+      .sort((left, right) => left.firstCivilDayNumber - right.firstCivilDayNumber);
+    const sequenceByFirstDay = new Map<number, number>();
+    for (const historicalYear of new Set(rawMonths.map((month) => month.historicalYear))) {
+      rawMonths
+        .filter((month) => month.historicalYear === historicalYear)
+        .forEach((month, index) => sequenceByFirstDay.set(month.firstCivilDayNumber, index + 1));
+    }
+    const nodes = rawMonths.flatMap((month) => {
+      const sequence = sequenceByFirstDay.get(month.firstCivilDayNumber)!;
+      const logicalMonth = month.month === 13 ? 12 : month.month;
+      const isLeap = month.isLeap;
+      return monthSegments(
         this.chart,
-        targetYear,
+        month.historicalYear,
         logicalMonth,
-        sequence,
         isLeap,
-        month.monthBuildingBranch,
-      );
-      return Object.freeze({
-        month: logicalMonth,
-        sequence,
-        monthName: month.monthName,
-        displayLabel: monthLabel(month.month, month.monthName, isLeap),
-        isLeap,
-        monthBuildingBranch: month.monthBuildingBranch,
-        stem: flow.limit.coordinate.stem,
-        branch: flow.limit.coordinate.branch,
-        solarStartJd: month.firstCivilDayNumber - 0.5,
-        solarEndJdExclusive: month.firstCivilDayNumber + month.dayCount - 0.5,
-        firstCivilDayNumber: month.firstCivilDayNumber,
-        dayCount: month.dayCount,
+        month.dayCount,
+        month.monthName,
+      ).map((segment) => {
+          const segmentDayCount = segment.dayEnd - segment.dayStart + 1;
+          const segmentFirstDay = month.firstCivilDayNumber + segment.dayStart - 1;
+          const flow = makeFlowMonthFromBuildingBranch(
+            this.chart,
+            month.lunarYear,
+            logicalMonth,
+            sequence,
+            isLeap,
+            month.monthBuildingBranch,
+            segment.dayStart,
+            segment.effectiveMonth,
+            segment.effectiveYear,
+            month.monthName,
+          );
+          return Object.freeze({
+            lunarYear: month.lunarYear,
+            month: logicalMonth,
+            sequence,
+            effectiveMonth: flow.effectiveMonth,
+            effectiveYear: flow.effectiveYear,
+            dayStart: segment.dayStart,
+            dayEnd: segment.dayEnd,
+            monthName: month.monthName,
+            displayLabel: monthLabel(month.month, month.monthName, isLeap),
+            isLeap,
+            monthBuildingBranch: month.monthBuildingBranch,
+            stem: flow.limit.coordinate.stem,
+            branch: flow.limit.coordinate.branch,
+            displayBranch: advanceBranch(2, flow.effectiveMonth - 1),
+            solarStartJd: segmentFirstDay - 0.5,
+            solarEndJdExclusive: segmentFirstDay + segmentDayCount - 0.5,
+            firstCivilDayNumber: segmentFirstDay,
+            dayCount: segmentDayCount,
+          });
       });
-    }));
+    }).filter((node) => node.effectiveYear === targetYear)
+      .sort((left, right) => left.firstCivilDayNumber - right.firstCivilDayNumber);
+    return Object.freeze(nodes);
   }
 
   private getSolarTermMonths(targetYear: number): readonly MonthNode[] {
@@ -224,14 +312,20 @@ export class ZiweiTimelineProvider {
       const startDay = Math.floor(starts[offset]! + this.chart.options.utcOffsetMinutes / 1440 + 0.5);
       const endDay = Math.floor(starts[offset + 1]! + this.chart.options.utcOffsetMinutes / 1440 + 0.5);
       return Object.freeze({
+        lunarYear: targetYear,
         month,
         sequence: month,
+        effectiveMonth: flow.effectiveMonth,
+        effectiveYear: flow.effectiveYear,
+        dayStart: 1,
+        dayEnd: endDay - startDay,
         monthName: MONTH_NAME.NORMAL,
         displayLabel: `${MONTH_LABELS[offset]}月`,
         isLeap: false,
         monthBuildingBranch: (month + 1) % 12,
         stem: flow.limit.coordinate.stem,
         branch: flow.limit.coordinate.branch,
+        displayBranch: advanceBranch(2, flow.effectiveMonth - 1),
         solarStartJd: starts[offset]!,
         solarEndJdExclusive: starts[offset + 1]!,
         firstCivilDayNumber: startDay,
@@ -240,14 +334,23 @@ export class ZiweiTimelineProvider {
     }));
   }
 
-  getDays(targetYear: number, month: number, isLeap = false): readonly DayNode[] {
-    const target = this.getMonths(targetYear).find((value) => value.month === month && value.isLeap === isLeap);
+  getDays(
+    targetYear: number,
+    month: number,
+    isLeap = false,
+    effectiveMonth?: number,
+    effectiveYear?: number,
+  ): readonly DayNode[] {
+    const target = this.getMonths(targetYear).find((value) => value.month === month
+      && value.isLeap === isLeap
+      && (effectiveMonth === undefined || value.effectiveMonth === effectiveMonth)
+      && (effectiveYear === undefined || value.effectiveYear === effectiveYear));
     if (target === undefined) return Object.freeze([]);
     return Object.freeze(Array.from({ length: target.dayCount }, (_, offset) => {
       const solarDate = dateOnly(target.firstCivilDayNumber - 0.5 + offset);
       const physical = calculateDayPillar(solarDate);
       return Object.freeze({
-        day: offset + 1,
+        day: target.dayStart + offset,
         stem: ganzhiStem(physical),
         branch: ganzhiBranch(physical),
         solarDate,
@@ -306,6 +409,8 @@ export class ZiweiTimelineProvider {
     decadeIndex?: number;
     month?: number;
     isLeap?: boolean;
+    effectiveMonth?: number;
+    effectiveYear?: number;
     day?: number;
   } = {}): TimelineManifest {
     let decadeIndex = input.decadeIndex;
@@ -327,8 +432,8 @@ export class ZiweiTimelineProvider {
     const months = input.year === undefined ? undefined : this.getMonths(input.year);
     const days = input.year === undefined || input.month === undefined
       ? undefined
-      : this.getDays(input.year, input.month, input.isLeap ?? false);
-    const targetDay = input.day === undefined ? undefined : days?.[input.day - 1];
+      : this.getDays(input.year, input.month, input.isLeap ?? false, input.effectiveMonth, input.effectiveYear);
+    const targetDay = input.day === undefined ? undefined : days?.find((value) => value.day === input.day);
     const hours = targetDay === undefined
       ? undefined
       : this.getHours(calculateDayPillar(targetDay.solarDate));

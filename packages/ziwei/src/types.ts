@@ -70,6 +70,14 @@ export const LEAP_MONTH_STRATEGY = Object.freeze({
 } as const);
 export type LeapMonthStrategy = typeof LEAP_MONTH_STRATEGY[keyof typeof LEAP_MONTH_STRATEGY];
 
+export const FLOW_MONTH_PALACE_STRATEGY = Object.freeze({
+  /** Dart/C++ convention: every physical lunar month advances the palace. */
+  PHYSICAL_SEQUENCE: 0,
+  /** Treat the whole selected segment as its effective previous/next month. */
+  EFFECTIVE_MONTH: 1,
+} as const);
+export type FlowMonthPalaceStrategy = typeof FLOW_MONTH_PALACE_STRATEGY[keyof typeof FLOW_MONTH_PALACE_STRATEGY];
+
 export const BRIGHTNESS = Object.freeze({
   NONE: -1,
   XIAN: 0,
@@ -105,6 +113,7 @@ export type StarTransformMark = typeof STAR_TRANSFORM_MARK[keyof typeof STAR_TRA
 
 export interface ZiweiLunarDateFacts {
   readonly year: number;
+  readonly historicalYear: number;
   readonly month: number;
   readonly day: number;
   readonly isLeap: boolean;

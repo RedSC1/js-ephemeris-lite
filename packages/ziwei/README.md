@@ -240,7 +240,7 @@ console.log(dynamic.smallLimitLayer);  // 小限是并行年度参考，不是�
 console.log(dynamic.getFlowStar(findStarId('flow_lucun')));
 ```
 
-农历流月同时保留三个不能混用的量：书面月份 `month`、含闰月的时序位置 `sequence`、冬至月起建的 `monthBuildingBranch`。因此 2033 闰十一月会消耗一个时序位置，但五虎遁月干重复前一个建子月；历史改历的特殊月名同样不会破坏月建。
+农历流月同时保留四个不能混用的量：书面月份 `month`、含闰月的真实时序位置 `sequence`、用于月干/四化/流曜的 `effectiveMonth`、冬至月起建的 `monthBuildingBranch`。默认流月命宫按 `sequence` 从流年斗君推进，与 Dart/C++ 一致；如需让闰月分段的命宫也跟随上月/下月，可单独设置 `flowMonthPalaceStrategy: FLOW_MONTH_PALACE_STRATEGY.EFFECTIVE_MONTH`。`MonthNode.branch` 是实际流月命宫，月份卡片的显示地支则在 `MonthNode.displayBranch`。
 
 给 Web UI 生成整套可选时间线：
 

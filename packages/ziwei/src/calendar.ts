@@ -9,6 +9,7 @@ import {
   julianDay,
   makeGanzhi,
   meanSolarTime,
+  normalizeChartVirtualTime,
   solarToLunar,
   trueSolarTime,
   type CivilDateTime,
@@ -124,17 +125,22 @@ export function resolveZiweiBirthFromInstant(
 ): ResolvedZiweiBirth {
   const options = resolveZiweiOptions(rawOptions);
   const jdUT1 = asUt1JulianDay(instant);
+  const normalizedVirtualTime = normalizeChartVirtualTime(virtualTime);
   const calendarOptions = options.toCalendarOptions();
-  const resolvedLunar = resolveZiweiLogicalLunarDate(virtualTime, options);
+  const resolvedLunar = resolveZiweiLogicalLunarDate(normalizedVirtualTime, options);
   const lunarDate: ZiweiLunarDateFacts = Object.freeze({
     year: resolvedLunar.year,
+    historicalYear: resolvedLunar.historicalYear,
     month: resolvedLunar.month,
     day: resolvedLunar.day,
     isLeap: resolvedLunar.isLeap,
     monthName: resolvedLunar.monthName,
   });
-  const effective = resolveEffectiveLunarMonth(lunarDate, options.leapMonthStrategy);
-  const solarTermPillars = calculateFourPillars(jdUT1, virtualTime, {
+  const effective = resolveEffectiveLunarMonth(
+    { ...lunarDate, year: resolvedLunar.historicalYear },
+    options.leapMonthStrategy,
+  );
+  const solarTermPillars = calculateFourPillars(jdUT1, normalizedVirtualTime, {
     ...calendarOptions,
     pillarHistoricalMode: options.pillarHistoricalMode,
     ratHourMode: options.ratHourMode,
@@ -146,14 +152,14 @@ export function resolveZiweiBirthFromInstant(
   }
   const facts: ZiweiCalendarFacts = Object.freeze({
     jdUT1,
-    virtualTime: freezeCivilTime(virtualTime),
+    virtualTime: freezeCivilTime(normalizedVirtualTime),
     gender: options.gender,
     lunarDate,
     solarTermPillars,
     lunarPillars: makeLunarPillars(effective.year, effective.month, solarTermPillars),
     effectiveLunarYear: effective.year,
     effectiveLunarMonth: effective.month,
-    solarDayFromPreviousJie: solarDayFromPreviousJie(jdUT1, virtualTime, options),
+    solarDayFromPreviousJie: solarDayFromPreviousJie(jdUT1, normalizedVirtualTime, options),
   });
   const resolved = computeZiweiAnchors(facts, options);
   return Object.freeze({ facts, ...resolved, options });

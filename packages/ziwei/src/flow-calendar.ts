@@ -7,6 +7,7 @@ import {
   ganzhiStem,
   julianDay,
   lunarToSolar,
+  normalizeChartVirtualTime,
   type CivilDateTime,
   type LunarMonth,
   type LunarMonthName,
@@ -42,6 +43,8 @@ import {
 } from './types.js';
 
 export interface ResolvedFlowMonthMetadata {
+  /** Historical ganzhi year used by annual Ziwei limits. */
+  readonly effectiveBaseYear: number;
   readonly logicalMonth: number;
   readonly sequence: number;
   readonly isLeap: boolean;
@@ -129,15 +132,16 @@ export function resolveLunarFlowMonthMetadata(
   const targetIndex = months.findIndex((month) => month.firstCivilDayNumber === firstDay && sameMonth(month, lunar));
   if (targetIndex < 0) throw new Error('target lunar month is absent from nearby calendar windows');
   const target = months[targetIndex]!;
-  let sequence = 1;
-  for (let index = 0; index < targetIndex; index += 1) {
-    if (months[index]!.lunarYear === lunar.year) sequence += 1;
-  }
-  const overflow = sequence > 13;
+  const historicalMonths = months
+    .filter((month) => month.historicalYear === target.historicalYear)
+    .sort((left, right) => left.firstCivilDayNumber - right.firstCivilDayNumber);
+  const sequence = historicalMonths.findIndex((month) => month.firstCivilDayNumber === target.firstCivilDayNumber) + 1;
+  if (sequence < 1) throw new Error('target lunar month is absent from its historical year');
   return Object.freeze({
-    logicalMonth: overflow ? 12 : lunar.month === 13 ? 12 : lunar.month,
-    sequence: Math.min(sequence, 13),
-    isLeap: overflow || lunar.isLeap,
+    effectiveBaseYear: target.historicalYear,
+    logicalMonth: lunar.month === 13 ? 12 : lunar.month,
+    sequence,
+    isLeap: lunar.isLeap,
     monthName: lunar.monthName,
     monthBuildingBranch: target.monthBuildingBranch,
     firstCivilDayNumber: target.firstCivilDayNumber,
@@ -166,7 +170,8 @@ export function resolveZiweiFlowFromInstant(
 ): ResolvedZiweiFlow {
   const jdUT1 = typeof targetInstant === 'number' ? targetInstant : targetInstant.jdUT1;
   if (jdUT1 < chart.facts.jdUT1) throw new RangeError('target instant precedes birth instant');
-  const targetPillars = calculateFourPillars(jdUT1, targetVirtualTime, {
+  const normalizedTargetVirtualTime = normalizeChartVirtualTime(targetVirtualTime);
+  const targetPillars = calculateFourPillars(jdUT1, normalizedTargetVirtualTime, {
     ...chart.options.toCalendarOptions(),
     pillarHistoricalMode: chart.options.pillarHistoricalMode,
     ratHourMode: chart.options.ratHourMode,
@@ -177,40 +182,37 @@ export function resolveZiweiFlowFromInstant(
   let targetMonthSequence: number;
   let targetMonthBuildingBranch: number;
   let targetMonthIsLeap: boolean;
+  let targetMonthName: number;
+  let targetMonthEffectiveBaseYear: number;
   let targetDay: number;
 
   if (boundary === PILLAR_BOUNDARY.LUNAR) {
-    const lunar = resolveZiweiLogicalLunarDate(targetVirtualTime, chart.options);
+    const lunar = resolveZiweiLogicalLunarDate(normalizedTargetVirtualTime, chart.options);
     const metadata = resolveLunarFlowMonthMetadata(chart, jdUT1, lunar);
     effectiveTargetYear = lunar.year;
     targetMonth = metadata.logicalMonth;
     targetMonthSequence = metadata.sequence;
     targetMonthBuildingBranch = metadata.monthBuildingBranch;
     targetMonthIsLeap = metadata.isLeap;
+    targetMonthName = metadata.monthName;
+    targetMonthEffectiveBaseYear = metadata.effectiveBaseYear;
     targetDay = lunar.day;
   } else {
-    effectiveTargetYear = effectiveSolarYear(targetVirtualTime.year, targetPillars.year);
+    effectiveTargetYear = effectiveSolarYear(normalizedTargetVirtualTime.year, targetPillars.year);
     targetMonthBuildingBranch = ganzhiBranch(targetPillars.month);
     targetMonth = mod(targetMonthBuildingBranch - 2, 12) + 1;
     targetMonthSequence = targetMonth;
     targetMonthIsLeap = false;
-    targetDay = solarDayFromPreviousJie(jdUT1, targetVirtualTime, chart.options);
+    targetMonthName = 0;
+    targetMonthEffectiveBaseYear = effectiveTargetYear;
+    targetDay = solarDayFromPreviousJie(jdUT1, normalizedTargetVirtualTime, chart.options);
   }
   const targetHourIndex = ganzhiBranch(targetPillars.hour);
   const targetRatHourSegment = ratHourSegment(
-    targetVirtualTime,
+    normalizedTargetVirtualTime,
     chart.options.ratHourMode,
     targetHourIndex,
   );
-  const virtualAge = effectiveTargetYear - effectiveBirthYear + 1;
-  if (virtualAge < 1) throw new RangeError('target precedes the effective birth year');
-  const decade = makeDecadeForYear(chart, effectiveBirthYear, effectiveTargetYear);
-  const smallLimit = makeSmallLimit(
-    chart,
-    ganzhiBranch(chart.facts.solarTermPillars.year),
-    virtualAge,
-  );
-  const year = makeFlowYear(chart, effectiveTargetYear);
   const month = boundary === PILLAR_BOUNDARY.LUNAR
     ? makeFlowMonthFromBuildingBranch(
       chart,
@@ -219,6 +221,11 @@ export function resolveZiweiFlowFromInstant(
       targetMonthSequence,
       targetMonthIsLeap,
       targetMonthBuildingBranch,
+      targetDay,
+      undefined,
+      undefined,
+      targetMonthName,
+      targetMonthEffectiveBaseYear,
     )
     : makeFlowMonth(
       chart,
@@ -227,11 +234,21 @@ export function resolveZiweiFlowFromInstant(
       targetMonthSequence,
       false,
     );
+  const effectiveFlowYear = month.effectiveYear;
+  const virtualAge = effectiveFlowYear - effectiveBirthYear + 1;
+  if (virtualAge < 1) throw new RangeError('target precedes the effective birth year');
+  const decade = makeDecadeForYear(chart, effectiveBirthYear, effectiveFlowYear);
+  const smallLimit = makeSmallLimit(
+    chart,
+    ganzhiBranch(chart.facts.solarTermPillars.year),
+    virtualAge,
+  );
+  const year = makeFlowYear(chart, effectiveFlowYear);
   const day = makeFlowDay(chart, month, targetDay, ganzhiStem(targetPillars.day));
   const hour = makeFlowHourFromPillar(chart, day, targetPillars.hour, targetRatHourSegment);
   return Object.freeze({
     effectiveBirthYear,
-    effectiveTargetYear,
+    effectiveTargetYear: effectiveFlowYear,
     targetMonth,
     targetMonthSequence,
     targetMonthBuildingBranch,
@@ -295,50 +312,41 @@ function frozenClock(value: CivilDateTime): Readonly<CivilDateTime> {
   return Object.freeze({ ...value });
 }
 
-/** Step to the canonical center of the adjacent logical hour, preserving the instant/virtual-clock offset. */
+/** Step one logical hour while preserving the position inside the chart clock. */
 export function stepZiweiFlowHourTarget(
   current: ZiweiFlowTarget,
   ratHourMode: string,
   direction: -1 | 1,
 ): ZiweiFlowTarget & { readonly ratHourSegment: RatHourSegment } {
   if (direction !== -1 && direction !== 1) throw new RangeError('direction must be -1 or 1');
+  const currentVirtualTime = normalizeChartVirtualTime(current.virtualTime);
   const split = ratHourMode !== RAT_HOUR_MODE.NEXT_DAY;
-  const slotCount = split ? 13 : 12;
-  let slot = split && current.virtualTime.hour >= 23
-    ? 12
-    : Math.floor((current.virtualTime.hour + 1) / 2) % 12;
-  let logicalDayShift = !split && current.virtualTime.hour >= 23 ? 1 : 0;
-  slot += direction;
-  if (slot < 0) {
-    slot += slotCount;
-    logicalDayShift -= 1;
-  } else if (slot >= slotCount) {
-    slot -= slotCount;
-    logicalDayShift += 1;
-  }
-  const dayStart = julianDay({
-    year: current.virtualTime.year,
-    month: current.virtualTime.month,
-    day: current.virtualTime.day,
+  const oneHourStep = split && (direction > 0
+    ? currentVirtualTime.hour >= 22 || currentVirtualTime.hour < 1
+    : currentVirtualTime.hour >= 23 || currentVirtualTime.hour < 2);
+  const stepHours = direction * (oneHourStep ? 1 : 2);
+  const unwrappedHour = currentVirtualTime.hour + stepHours;
+  const dayShift = Math.floor(unwrappedHour / 24);
+  const targetHour = mod(unwrappedHour, 24);
+  const sourceNoon = julianDay({
+    year: currentVirtualTime.year,
+    month: currentVirtualTime.month,
+    day: currentVirtualTime.day,
+    hour: 12,
   });
-  const targetDay = calendarDateFromJulianDay(dayStart + logicalDayShift);
-  const center = split
-    ? slot === 0 ? 0.5 : slot === 12 ? 23.5 : slot * 2
-    : slot === 0 ? 0.5 : slot * 2;
+  const targetDay = calendarDateFromJulianDay(sourceNoon + dayShift);
   const targetVirtual: CivilDateTime = {
     year: targetDay.year,
     month: targetDay.month,
     day: targetDay.day,
-    hour: Math.floor(center),
-    minute: center % 1 >= 0.5 ? 30 : 0,
-    second: 0,
+    hour: targetHour,
+    minute: currentVirtualTime.minute,
+    second: currentVirtualTime.second,
   };
-  const delta = julianDay(targetVirtual) - julianDay(current.virtualTime);
-  const segment = split
-    ? slot === 0 ? RAT_HOUR_SEGMENT.EARLY : slot === 12 ? RAT_HOUR_SEGMENT.LATE : RAT_HOUR_SEGMENT.NONE
-    : slot === 0 ? RAT_HOUR_SEGMENT.UNIFIED : RAT_HOUR_SEGMENT.NONE;
+  const targetHourBranch = Math.floor((targetHour + 1) / 2) % 12;
+  const segment = ratHourSegment(targetVirtual, ratHourMode, targetHourBranch);
   return Object.freeze({
-    jdUT1: current.jdUT1 + delta,
+    jdUT1: current.jdUT1 + stepHours / 24,
     virtualTime: frozenClock(targetVirtual),
     ratHourSegment: segment,
   });
@@ -349,16 +357,23 @@ export function stepZiweiFlowDayTarget(
   direction: -1 | 1,
 ): ZiweiFlowTarget {
   if (direction !== -1 && direction !== 1) throw new RangeError('direction must be -1 or 1');
-  const date = calendarDateFromJulianDay(julianDay(current.virtualTime) + direction);
+  const currentVirtualTime = normalizeChartVirtualTime(current.virtualTime);
+  const sourceNoon = julianDay({
+    year: currentVirtualTime.year,
+    month: currentVirtualTime.month,
+    day: currentVirtualTime.day,
+    hour: 12,
+  });
+  const date = calendarDateFromJulianDay(sourceNoon + direction);
   return Object.freeze({
     jdUT1: current.jdUT1 + direction,
     virtualTime: frozenClock({
       year: date.year,
       month: date.month,
       day: date.day,
-      hour: current.virtualTime.hour,
-      minute: current.virtualTime.minute,
-      second: current.virtualTime.second,
+      hour: currentVirtualTime.hour,
+      minute: currentVirtualTime.minute,
+      second: currentVirtualTime.second,
     }),
   });
 }

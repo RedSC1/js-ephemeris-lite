@@ -38,6 +38,10 @@
       "types": "./src/chinese-calendar.d.ts",
       "default": "./src/chinese-calendar.js"
     },
+    "./chinese-era": {
+      "types": "./src/chinese-era.d.ts",
+      "default": "./src/chinese-era.js"
+    },
     "./ganzhi": {
       "types": "./src/ganzhi.d.ts",
       "default": "./src/ganzhi.js"
@@ -72,6 +76,7 @@
   "scripts": {
     "demo": "node src/ephemeris.js",
     "build:workspaces": "npm run build --workspaces --if-present",
+    "verify:chinese-era-data": "node tools/verify-chinese-era-data.mjs",
     "test": "node --test",
     "test:types": "tsc -p tsconfig.types.json",
     "test:workspaces": "npm run test --workspaces --if-present",

@@ -20,6 +20,10 @@ const DAYS_PER_TROPICAL_YEAR = 365.2422;
 const J2000 = 2451545;
 const CHINA_OFFSET_MINUTES = 480;
 const ROOT_EQUALITY_DAYS = 1e-10;
+// The source lunarYear label is intentionally preserved across these reform
+// windows. historicalYear records the actual calendar/ganzhi year instead.
+const QIN_HAN_FIRST_YEAR_START_DAY = 1640641;
+const TAICHU_FIRST_YEAR_START_DAY = 1683490;
 
 export const CALENDAR_MODE = Object.freeze({
   HISTORICAL: 'historical',
@@ -255,14 +259,21 @@ function assignLunarYears(months) {
       const endDay = boundary + 1 < starts.length ? months[next].firstCivilDayNumber : startDay + 180;
       const year = solarDateFromDayNumber(Math.floor((startDay + endDay) / 2)).year;
       if (boundary === 0) firstYear = year;
-      for (let index = first; index < next; index += 1) months[index].lunarYear = year;
+      for (let index = first; index < next; index += 1) {
+        months[index].lunarYear = year;
+        months[index].historicalYear = year;
+      }
     }
-    for (let index = 0; index < starts[0]; index += 1) months[index].lunarYear = firstYear - 1;
+    for (let index = 0; index < starts[0]; index += 1) {
+      months[index].lunarYear = firstYear - 1;
+      months[index].historicalYear = firstYear - 1;
+    }
     return;
   }
   for (const month of months) {
     const date = solarDateFromDayNumber(month.firstCivilDayNumber);
     month.lunarYear = month.month >= 11 ? date.year - 1 : date.year;
+    month.historicalYear = month.lunarYear;
   }
 }
 
@@ -298,6 +309,7 @@ function assignEarlyHistoricalMonths(yearHint, year, options, months) {
     const offset = Math.floor((year.newMoons[index].civilDayNumber - yearStarts[era] + 15) / DAYS_PER_SYNODIC_MONTH);
     const month = months[index];
     const winterYearShift = baseMonths[era] === 11 ? 1 : 0;
+    month.historicalYear = yearHint + era - 1;
     month.lunarYear = yearHint + era - 1 - winterYearShift;
     month.monthBuildingBranch = positiveMod(sequence[index], 12);
     if (offset < 12) {
@@ -322,6 +334,7 @@ function assignMonths(year, options) {
     }
     months.push({
       lunarYear: 0,
+      historicalYear: 0,
       month: 0,
       isLeap: false,
       dayCount,
@@ -366,6 +379,14 @@ function assignMonths(year, options) {
     if (day === 1977112 || day === 1999526) month.monthName = MONTH_NAME.LATER_SAME_NAME;
   }
   assignLunarYears(months);
+  if (options.historical) {
+    for (const month of months) {
+      if (month.firstCivilDayNumber >= QIN_HAN_FIRST_YEAR_START_DAY
+        && month.firstCivilDayNumber < TAICHU_FIRST_YEAR_START_DAY) {
+        month.historicalYear = month.lunarYear + 1;
+      }
+    }
+  }
   return months;
 }
 
@@ -453,6 +474,7 @@ export function solarToLunar(solarDate, rawOptions = {}) {
     if (targetDay < month.firstCivilDayNumber || targetDay >= month.firstCivilDayNumber + month.dayCount) continue;
     return {
       year: month.lunarYear,
+      historicalYear: month.historicalYear,
       month: month.month,
       day: targetDay - month.firstCivilDayNumber + 1,
       isLeap: month.isLeap,

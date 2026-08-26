@@ -42,15 +42,15 @@ test('historical linear-plus-sparse-residual profiles preserve their C++ endpoin
 
 test('modern conversion, month size and 2033 leap-eleven round trip', () => {
   assert.deepEqual(solarToLunar({ year: 2025, month: 1, day: 29 }), {
-    year: 2025, month: 1, day: 1, isLeap: false, monthDays: 30, monthName: MONTH_NAME.NORMAL,
+    year: 2025, historicalYear: 2025, month: 1, day: 1, isLeap: false, monthDays: 30, monthName: MONTH_NAME.NORMAL,
   });
   assert.deepEqual(solarToLunar({ year: 2026, month: 3, day: 15 }), {
-    year: 2026, month: 1, day: 27, isLeap: false, monthDays: 30, monthName: MONTH_NAME.NORMAL,
+    year: 2026, historicalYear: 2026, month: 1, day: 27, isLeap: false, monthDays: 30, monthName: MONTH_NAME.NORMAL,
   });
 
   const leapEleven = solarToLunar({ year: 2033, month: 12, day: 22 });
   assert.deepEqual(leapEleven, {
-    year: 2033, month: 11, day: 1, isLeap: true, monthDays: 29, monthName: MONTH_NAME.NORMAL,
+    year: 2033, historicalYear: 2033, month: 11, day: 1, isLeap: true, monthDays: 29, monthName: MONTH_NAME.NORMAL,
   });
   assert.deepEqual(lunarToSolar(leapEleven), { year: 2033, month: 12, day: 22 });
   assert.equal(getLunarMonthDays(2033, 11, true), 29);
@@ -77,10 +77,10 @@ test('instant conversion uses the requested civil offset without changing the Ch
   }));
 
   assert.deepEqual(instantToLunar(instant, { utcOffsetMinutes: 480 }), {
-    year: 2025, month: 1, day: 1, isLeap: false, monthDays: 30, monthName: MONTH_NAME.NORMAL,
+    year: 2025, historicalYear: 2025, month: 1, day: 1, isLeap: false, monthDays: 30, monthName: MONTH_NAME.NORMAL,
   });
   assert.deepEqual(instantToLunar(instant, { utcOffsetMinutes: 0 }), {
-    year: 2024, month: 12, day: 29, isLeap: false, monthDays: 29, monthName: MONTH_NAME.NORMAL,
+    year: 2024, historicalYear: 2024, month: 12, day: 29, isLeap: false, monthDays: 29, monthName: MONTH_NAME.NORMAL,
   });
 });
 
@@ -104,19 +104,19 @@ test('China-standard and local-astronomical lunar calendars stay distinct at a n
 
 test('historical month reforms match the C++ regression fixtures', () => {
   const fixtures = [
-    [{ year: -456, month: 4, day: 4 }, [-456, 5, 12, false, 30, MONTH_NAME.NORMAL]],
-    [{ year: -104, month: 1, day: 3 }, [-105, 11, 27, false, 29, MONTH_NAME.NORMAL]],
-    [{ year: -103, month: 1, day: 20 }, [-104, 11, 27, false, 30, MONTH_NAME.NORMAL]],
-    [{ year: 10, month: 6, day: 1 }, [10, 6, 1, false, 30, MONTH_NAME.NORMAL]],
-    [{ year: 238, month: 6, day: 1 }, [238, 6, 2, false, 29, MONTH_NAME.NORMAL]],
-    [{ year: 690, month: 6, day: 1 }, [690, 4, 19, false, 29, MONTH_NAME.NORMAL]],
-    [{ year: 23, month: 12, day: 2 }, [23, 12, 1, false, 29, MONTH_NAME.ALT_TWELVE]],
-    [{ year: 690, month: 2, day: 15 }, [690, 1, 1, false, 29, MONTH_NAME.ALT_ONE]],
+    [{ year: -456, month: 4, day: 4 }, [-456, -456, 5, 12, false, 30, MONTH_NAME.NORMAL]],
+    [{ year: -104, month: 1, day: 3 }, [-105, -104, 11, 27, false, 29, MONTH_NAME.NORMAL]],
+    [{ year: -103, month: 1, day: 20 }, [-104, -103, 11, 27, false, 30, MONTH_NAME.NORMAL]],
+    [{ year: 10, month: 6, day: 1 }, [10, 10, 6, 1, false, 30, MONTH_NAME.NORMAL]],
+    [{ year: 238, month: 6, day: 1 }, [238, 238, 6, 2, false, 29, MONTH_NAME.NORMAL]],
+    [{ year: 690, month: 6, day: 1 }, [690, 690, 4, 19, false, 29, MONTH_NAME.NORMAL]],
+    [{ year: 23, month: 12, day: 2 }, [23, 23, 12, 1, false, 29, MONTH_NAME.ALT_TWELVE]],
+    [{ year: 690, month: 2, day: 15 }, [690, 690, 1, 1, false, 29, MONTH_NAME.ALT_ONE]],
   ];
   for (const [solar, expected] of fixtures) {
     const lunar = solarToLunar(solar);
     assert.deepEqual(
-      [lunar.year, lunar.month, lunar.day, lunar.isLeap, lunar.monthDays, lunar.monthName],
+      [lunar.year, lunar.historicalYear, lunar.month, lunar.day, lunar.isLeap, lunar.monthDays, lunar.monthName],
       expected,
     );
     assert.deepEqual(lunarToSolar(lunar), solar);

@@ -16,8 +16,14 @@ import {
   getNayinElement,
   getNayinId,
   makeGanzhi,
+  normalizeChartVirtualTime,
 } from '../src/ganzhi.js';
-import { JulianTime, ZonedTime } from '../src/time.js';
+import {
+  localApparentToMeanSolarTime,
+  meanSolarTime,
+  trueSolarTime,
+} from '../src/solar-time.js';
+import { JulianTime, ZonedTime, julianDay } from '../src/time.js';
 
 const ASTRONOMICAL_CHINA = { mode: CALENDAR_MODE.CHINA_ASTRONOMICAL };
 
@@ -86,6 +92,70 @@ test('the three late-Zi conventions remain independent', () => {
     const pillars = fourPillarsForZonedTime(time, { ...ASTRONOMICAL_CHINA, ratHourMode });
     assert.equal(pillars.day, day);
     assert.equal(pillars.hour, hour);
+  }
+});
+
+test('exact Shi-Chen boundaries enter the new branch after a JD round trip', () => {
+  const starts = [
+    [1, 1], [3, 2], [5, 3], [7, 4], [9, 5], [11, 6],
+    [13, 7], [15, 8], [17, 9], [19, 10], [21, 11], [23, 0],
+  ];
+  for (const [hour, expectedBranch] of starts) {
+    const source = new ZonedTime({
+      year: 2026, month: 4, day: 8, hour, minute: 0, second: 0, offsetMinutes: 480,
+    });
+    const reconstructed = ZonedTime.fromJulianTime(source.toJulianTime(), 480);
+    const normalized = normalizeChartVirtualTime(reconstructed);
+    assert.deepEqual(
+      [normalized.year, normalized.month, normalized.day,
+        normalized.hour, normalized.minute, normalized.second],
+      [2026, 4, 8, hour, 0, 0],
+    );
+    const pillars = fourPillarsForZonedTime(reconstructed, ASTRONOMICAL_CHINA);
+    assert.equal(pillars.hour & 0x0f, expectedBranch, `${hour}:00 entered the wrong Shi-Chen`);
+  }
+
+  const before = new ZonedTime({
+    year: 2026, month: 4, day: 8, hour: 10, minute: 59, second: 59.999,
+    offsetMinutes: 480,
+  });
+  const at = new ZonedTime({
+    year: 2026, month: 4, day: 8, hour: 11, minute: 0, second: 0,
+    offsetMinutes: 480,
+  });
+  assert.equal(fourPillarsForZonedTime(before, ASTRONOMICAL_CHINA).hour & 0x0f, 5);
+  assert.equal(fourPillarsForZonedTime(at, ASTRONOMICAL_CHINA).hour & 0x0f, 6);
+  const genuineBefore = normalizeChartVirtualTime({
+    year: 2026, month: 4, day: 8, hour: 10, minute: 59, second: 59.99998,
+  });
+  assert.deepEqual(
+    [genuineBefore.hour, genuineBefore.minute, genuineBefore.second],
+    [10, 59, 59.99998],
+  );
+});
+
+test('mean and apparent solar clocks share the exact 11:00 chart boundary', () => {
+  const longitudeDeg = 118.5;
+  const exactLocalJd = julianDay({
+    year: 2003, month: 3, day: 13, hour: 11, minute: 0, second: 0,
+  });
+  for (const [name, clock, instantForLocalJd] of [
+    ['mean', meanSolarTime, (value) => value - longitudeDeg / 360],
+    ['apparent', trueSolarTime, (value) => (
+      localApparentToMeanSolarTime(value, longitudeDeg) - longitudeDeg / 360
+    )],
+  ]) {
+    for (const [offsetSeconds, expectedBranch] of [[-0.001, 5], [0, 6]]) {
+      const jdUT1 = instantForLocalJd(exactLocalJd + offsetSeconds / 86400);
+      const instant = JulianTime.fromUT1(jdUT1);
+      const virtualTime = clock(instant, longitudeDeg);
+      const pillars = calculateFourPillars(instant, virtualTime, ASTRONOMICAL_CHINA);
+      assert.equal(
+        pillars.hour & 0x0f,
+        expectedBranch,
+        `${name} solar clock mishandled ${offsetSeconds}s from 11:00`,
+      );
+    }
   }
 });
 

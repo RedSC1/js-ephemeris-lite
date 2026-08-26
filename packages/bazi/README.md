@@ -105,7 +105,30 @@ const solarClock = trueSolarTime(birth, 116.4);
 const chart = calculateBazi(birth.toJulianTime(), solarClock, options);
 ```
 
-`BaziChart` 不提供 `fromPillars()`：只有四柱无法反推出出生 JD、节令间隔和起运时刻。纯规则层确实需要分析已知四柱时可使用底层 `analyzePillars()`，它返回明确命名的 `BaziPillarAnalysis`，不会冒充能够起运的完整命盘。
+`BaziChart` 不提供 `fromPillars()`：只有四柱本身不能唯一确定出生 JD、节令间隔和起运时刻。需要寻找真实出生候选时应使用下面的有限区间反查；纯规则层只分析一组已知四柱时可使用 `analyzePillars()`。
+
+### 四柱反查
+
+反查必须提供有限的起止日期，因为同一组四柱会在不同年代重复出现。三个入口分别用于搜日期、展开某个日期候选的时辰，以及一次完成四柱反查：
+
+```ts
+import {
+  BaziReverseLookup,
+  packPillar,
+} from '@opendestiny/bazi-lite';
+
+const matches = BaziReverseLookup.searchFullBazi({
+  year: packPillar(2, 6),  // 丙午
+  month: packPillar(6, 2), // 庚寅
+  day: packPillar(5, 9),   // 己酉
+  hour: packPillar(0, 0),  // 甲子
+  startDate: { year: 1900, month: 1, day: 1 },
+  endDate: { year: 2100, month: 12, day: 31 },
+  options,
+});
+```
+
+也可以直接调用树摇友好的独立函数 `searchBaziDates()`、`searchBaziTimesForDate()` 和 `reverseLookupBazi()`。反查会复用正向 `BaziChart` 逐项复核，并遵循同一套固定时区、真/平太阳时、历史节气分配日及三种子时设置。节令当天会保留节前、节后候选；时辰结果包含钟表时间段及“晚子时”标记。
 
 ## 2. 读取命盘
 

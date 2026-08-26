@@ -8,10 +8,12 @@ import {
 } from 'js-ephemeris-lite';
 import {
   LEAP_MONTH_STRATEGY,
+  FLOW_MONTH_PALACE_STRATEGY,
   PILLAR_BOUNDARY,
   ZIWEI_CHART_MODE,
   ZIWEI_GENDER,
   type LeapMonthStrategy,
+  type FlowMonthPalaceStrategy,
   type PillarBoundary,
   type ZiweiChartMode,
   type ZiweiGender,
@@ -73,6 +75,7 @@ export interface ZiweiOptionsInput {
   clockMode?: ZiweiClockMode;
   longitudeDeg?: number;
   leapMonthStrategy?: LeapMonthStrategy;
+  flowMonthPalaceStrategy?: FlowMonthPalaceStrategy;
   chartMode?: ZiweiChartMode;
   wuHuDunYearBoundary?: PillarBoundary;
   sihuaYearBoundary?: PillarBoundary;
@@ -136,6 +139,7 @@ export class ZiweiOptions {
   readonly clockMode: ZiweiClockMode;
   readonly longitudeDeg: number | undefined;
   readonly leapMonthStrategy: LeapMonthStrategy;
+  readonly flowMonthPalaceStrategy: FlowMonthPalaceStrategy;
   readonly chartMode: ZiweiChartMode;
   readonly wuHuDunYearBoundary: PillarBoundary;
   readonly sihuaYearBoundary: PillarBoundary;
@@ -156,6 +160,8 @@ export class ZiweiOptions {
     this.longitudeDeg = input.longitudeDeg;
     this.leapMonthStrategy = input.leapMonthStrategy
       ?? LEAP_MONTH_STRATEGY.SPLIT_AFTER_FIFTEENTH;
+    this.flowMonthPalaceStrategy = input.flowMonthPalaceStrategy
+      ?? FLOW_MONTH_PALACE_STRATEGY.PHYSICAL_SEQUENCE;
     this.chartMode = input.chartMode ?? ZIWEI_CHART_MODE.TIAN_PAN;
     this.wuHuDunYearBoundary = input.wuHuDunYearBoundary ?? PILLAR_BOUNDARY.LUNAR;
     this.sihuaYearBoundary = input.sihuaYearBoundary ?? PILLAR_BOUNDARY.LUNAR;
@@ -187,6 +193,9 @@ export class ZiweiOptions {
     }
     if (!includes(Object.values(LEAP_MONTH_STRATEGY), this.leapMonthStrategy)) {
       throw new RangeError('unknown leap-month strategy');
+    }
+    if (!includes(Object.values(FLOW_MONTH_PALACE_STRATEGY), this.flowMonthPalaceStrategy)) {
+      throw new RangeError('unknown flow-month palace strategy');
     }
     if (!includes(Object.values(ZIWEI_CHART_MODE), this.chartMode)) throw new RangeError('unknown Ziwei chart mode');
     for (const boundary of [
@@ -239,6 +248,7 @@ export class ZiweiOptions {
       clockMode: this.clockMode,
       longitudeDeg: this.longitudeDeg,
       leapMonthStrategy: this.leapMonthStrategy,
+      flowMonthPalaceStrategy: this.flowMonthPalaceStrategy,
       chartMode: this.chartMode,
       wuHuDunYearBoundary: this.wuHuDunYearBoundary,
       sihuaYearBoundary: this.sihuaYearBoundary,
