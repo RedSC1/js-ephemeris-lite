@@ -15,7 +15,7 @@ import {
   hasShenSha,
   shenShaNames,
   unpackPillar,
-} from '@opendestiny/bazi-lite';
+} from 'bazi-lite';
 
 const birth = new ZonedTime({
   year: 2000, month: 1, day: 1,

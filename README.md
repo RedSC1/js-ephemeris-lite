@@ -10,7 +10,7 @@
 npm install js-ephemeris-lite
 ```
 
-本仓库使用 npm workspaces：根目录是暂未发布的 `js-ephemeris-lite` 核心，`packages/bazi` 与 `packages/ziwei` 是暂时保持私有的 TypeScript 规则层。两个上层包在本地直接链接核心，待共同验证并稳定 API 后再确定最终包名和发布版本。八字 workspace 已包含紧凑四柱、十神藏干、合冲刑害关系、起运、大小运、人元司令和 66 位神煞 bitset；紫微 workspace 已包含出生解析、31 anchors、十二宫、115 颗本命星、亮度、命主身主、十二位四化 mask、大限/小限、五层流运、44 流曜、历史流月、时间线、导航管理和时辰反查。
+本仓库使用 npm workspaces：根目录发布 `js-ephemeris-lite` 天文历法核心，`packages/bazi` 发布 `bazi-lite`，`packages/ziwei` 发布 `ziwei-lite`。八字包包含紧凑四柱、十神藏干、合冲刑害关系、起运、大小运、人元司令和 66 位神煞 bitset；紫微包包含出生解析、31 anchors、十二宫、115 颗本命星、亮度、命主身主、十二位四化 mask、大限/小限、五层流运、44 流曜、历史流月、时间线、导航管理和时辰反查。
 
 八字的创建、真太阳时、神煞、起运、大运和默认设置见 [`packages/bazi/README.md`](./packages/bazi/README.md)。
 

@@ -1,9 +1,21 @@
 {
-  "name": "@opendestiny/bazi-lite",
-  "version": "0.0.0",
-  "private": true,
-  "description": "Work-in-progress lightweight BaZi rules built on js-ephemeris-lite",
+  "name": "bazi-lite",
+  "version": "0.1.0",
+  "description": "Lightweight TypeScript BaZi rules built on js-ephemeris-lite",
   "type": "module",
+  "license": "MPL-2.0",
+  "keywords": [
+    "bazi",
+    "ba-zi",
+    "four-pillars",
+    "four-pillars-of-destiny",
+    "chinese-astrology",
+    "ganzhi",
+    "ten-gods",
+    "shen-sha",
+    "chinese-calendar",
+    "typescript"
+  ],
   "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -15,15 +27,32 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && npm run test:examples && node --test test/*.test.mjs",
     "test:examples": "tsc -p tsconfig.examples.json",
-    "test:shen-sha": "npm run build && node tools/shen-sha-fingerprint.mjs"
+    "test:shen-sha": "npm run build && node tools/shen-sha-fingerprint.mjs",
+    "prepack": "npm test"
   },
   "dependencies": {
-    "js-ephemeris-lite": "file:../.."
-  }
+    "js-ephemeris-lite": "^0.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RedSC1/js-ephemeris-lite.git",
+    "directory": "packages/bazi"
+  },
+  "bugs": {
+    "url": "https://github.com/RedSC1/js-ephemeris-lite/issues"
+  },
+  "homepage": "https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/bazi#readme"
 }

@@ -1,6 +1,10 @@
-# @opendestiny/bazi-lite
+# bazi-lite
 
-基于 `js-ephemeris-lite` 的 TypeScript 八字规则层。当前是同一仓库中的私有 workspace，尚未发布到 npm。
+基于 `js-ephemeris-lite` 的 TypeScript 八字规则层。
+
+```bash
+npm install js-ephemeris-lite bazi-lite
+```
 
 它负责四柱解释、十神藏干、关系、神煞和运限；节气、真太阳时、早晚子时和历史历法边界由 `js-ephemeris-lite` 提供。
 
@@ -22,7 +26,7 @@ import {
   EARTH_PALACE_MODE,
   GENDER,
   QIYUN_TIME_MODEL,
-} from '@opendestiny/bazi-lite';
+} from 'bazi-lite';
 
 const birth = new ZonedTime({
   year: 2000,
@@ -84,7 +88,7 @@ import {
   BAZI_CLOCK_MODE,
   BaziChart,
   BaziOptions,
-} from '@opendestiny/bazi-lite';
+} from 'bazi-lite';
 
 const chart = BaziChart.fromZonedTime(birth, new BaziOptions({
   gender: GENDER.MALE,
@@ -99,7 +103,7 @@ const chart = BaziChart.fromZonedTime(birth, new BaziOptions({
 
 ```ts
 import { trueSolarTime } from 'js-ephemeris-lite';
-import { calculateBazi } from '@opendestiny/bazi-lite';
+import { calculateBazi } from 'bazi-lite';
 
 const solarClock = trueSolarTime(birth, 116.4);
 const chart = calculateBazi(birth.toJulianTime(), solarClock, options);
@@ -115,7 +119,7 @@ const chart = calculateBazi(birth.toJulianTime(), solarClock, options);
 import {
   BaziReverseLookup,
   packPillar,
-} from '@opendestiny/bazi-lite';
+} from 'bazi-lite';
 
 const matches = BaziReverseLookup.searchFullBazi({
   year: packPillar(2, 6),  // 丙午
@@ -139,7 +143,7 @@ import {
   LIFE_STAGE_NAMES,
   TEN_GOD_NAMES,
   unpackPillar,
-} from '@opendestiny/bazi-lite';
+} from 'bazi-lite';
 import { HEAVENLY_STEMS, describeFourPillars } from 'js-ephemeris-lite';
 
 console.log(describeFourPillars(chart.pillars));
@@ -178,7 +182,7 @@ import {
   hasShenSha,
   shenShaIds,
   shenShaNames,
-} from '@opendestiny/bazi-lite';
+} from 'bazi-lite';
 
 const natalShenSha = chart.getShenSha();
 
@@ -203,7 +207,7 @@ import {
   SHEN_SHA_TARGET,
   calculateFlowYear,
   shenShaNames,
-} from '@opendestiny/bazi-lite';
+} from 'bazi-lite';
 
 const flowYearPillar = calculateFlowYear(2026);
 const flowYearShenSha = chart.getTargetShenSha(
@@ -223,7 +227,7 @@ console.log(shenShaNames(flowYearShenSha));
 `BaziOptions` 中已经保存性别、起运模型、大运边界模型和步数。命盘会复用创建时的出生瞬间和虚拟钟表，不需要调用方再次拼装参数：
 
 ```ts
-import { unpackPillar } from '@opendestiny/bazi-lite';
+import { unpackPillar } from 'bazi-lite';
 
 const qiYun = chart.getQiYun();
 
@@ -334,7 +338,7 @@ import {
   RELATION_KIND,
   collectChartRelations,
   generateXiaoYun,
-} from '@opendestiny/bazi-lite';
+} from 'bazi-lite';
 
 const relations = collectChartRelations(chart, {
   pillarMask: PILLAR_MASK.PRIMARY,
@@ -352,8 +356,8 @@ const siling = chart.getRenyuanSiling();
 ## 7. 测试
 
 ```bash
-npm run test --workspace @opendestiny/bazi-lite
-npm run test:shen-sha --workspace @opendestiny/bazi-lite
+npm run test --workspace bazi-lite
+npm run test:shen-sha --workspace bazi-lite
 ```
 
 完整神煞测试枚举 518,400 个合法命盘，并分别校验无性别、男性和女性指纹。

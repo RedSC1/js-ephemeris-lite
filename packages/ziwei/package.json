@@ -1,9 +1,20 @@
 {
-  "name": "@opendestiny/ziwei-lite",
-  "version": "0.0.0",
-  "private": true,
-  "description": "Work-in-progress lightweight Zi Wei Dou Shu rules built on js-ephemeris-lite",
+  "name": "ziwei-lite",
+  "version": "0.1.0",
+  "description": "Lightweight TypeScript Zi Wei Dou Shu rules built on js-ephemeris-lite",
   "type": "module",
+  "license": "MPL-2.0",
+  "keywords": [
+    "ziwei",
+    "zi-wei-dou-shu",
+    "purple-star-astrology",
+    "chinese-astrology",
+    "chinese-calendar",
+    "lunar-calendar",
+    "astrology",
+    "destiny",
+    "typescript"
+  ],
   "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -15,15 +26,32 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "generate:rules": "node tools/generate-rules.mjs ../../../taiyin-ephemeris/ziwei_astrology/rules src/generated/default-rules.ts",
     "test:examples": "tsc -p tsconfig.examples.json",
-    "test": "npm run build && npm run test:examples && node --test test/*.test.mjs"
+    "test": "npm run build && npm run test:examples && node --test test/*.test.mjs",
+    "prepack": "npm test"
   },
   "dependencies": {
-    "js-ephemeris-lite": "file:../.."
-  }
+    "js-ephemeris-lite": "^0.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RedSC1/js-ephemeris-lite.git",
+    "directory": "packages/ziwei"
+  },
+  "bugs": {
+    "url": "https://github.com/RedSC1/js-ephemeris-lite/issues"
+  },
+  "homepage": "https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/ziwei#readme"
 }

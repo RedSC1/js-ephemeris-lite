@@ -80,6 +80,7 @@
   "scripts": {
     "demo": "node src/ephemeris.js",
     "build:workspaces": "npm run build --workspaces --if-present",
+    "generate:historical-calendar-data": "node tools/generate-calendar-data.mjs",
     "verify:chinese-era-data": "node tools/verify-chinese-era-data.mjs",
     "test": "node --test",
     "test:types": "tsc -p tsconfig.types.json",

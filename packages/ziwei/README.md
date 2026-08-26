@@ -1,6 +1,10 @@
-# @opendestiny/ziwei-lite
+# ziwei-lite
 
-基于 `js-ephemeris-lite` 的 TypeScript 紫微斗数规则层。当前是仓库内部 workspace，尚未发布到 npm。
+基于 `js-ephemeris-lite` 的 TypeScript 紫微斗数规则层。
+
+```bash
+npm install js-ephemeris-lite ziwei-lite
+```
 
 当前版本能从带时区的出生时间创建本命盘，计算历史/天文农历、31 个稳定 anchor、十二宫、五行局、115 颗本命星、庙旺亮度、命主身主，以及本命、自化和向心四化；也包含大限、小限、流年、流月、流日、流时、44 颗流曜、时间线、物理时间步进和时辰反查。默认规则表在构建前离线编译进包，浏览器运行时不解析 TOML。
 
@@ -12,7 +16,7 @@ import {
   ZIWEI_GENDER,
   ZiweiChart,
   ZiweiOptions,
-} from '@opendestiny/ziwei-lite';
+} from 'ziwei-lite';
 
 const birth = new ZonedTime({
   year: 2003,
@@ -49,7 +53,7 @@ chart.options;
 内部宫位状态按照物理地支 `0..11` 排列；宫职通过 `palaceId` 标注。
 
 ```ts
-import { PALACE, PALACE_NAMES } from '@opendestiny/ziwei-lite';
+import { PALACE, PALACE_NAMES } from 'ziwei-lite';
 
 const lifePalace = chart.getPalace(PALACE.LIFE);
 console.log(lifePalace.branch, lifePalace.stem);
@@ -87,7 +91,7 @@ import {
   brightnessName,
   findStarId,
   getStar,
-} from '@opendestiny/ziwei-lite';
+} from 'ziwei-lite';
 
 const ziweiId = findStarId('ziwei')!;
 const ziwei = chart.getStarPosition(ziweiId)!;
@@ -114,7 +118,7 @@ console.log(STAR_CATALOG.length); // 本命星和预留流曜共 159 个稳定 I
 - bit `8..11`：对宫宫干引发的向心禄、权、科、忌。
 
 ```ts
-import { STAR_TRANSFORM_MARK } from '@opendestiny/ziwei-lite';
+import { STAR_TRANSFORM_MARK } from 'ziwei-lite';
 
 chart.birthYearTransformations; // { lu, quan, ke, ji }，值均为 StarId
 
@@ -138,7 +142,7 @@ import {
   ZIWEI_CHART_MODE,
   ZIWEI_CLOCK_MODE,
   ZIWEI_RULE_OPTION,
-} from '@opendestiny/ziwei-lite';
+} from 'ziwei-lite';
 
 const options = new ZiweiOptions({
   gender: ZIWEI_GENDER.FEMALE,
@@ -304,7 +308,7 @@ for (const candidate of candidates) {
 内置 `option1..option4` 适合固定流派差异；用户自己保存的规则资料用不可变 `ZiweiRuleset`：
 
 ```ts
-import { ZiweiConfigLoader } from '@opendestiny/ziwei-lite';
+import { ZiweiConfigLoader } from 'ziwei-lite';
 
 const ruleset = ZiweiConfigLoader.overrideWith(
   ZiweiConfigLoader.getDefault(),

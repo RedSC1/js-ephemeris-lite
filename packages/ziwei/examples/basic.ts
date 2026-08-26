@@ -7,7 +7,7 @@ import {
   ZiweiOptions,
   brightnessName,
   getStar,
-} from '@opendestiny/ziwei-lite';
+} from 'ziwei-lite';
 
 const birth = new ZonedTime({
   year: 2003, month: 3, day: 13,
