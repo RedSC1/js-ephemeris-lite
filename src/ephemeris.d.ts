@@ -37,6 +37,7 @@ export function moonState(jdTT: number, options?: CorrectionOptions): CartesianS
 export function earthLongitudeCorrectionState(jdTT: number, corrections?: boolean): ScalarState;
 export function earthPosition(jdTT: number, options?: CorrectionOptions): EphemerisVector3;
 export function earthState(jdTT: number, options?: CorrectionOptions): CartesianState;
+export function earthDirectionState(jdTT: number, options?: CorrectionOptions): CartesianState;
 export function embPosition(jdTT: number, options?: CorrectionOptions): EphemerisVector3;
 export function embState(jdTT: number, options?: CorrectionOptions): CartesianState;
 

@@ -6,6 +6,7 @@ import {
   EARTH_MOON_MASS_RATIO,
   MOON_MODEL_INFO,
   correctionWeight,
+  earthDirectionState,
   earthHeliocentricPosition,
   earthHeliocentricState,
   earthPosition,
@@ -62,6 +63,24 @@ test('event direction skips radius while matching the complete Moon state', () =
     const direction = moonDirectionState(jd).position;
     direction.forEach((value, index) => near(value, position[index] / radius, 4e-15));
     near(Math.hypot(...direction), 1, 4e-15);
+  }
+});
+
+test('Earth event direction skips radius while preserving angular state', () => {
+  for (const jd of [J2000, 2415020.5, 3182029.5, 3912514.5]) {
+    const state = earthHeliocentricState(jd);
+    const radius = Math.hypot(...state.position);
+    const radialRate = state.position.reduce(
+      (sum, value, index) => sum + value * state.velocity[index],
+      0,
+    ) / radius;
+    const direction = earthDirectionState(jd);
+    direction.position.forEach((value, index) => near(value, state.position[index] / radius, 4e-15));
+    direction.velocity.forEach((value, index) => near(
+      value,
+      state.velocity[index] / radius - state.position[index] * radialRate / (radius * radius),
+      4e-15,
+    ));
   }
 });
 

@@ -46,11 +46,19 @@ export function solveSolarLongitude(
 export function solveLunarPhase(
   targetElongation: number,
   nearJdTT: number,
-  options?: { toleranceSeconds?: number; moonLatitudeTerms?: MoonLatitudeTerms },
+  options?: {
+    toleranceSeconds?: number;
+    moonLatitudeTerms?: MoonLatitudeTerms;
+    solver?: 'auto' | 'safeguarded';
+  },
 ): NewMoonRoot;
 export function solveNewMoon(
   nearJdTT: number,
-  options?: { toleranceSeconds?: number; moonLatitudeTerms?: MoonLatitudeTerms },
+  options?: {
+    toleranceSeconds?: number;
+    moonLatitudeTerms?: MoonLatitudeTerms;
+    solver?: 'auto' | 'safeguarded';
+  },
 ): NewMoonRoot;
 
 export const LOW_MODEL_INFO: Readonly<{

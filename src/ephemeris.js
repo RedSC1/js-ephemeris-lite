@@ -113,15 +113,21 @@ function evaluateElpCoordinateState(coordinate, t, tRate, shifts) {
   for (let order = 0; order < blocks.length; order += 1) {
     let subtotal = 0, subtotalRate = 0;
     for (const term of blocks[order]) {
-      const argument = phasePolynomialState(term.slice(1, 6), t, tRate);
+      let argumentValue = term[5];
+      let argumentDerivative = 0;
+      for (let index = 4; index >= 1; index -= 1) {
+        argumentDerivative = argumentDerivative * t + argumentValue;
+        argumentValue = argumentValue * t + term[index];
+      }
+      let argumentRate = argumentDerivative * tRate;
       if (coordinate === 0 && shifts) {
         for (let index = 0; index < 4; index += 1) {
-          argument.value += term[6 + index] * shifts[index].value;
-          argument.rate += term[6 + index] * shifts[index].rate;
+          argumentValue += term[6 + index] * shifts[index].value;
+          argumentRate += term[6 + index] * shifts[index].rate;
         }
       }
-      subtotal += term[0] * Math.sin(argument.value);
-      subtotalRate += term[0] * Math.cos(argument.value) * argument.rate;
+      subtotal += term[0] * Math.sin(argumentValue);
+      subtotalRate += term[0] * Math.cos(argumentValue) * argumentRate;
     }
     const envelope = t ** order;
     const envelopeRate = order === 0 ? 0 : order * t ** (order - 1) * tRate;
@@ -147,13 +153,20 @@ function evaluateSelectedLatitudeState(t, tRate, termCount) {
   }
   let value = 0;
   let rate = 0;
-  for (const { term, power } of MOON_LATITUDE_CANDIDATES.slice(0, termCount)) {
-    const argument = phasePolynomialState(term.slice(1, 6), t, tRate);
+  for (let candidateIndex = 0; candidateIndex < termCount; candidateIndex += 1) {
+    const { term, power } = MOON_LATITUDE_CANDIDATES[candidateIndex];
+    let argumentValue = term[5];
+    let argumentDerivative = 0;
+    for (let index = 4; index >= 1; index -= 1) {
+      argumentDerivative = argumentDerivative * t + argumentValue;
+      argumentValue = argumentValue * t + term[index];
+    }
+    const argumentRate = argumentDerivative * tRate;
     const envelope = t ** power;
     const envelopeRate = power === 0 ? 0 : power * t ** (power - 1) * tRate;
-    const sine = Math.sin(argument.value);
+    const sine = Math.sin(argumentValue);
     value += term[0] * envelope * sine;
-    rate += term[0] * (envelopeRate * sine + envelope * Math.cos(argument.value) * argument.rate);
+    rate += term[0] * (envelopeRate * sine + envelope * Math.cos(argumentValue) * argumentRate);
   }
   return { value, rate };
 }
@@ -335,22 +348,30 @@ export const MOON_MODEL_INFO = Object.freeze({
 function evaluateVsopEarthState(jdTT) {
   const tau = (jdTT - J2000) / DAYS_PER_MILLENNIUM;
   const tauRate = 1 / DAYS_PER_MILLENNIUM;
-  const lbr = Array.from({ length: 3 }, () => ({ value: 0, rate: 0 }));
-  for (let coordinate = 0; coordinate < 3; coordinate += 1) {
-    for (let power = 0; power < MODEL_DATA.vsopEarth[coordinate].length; power += 1) {
-      let subtotal = 0, subtotalRate = 0;
-      for (const [amplitude, phase, frequency] of MODEL_DATA.vsopEarth[coordinate][power]) {
-        const argument = phase + frequency * tau;
-        subtotal += amplitude * Math.cos(argument);
-        subtotalRate -= amplitude * frequency * Math.sin(argument) * tauRate;
-      }
-      const envelope = tau ** power;
-      const envelopeRate = power === 0 ? 0 : power * tau ** (power - 1) * tauRate;
-      lbr[coordinate].value += subtotal * envelope;
-      lbr[coordinate].rate += subtotalRate * envelope + subtotal * envelopeRate;
-    }
-  }
+  const lbr = Array.from({ length: 3 }, (_, coordinate) => evaluateVsopEarthCoordinateState(
+    coordinate,
+    tau,
+    tauRate,
+  ));
   return { tau, tauRate, lbr };
+}
+
+function evaluateVsopEarthCoordinateState(coordinate, tau, tauRate) {
+  let value = 0;
+  let rate = 0;
+  for (let power = 0; power < MODEL_DATA.vsopEarth[coordinate].length; power += 1) {
+    let subtotal = 0, subtotalRate = 0;
+    for (const [amplitude, phase, frequency] of MODEL_DATA.vsopEarth[coordinate][power]) {
+      const argument = phase + frequency * tau;
+      subtotal += amplitude * Math.cos(argument);
+      subtotalRate -= amplitude * frequency * Math.sin(argument) * tauRate;
+    }
+    const envelope = tau ** power;
+    const envelopeRate = power === 0 ? 0 : power * tau ** (power - 1) * tauRate;
+    value += subtotal * envelope;
+    rate += subtotalRate * envelope + subtotal * envelopeRate;
+  }
+  return { value, rate };
 }
 
 export function earthLongitudeCorrectionState(jdTT, corrections = true) {
@@ -398,6 +419,19 @@ export function earthState(jdTT, { corrections = true } = {}) {
   lbr[0].value += correction.value;
   lbr[0].rate += correction.rate;
   return sphericalState(lbr[0], lbr[1], lbr[2]);
+}
+
+/** Heliocentric Earth unit direction and angular velocity; skips the radius series. */
+export function earthDirectionState(jdTT, { corrections = true } = {}) {
+  if (!Number.isFinite(jdTT)) throw new TypeError('jdTT must be finite');
+  const tau = (jdTT - J2000) / DAYS_PER_MILLENNIUM;
+  const tauRate = 1 / DAYS_PER_MILLENNIUM;
+  const longitude = evaluateVsopEarthCoordinateState(0, tau, tauRate);
+  const latitude = evaluateVsopEarthCoordinateState(1, tau, tauRate);
+  const correction = earthLongitudeCorrectionState(jdTT, corrections);
+  longitude.value += correction.value;
+  longitude.rate += correction.rate;
+  return sphericalState(longitude, latitude, { value: 1, rate: 0 });
 }
 
 /** Heliocentric Earth-Moon barycentre, J2000 mean ecliptic/equinox, AU. */

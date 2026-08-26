@@ -7,6 +7,7 @@ import {
 } from './coordinates.js';
 import {
   earthState,
+  earthDirectionState,
   moonDirectionState,
   earthLongitudeCorrectionState,
   moonCorrectionState,
@@ -68,7 +69,13 @@ function chebyshevState(coefficients, x, xRate) {
 }
 
 function phaseState(term, time, timeRate) {
-  return polynomialState(term.slice(1, 6), time, timeRate);
+  let value = term[5];
+  let derivative = 0;
+  for (let index = 4; index >= 1; index -= 1) {
+    derivative = derivative * time + value;
+    value = value * time + term[index];
+  }
+  return { value, rate: derivative * timeRate };
 }
 
 function applyMatrix(matrix, vector) {
@@ -110,6 +117,7 @@ function rankEnvelopeTerms(blocks, maximumTime) {
 const LOW_EARTH_LONGITUDE_CANDIDATES = rankEnvelopeTerms(MODEL_DATA.vsopEarth[0], 8);
 const LOW_MOON_LONGITUDE_CANDIDATES = rankEnvelopeTerms(MODEL_DATA.elp.terms[0], 80);
 const LOW_EARTH_RADIUS_TERMS = rankEnvelopeTerms(MODEL_DATA.vsopEarth[2], 8).slice(0, 3);
+const FAST_EARTH_RADIUS_TERMS = rankEnvelopeTerms(MODEL_DATA.vsopEarth[2], 8).slice(0, 30);
 
 function lowVsopCoordinateState(terms, tau, tauRate) {
   let value = 0, rate = 0;
@@ -181,9 +189,44 @@ export function moonLongitudeState(jdTT, { latitudeTerms = 'full' } = {}) {
 }
 
 export function elongationState(jdTT, { moonLatitudeTerms = 'full' } = {}) {
-  const moon = moonLongitudeState(jdTT, { latitudeTerms: moonLatitudeTerms });
-  const sun = solarLongitudeState(jdTT);
-  return { value: wrapRadians(moon.value - sun.value), rate: moon.rate - sun.rate };
+  if (!Number.isFinite(jdTT)) throw new TypeError('jdTT must be finite');
+  const frame = meanEclipticOfDateMatrixState(jdTT);
+  const moon = longitudeState(transformState(
+    frame,
+    moonDirectionState(jdTT, { latitudeTerms: moonLatitudeTerms }),
+  ));
+  const earth = earthState(jdTT);
+  const sun = longitudeState(transformState(frame, {
+    position: earth.position.map(value => -value),
+    velocity: earth.velocity.map(value => -value),
+  }));
+  const radius = normState(earth);
+  // Nutation in longitude is common to the apparent Moon and Sun and cancels
+  // exactly in their elongation.  Computing it twice was pure event-path work.
+  const aberration = SOLAR_ABERRATION_RAD / radius.value;
+  return {
+    value: wrapRadians(moon.value - sun.value + aberration),
+    rate: moon.rate - sun.rate - SOLAR_ABERRATION_RAD * radius.rate / (radius.value * radius.value),
+  };
+}
+
+function fastElongationState(jdTT, moonLatitudeTerms) {
+  const frame = meanEclipticOfDateMatrixState(jdTT);
+  const moon = longitudeState(transformState(
+    frame,
+    moonDirectionState(jdTT, { latitudeTerms: moonLatitudeTerms }),
+  ));
+  const earth = earthDirectionState(jdTT);
+  const sun = longitudeState(transformState(frame, {
+    position: earth.position.map(value => -value),
+    velocity: earth.velocity.map(value => -value),
+  }));
+  const tau = (jdTT - J2000) / DAYS_PER_MILLENNIUM;
+  const radius = lowVsopCoordinateState(FAST_EARTH_RADIUS_TERMS, tau, 1 / DAYS_PER_MILLENNIUM);
+  return {
+    value: wrapRadians(moon.value - sun.value + SOLAR_ABERRATION_RAD / radius.value),
+    rate: moon.rate - sun.rate - SOLAR_ABERRATION_RAD * radius.rate / (radius.value * radius.value),
+  };
 }
 
 /** Independent ten-term solar estimator; intended only to locate a root. */
@@ -274,6 +317,31 @@ function solveSafeguarded(evaluator, target, estimate, initialHalfWidth, toleran
   throw new RangeError('event root did not converge');
 }
 
+function solveFastNewton(evaluator, target, estimate, initialHalfWidth, toleranceSeconds) {
+  const left = estimate - initialHalfWidth;
+  const right = estimate + initialHalfWidth;
+  let jd = estimate;
+  for (let iteration = 1; iteration <= 4; iteration += 1) {
+    const state = evaluator(jd);
+    const residual = wrapRadians(state.value - target);
+    const correction = residual / state.rate;
+    if (!Number.isFinite(correction) || state.rate <= 0) return null;
+    if (Math.abs(correction) * 86400 <= toleranceSeconds) {
+      return {
+        jdTT: jd,
+        iterations: iteration,
+        usedBisection: false,
+        residualRadians: residual,
+        correctionSeconds: (jd - estimate) * 86400,
+      };
+    }
+    const next = jd - correction;
+    if (!(next > left && next < right)) return null;
+    jd = next;
+  }
+  return null;
+}
+
 function addUt1(result) {
   const deltaTSeconds = deltaTSecondsFromTt(result.jdTT);
   return { ...result, jdUT1: ttToUt1(result.jdTT, deltaTSeconds), deltaTSeconds };
@@ -290,17 +358,25 @@ export function solveSolarLongitude(targetLongitude, nearJdTT, { toleranceSecond
 export function solveLunarPhase(targetElongation, nearJdTT, {
   toleranceSeconds = 0.01,
   moonLatitudeTerms = DEFAULT_NEW_MOON_LATITUDE_TERMS,
+  solver = 'auto',
 } = {}) {
   if (!Number.isFinite(targetElongation)) throw new TypeError('targetElongation must be finite');
+  if (solver !== 'auto' && solver !== 'safeguarded') {
+    throw new RangeError("solver must be 'auto' or 'safeguarded'");
+  }
   const target = wrapRadians(targetElongation);
   // From an arbitrary date the lunar phase can start almost half a synodic
   // month from its target; a third cheap low-model step removes that curvature.
   const estimate = estimateRoot(lowElongationState, target, nearJdTT, 3);
   const evaluator = jdTT => elongationState(jdTT, { moonLatitudeTerms });
+  const fastEvaluator = jdTT => fastElongationState(jdTT, moonLatitudeTerms);
+  const root = solver === 'auto'
+    ? solveFastNewton(fastEvaluator, target, estimate, 2, toleranceSeconds)
+    : null;
   return addUt1({
     estimateJdTT: estimate,
     moonLatitudeTerms,
-    ...solveSafeguarded(evaluator, target, estimate, 2, toleranceSeconds),
+    ...(root ?? solveSafeguarded(evaluator, target, estimate, 2, toleranceSeconds)),
   });
 }
 

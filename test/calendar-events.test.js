@@ -5,6 +5,7 @@ import {
   LOW_MODEL_INFO,
   solarLongitudeState,
   elongationState,
+  solveLunarPhase,
   solveSolarLongitude,
   solveNewMoon,
 } from '../src/calendar-events.js';
@@ -76,4 +77,19 @@ test('safeguarded event roots stay robust across -6000..10000', () => {
     assert.ok(solar.iterations <= 6);
     assert.ok(moon.iterations <= 6);
   }
+});
+
+test('fast lunar-phase roots track the safeguarded full model across the supported span', () => {
+  for (let year = -6000; year <= 10000; year += 250) {
+    const nearJd = J2000 + (year - 2000) * 365.25 + 17.25;
+    for (const target of [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2]) {
+      const fast = solveLunarPhase(target, nearJd, { toleranceSeconds: 0.0001 });
+      const reference = solveLunarPhase(target, nearJd, {
+        toleranceSeconds: 0.0001,
+        solver: 'safeguarded',
+      });
+      near((fast.jdTT - reference.jdTT) * 86400, 0, 0.001, `${year}, ${target}`);
+    }
+  }
+  assert.throws(() => solveLunarPhase(0, J2000, { solver: 'unknown' }), /solver/);
 });
