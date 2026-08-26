@@ -202,6 +202,11 @@ export function getChineseEraNames(value) {
     const hasExactManakaiEnd = Number.isFinite(rawManakaiBoundary?.[1]);
     const hasAdjacentStart = !hasExactManakaiStart && Number.isFinite(adjacentBoundary?.start);
     const hasAdjacentEnd = !hasExactManakaiEnd && Number.isFinite(adjacentBoundary?.end);
+    const isYearOnlyManakaiBoundary = rawManakaiBoundary
+      && !hasExactManakaiStart && !hasExactManakaiEnd
+      && !hasAdjacentStart && !hasAdjacentEnd;
+    if (isYearOnlyManakaiBoundary
+      && (lunar.year < startYear || lunar.year >= startYear + duration)) continue;
     const hasTransitionBoundary = rawManakaiBoundary || hasAdjacentStart || hasAdjacentEnd;
     const manakaiBoundary = hasTransitionBoundary
       ? [

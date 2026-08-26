@@ -40,6 +40,27 @@ test('First Emperor title change preserves Ying Zheng regnal-year numbering', ()
   assert.equal(qin?.text, '[秦]始皇帝 嬴政 始皇33年');
 });
 
+test('Three Kingdoms exposes Wei, Shu Han and Sun Wu concurrently', () => {
+  const entries = getChineseEraNames(civilNoon(250, 7, 1));
+  assert.deepEqual(
+    entries.map((entry) => entry.dynasty),
+    ['三国-魏', '蜀汉', '孙吴'],
+  );
+  assert.ok(entries.some((entry) => entry.text === '[蜀汉]后主 刘禅 延熙13年'));
+  assert.ok(entries.some((entry) => entry.text === '[孙吴]大帝 孙权 赤乌13年'));
+});
+
+test('Warring States exposes the seven major states without duplicating Qin', () => {
+  const entries = getChineseEraNames(civilNoon(-299, 7, 1));
+  const stateNames = entries.map((entry) => (
+    entry.dynasty === '战国-秦' ? '秦' : entry.dynasty
+  ));
+  assert.deepEqual(new Set(stateNames), new Set(['秦', '齐', '楚', '燕', '韩', '赵', '魏']));
+  assert.equal(stateNames.filter((state) => state === '秦').length, 1);
+  assert.ok(entries.filter((entry) => entry.dynasty !== '战国-秦')
+    .every((entry) => entry.precision === 'year'));
+});
+
 test('DDBC day boundaries separate the three Liu Song era names in 465', () => {
   assert.deepEqual(
     getChineseEraNames(lunarNoon(465, 8, 12))

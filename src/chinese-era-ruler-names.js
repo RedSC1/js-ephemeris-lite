@@ -12,6 +12,14 @@
 // - Liao Shi 30 (Northern/Western Liao): https://zh.wikisource.org/zh-hans/辽史/卷30
 // - Liao Shi 72 (Yelü Bei / Dongdan): https://zh.wikisource.org/zh-hans/辽史/卷72
 export const CHINESE_ERA_RULER_NAMES = Object.freeze({
+  // Three Kingdoms.
+  1754:Object.freeze({ title:'昭烈帝', ruler:'刘备' }),
+  1757:Object.freeze({ title:'后主', ruler:'刘禅' }),
+  1766:Object.freeze({ title:'大帝', ruler:'孙权' }),
+  1768:Object.freeze({ title:'会稽王', ruler:'孙亮' }),
+  1769:Object.freeze({ title:'景帝', ruler:'孙休' }),
+  1770:Object.freeze({ title:'末帝', ruler:'孙皓' }),
+
   // Other source tags whose primary label is a title or a less familiar
   // non-Han name rather than the public Chinese label used by this UI.
   1239:Object.freeze({ title:'昭宗', ruler:'朱由榔' }),

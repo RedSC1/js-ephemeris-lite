@@ -212,8 +212,14 @@ at Yelü Bei's recorded departure and Yelü Anduan's investiture; the uncertain
 middle interval intentionally carries no personal ruler label.
 
 A conservative manakai-only subset supplements polities absent from the Shou
-Xing table, including selected Five Dynasties and Ten Kingdoms, Khitan/Liao,
-Western Xia, Jin, Balhae, and related short-lived regimes. Supplemental records
+Xing table, including Shu Han and Sun Wu, the seven major Warring States,
+selected Five Dynasties and Ten Kingdoms, Khitan/Liao, Western Xia, Jin,
+Balhae, and related short-lived regimes. The Warring States layer imports
+reviewed ruler-accession chronologies as year-precision labels; synthetic
+January boundaries used by a source to represent an uncertain historical year
+are not exposed as precise accession dates. It is limited to Qin, Qi, Chu,
+Yan, Han, Zhao, and Wei from 500 BCE onward rather than importing every Spring
+and Autumn polity. Supplemental records
 normally require an explicit polity, ruler, first day, and last day. The
 canonical Western Xia sequence is the narrow exception: where manakai supplies
 an explicit polity, ruler, nominal first year, and exact last day but no
