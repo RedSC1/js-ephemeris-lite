@@ -31,6 +31,15 @@ function civilNoon(year, month, day) {
   return new ZonedTime({ year, month, day, hour:12, offsetMinutes:480 }).toJulianTime();
 }
 
+test('First Emperor title change preserves Ying Zheng regnal-year numbering', () => {
+  // Astronomical year -212 is 213 BCE. Under the Qin calendar this instant is
+  // the later ninth month of the historical 214 BCE-labelled lunar year.
+  const entries = getChineseEraNames(civilNoon(-212, 10, 21));
+  const qin = entries.find((entry) => entry.dynasty === '秦' && entry.era === '始皇');
+  assert.equal(qin?.yearNumber, 33);
+  assert.equal(qin?.text, '[秦]始皇帝 嬴政 始皇33年');
+});
+
 test('DDBC day boundaries separate the three Liu Song era names in 465', () => {
   assert.deepEqual(
     getChineseEraNames(lunarNoon(465, 8, 12))

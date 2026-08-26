@@ -25,6 +25,19 @@ const ALL_CHINESE_ERA_RECORDS = Object.freeze([
   ...MANAKAI_SUPPLEMENTAL_ERA_RECORDS,
 ]);
 
+// Shou Xing splits Ying Zheng's record when his public title changes from
+// king to First Emperor, but its carried-year field is zero on both rows.
+// The historical regnal count did not restart: First Emperor year 26 follows
+// King Zheng year 25. Keep the generated source table intact and apply the
+// attested carry here as a narrowly scoped source correction.
+const ERA_YEAR_OFFSET_CORRECTIONS = new Map([
+  ['秦\u0000始皇帝\u0000嬴政\u0000始皇', 25],
+]);
+
+function eraYearOffset(record) {
+  return ERA_YEAR_OFFSET_CORRECTIONS.get(record.slice(3, 7).join('\u0000')) ?? record[2];
+}
+
 function sourceBoundaries(record) {
   const boundaryData = record[7];
   const ddbcSegments = Array.isArray(boundaryData) ? boundaryData : boundaryData?.ddbc;
@@ -150,7 +163,8 @@ export function getChineseEraNames(value) {
   const results = [];
 
   for (const record of ALL_CHINESE_ERA_RECORDS) {
-    const [startYear, duration, usedYears, dynasty, , , , boundaryData] = record;
+    const [startYear, duration, , dynasty, , , , boundaryData] = record;
+    const usedYears = eraYearOffset(record);
 
     if (dynasty === '当代' && startYear === 1949) {
       if (jdUT1 < MODERN_CHINA_ERA_START_JD) continue;
