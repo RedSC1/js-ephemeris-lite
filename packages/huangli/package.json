@@ -1,7 +1,6 @@
 {
   "name": "huangli-lite",
   "version": "0.1.0",
-  "private": true,
   "description": "Chinese almanac rules and daily Yi/Ji on js-ephemeris-lite",
   "type": "module",
   "license": "MIT",
@@ -11,10 +10,19 @@
   "types": "./src/index.d.ts",
   "exports": {
     ".": { "types": "./src/index.d.ts", "default": "./src/index.js" },
-    "./rules": { "types": "./src/rules.d.ts", "default": "./src/rules.js" }
+    "./rules": { "types": "./src/rules.d.ts", "default": "./src/rules.js" },
+    "./feng-shui": { "types": "./src/feng-shui.d.ts", "default": "./src/feng-shui.js" }
   },
   "files": ["src", "docs", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md"],
   "engines": { "node": ">=18" },
+  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RedSC1/js-ephemeris-lite.git",
+    "directory": "packages/huangli"
+  },
+  "bugs": { "url": "https://github.com/RedSC1/js-ephemeris-lite/issues" },
+  "homepage": "https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/huangli#readme",
   "dependencies": { "js-ephemeris-lite": "^0.1.0" },
   "scripts": {
     "test": "node --test test/*.test.mjs",

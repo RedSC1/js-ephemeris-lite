@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { RAT_HOUR_MODE, ZonedTime } from 'js-ephemeris-lite';
+import { readFileSync } from 'node:fs';
+import { RAT_HOUR_MODE, ZonedTime, makeGanzhi } from 'js-ephemeris-lite';
 import {
   FLOW_LEVEL,
   FLOW_MONTH_PALACE_STRATEGY,
@@ -18,8 +19,37 @@ import {
   resolveZiweiFlow,
   makeFlowMonthFromBuildingBranch,
   makeFlowMonth,
+  makeFlowLayer,
+  computeZiweiAnchors,
   reverseLookupZiweiTier1,
 } from '../dist/index.js';
+
+test('C++ natal and flow fixtures cover five levels, all 120 coordinates and both genders', () => {
+  const { rows } = JSON.parse(readFileSync(process.env.TAIYIN_ZIWEI_ORACLE_JSON
+    ?? new URL('./fixtures/flows-cpp.json', import.meta.url)));
+  assert.equal(rows.length, 1200);
+  for (const [i, row] of rows.entries()) {
+    const [y, m, d, h, gender, level, stem, branch] = row.input;
+    const pillars = {
+      year: makeGanzhi(y % 10, y % 12), month: makeGanzhi(((y % 10 % 5) * 2 + 2 + m - 1) % 10, (m + 1) % 12),
+      day: makeGanzhi((d - 1) % 10, (d - 1) % 12), hour: makeGanzhi(((d - 1) % 10 % 5 * 2 + h) % 10, h),
+    };
+    const facts = {
+      jdUT1: 0, virtualTime: { year: 2000, month: 1, day: 1, hour: 0, minute: 0, second: 0 }, gender,
+      lunarDate: { year: 1984 + y, month: m, day: d, isLeap: false, monthName: 0 },
+      effectiveLunarYear: 1984 + y, effectiveLunarMonth: m, solarDayFromPreviousJie: d,
+      solarTermPillars: pillars, lunarPillars: pillars,
+    };
+    const options = new ZiweiOptions({ gender });
+    const chart = ZiweiChart.fromResolvedBirth({ facts, ...computeZiweiAnchors(facts, options), options });
+    const flow = makeFlowLayer(chart, level, { stem, branch });
+    const positions = a => a.map(p => p < 0 ? 255 : p);
+    assert.deepEqual([
+      chart.anchors.palacePositions[0], chart.bodyPalace, chart.anchors.bureau, positions(chart.starPositions),
+      chart.transformationMasks, positions(flow.starPositions), Object.values(flow.transforms),
+    ], row.expected, `C++ natal/flow pair ${i}`);
+  }
+});
 
 function zoned(year, month, day, hour = 12, minute = 0) {
   return new ZonedTime({ year, month, day, hour, minute, second: 0, offsetMinutes: 480 });

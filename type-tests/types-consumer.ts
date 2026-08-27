@@ -41,6 +41,11 @@ import {
 } from 'js-ephemeris-lite/orbital-events';
 import { HuangliCalendar, getHuangliDay, ACTIVITY_MASKS, type HuangliDay } from '../packages/huangli/src/index.js';
 import { evaluateAlmanacRules } from '../packages/huangli/src/rules.js';
+import {
+  MOUNTAIN, createFengShuiChart, calculatePaiLong, mountainForAzimuth,
+  type FengShuiChart,
+} from 'huangli-lite/feng-shui';
+import type { HuangliHourPeriod, TuWangPeriod, FestivalCategory, FestivalDetail } from 'huangli-lite';
 
 const instant = JulianTime.fromDate(new Date());
 const clock = new ZonedTime({
@@ -135,6 +140,14 @@ searchGreatestElongations('mars', 2451545, 2451555);
 
 const almanac = new HuangliCalendar({utcOffsetMinutes: 480, ratHourMode: 'next-day'});
 const almanacDay: HuangliDay = almanac.getDay(2026,3,16,{activityMask:ACTIVITY_MASKS.civilian37});
+const festivalDetails: FestivalDetail[] = almanacDay.festivalDetails;
+const festivalCategories: FestivalCategory[] = festivalDetails.map(f=>f.category);
+const traditionalFestivalNames: string[] = festivalDetails.filter(f=>f.category==='traditional').map(f=>f.name);
+new HuangliCalendar({festivalMode:'all'}).getYear(2026);
+const festivalMode: 'common'|'all' = almanacDay.settings.festivalMode;
+// @ts-expect-error festival mode is a selection, not a category name
+new HuangliCalendar({festivalMode:'religious'});
+void [festivalCategories,traditionalFestivalNames,festivalMode];
 const clockDay: HuangliDay = getHuangliDay({year:2026,month:3,day:16,hour:10});
 evaluateAlmanacRules(almanacDay.ruleInput);
 const effectiveDate: number = almanacDay.ruleDate.day;
@@ -145,3 +158,14 @@ new HuangliCalendar({longitude:116});
 // @ts-expect-error settings must not change after the event cache has been initialized
 almanac.options.utcOffsetMinutes = 0;
 void [nodeEvents,almanacDay,clockDay,effectiveDate,effectiveLunarMonth];
+
+const earthChart: FengShuiChart = createFengShuiChart({period:9,sitting:MOUNTAIN.ZI});
+calculatePaiLong('壬', mountainForAzimuth(180).key);
+const hourlyPeriods: HuangliHourPeriod[] = almanac.getHours(2026,2,16);
+const soilPeriods: TuWangPeriod[] = almanac.getTuWangPeriods(2026);
+new HuangliCalendar({tuWangMethod:'manual'}).getDay(2026,1,20,{isTuWangYongShi:false});
+// @ts-expect-error twenty-four mountains use named directions
+createFengShuiChart({period:9,sitting:180});
+// @ts-expect-error only explicit TuWang modes are supported
+new HuangliCalendar({tuWangMethod:'unknown'});
+void [earthChart,hourlyPeriods,soilPeriods];

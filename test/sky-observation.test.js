@@ -1,9 +1,57 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { bodyPhenomena, moonIllumination } from '../src/phenomena.js';
 import { bodyHorizontalPosition, bodyRiseSetForDay } from '../src/body-visibility.js';
 import { SKY_BODIES } from '../src/apparent.js';
 import { solveNewMoon, solveLunarPhase } from '../src/calendar-events.js';
+
+const nativeRows = JSON.parse(readFileSync(process.env.TAIYIN_SKY_ORACLE_JSON
+  ?? new URL('./fixtures/observation-de441.json', import.meta.url))).rows;
+const near = (a, b, tolerance, label) => assert.ok(Number.isFinite(a) && Math.abs(a - b) <= tolerance,
+  `${label}: ${a} vs ${b}; tolerance ${tolerance}`);
+
+test('physical illumination, elongation, diameter and parallax match native DE441 geometry', () => {
+  const rows = nativeRows.filter(r => r.kind === 'phenomena');
+  assert.equal(rows.length, 45);
+  for (const r of rows) {
+    const p = bodyPhenomena(r.body, r.jd), label = `${r.body} ${r.jd}`;
+    // Native public phase uses an apparent triangle (columns 0/1); columns
+    // 5/6 use its astrometric solution for the physical triangle exposed here.
+    if (r.body !== 'sun') {
+      near(p.phaseAngleDeg, r.expected[5], 0.0002, `${label} phase deg`);
+      near(p.illuminatedFraction, r.expected[6], 1e-6, `${label} illumination`);
+    }
+    near(p.solarElongationDeg, r.expected[2], 0.001, `${label} elongation deg`);
+    near(p.apparentDiameterArcsec, r.expected[3], 0.003, `${label} diameter arcsec`);
+    near(p.horizontalParallaxDeg, r.expected[7], 2e-6, `${label} parallax deg`);
+  }
+});
+
+test('topocentric coordinates match native DE441 at northern, southern and polar sites', () => {
+  for (const r of nativeRows.filter(r => r.kind === 'horizontal')) {
+    const p = bodyHorizontalPosition(r.body, r.jd, r.observer, r.options);
+    const label = `${r.body} ${r.jd} ${r.observer.latitudeDeg}`;
+    const azimuthError = ((p.azimuthDeg - r.expected[0] + 540) % 360) - 180;
+    near(azimuthError, 0, 0.001, `${label} azimuth deg`);
+    near(p.geometricAltitudeDeg, r.expected[1], 0.001, `${label} altitude deg`);
+    near(p.apparentAltitudeDeg, r.expected[2], 0.001, `${label} refracted altitude deg`);
+    const distanceTolerance = ['uranus', 'neptune'].includes(r.body) ? 5e-5 : r.body === 'moon' ? 1e-8 : 3e-6;
+    near(p.distanceAu, r.expected[3], distanceTolerance, `${label} distance AU`);
+  }
+});
+
+test('independent native interval searches match every rise, set and transit, including limb refraction', () => {
+  for (const r of nativeRows.filter(r => r.kind === 'visibility')) {
+    const p = bodyRiseSetForDay(r.body, r.jd, r.observer, r.options);
+    const fields = ['rises', 'sets', 'upperTransits', 'lowerTransits'];
+    for (const [i, key] of fields.entries()) {
+      const label = `${r.body} ${r.jd} ${r.observer.latitudeDeg} ${JSON.stringify(r.options)} ${key}`;
+      assert.equal(p[key].length, r.expected[i].length, `${label} count`);
+      for (const [j, t] of p[key].entries()) near((t - r.expected[i][j]) * 86400, 0, 0.5, `${label} seconds`);
+    }
+  }
+});
 
 test('illumination, true angular elongation and phase angle have physical ranges', () => {
   for (const body of SKY_BODIES) {

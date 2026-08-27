@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {HuangliCalendar,evaluateAlmanacRules,createFlyingStarBoard} from '../src/index.js';
+import {HuangliCalendar,evaluateAlmanacRules,createFlyingStarBoard,ALMANAC_GODS} from '../src/index.js';
 import {getQiShuoYear,ZonedTime,julianDay,calendarDateFromJulianDay,solarToLunar} from 'js-ephemeris-lite';
 
 const mod=(n,m)=>(n%m+m)%m;
@@ -152,4 +152,55 @@ test('batch queries use the same clock/settings as individual days, including th
   assert.throws(()=>calendar.getMonth(2026,13));
   assert.throws(()=>calendar.getYear(10000));
   assert.throws(()=>calendar.getDay(2026,1,1,{activityMask:[98]}));
+});
+
+test('TuWang uses exactly the 18 rule days before each assigned season start',()=>{
+  const id=ALMANAC_GODS.find(g=>g.key==='tu_wang_yong_shi').index;
+  for(const mode of ['china-astronomical','historical','local-astronomical'])
+    for(const utcOffsetMinutes of [210,480]) {
+      const c=new HuangliCalendar({mode,utcOffsetMinutes});
+      const exact=new HuangliCalendar({mode,utcOffsetMinutes,exactJieQiTime:true});
+      const periods=c.getTuWangPeriods(2026);
+      assert.equal(periods.length,4);
+      const terms=getQiShuoYear(2026,{mode,utcOffsetMinutes}).events
+        .filter(e=>e.kind==='solar-term'&&[21,3,9,15].includes(e.termIndex));
+      for(let i=0;i<4;i++) {
+        const p=periods[i],start=civilDay(p.startDate),end=civilDay(p.endDateExclusive);
+        assert.equal(end-start,18);
+        assert.equal(end,mode==='historical'?terms[i].assignedCivilDayNumber:terms[i].localCivilDayNumber);
+        for(const offset of [-1,0,1,16,17,18]) {
+          const date=calendarDateFromJulianDay(start+offset);
+          const x=c.getDay(date.year,date.month,date.day);
+          const expected=offset>=0&&offset<18;
+          assert.equal(x.flags.isTuWangYongShi,expected);
+          assert.equal(x.godIds.includes(id),expected);
+          assert.equal(x.tuWangYongShi.source,'calendar');
+          assert.equal(exact.getDay(date.year,date.month,date.day).flags.isTuWangYongShi,expected);
+          const replay=evaluateAlmanacRules(x.ruleInput);
+          assert.deepEqual(x.tabooIds,replay.tabooIds);
+        }
+        const previous=calendarDateFromJulianDay(start-1);
+        assert(c.getDay(previous.year,previous.month,previous.day,{hour:23}).flags.isTuWangYongShi);
+        const split=new HuangliCalendar({mode,utcOffsetMinutes,ratHourMode:'current-day'});
+        assert(!split.getDay(previous.year,previous.month,previous.day,{hour:23}).flags.isTuWangYongShi);
+      }
+    }
+});
+
+test('TuWang manual mode and explicit false overrides preserve caller control',()=>{
+  const c=new HuangliCalendar(), manual=new HuangliCalendar({tuWangMethod:'manual'});
+  const date=c.getTuWangPeriods(2026)[0].startDate;
+  const args=[date.year,date.month,date.day];
+  assert(c.getDay(...args).flags.isTuWangYongShi);
+  const suppressed=c.getDay(...args,{isTuWangYongShi:false});
+  assert(!suppressed.flags.isTuWangYongShi);
+  assert.equal(suppressed.tuWangYongShi.source,'override');
+  assert(!manual.getDay(...args).flags.isTuWangYongShi);
+  assert.equal(manual.getDay(...args).tuWangYongShi.source,'manual');
+  assert(manual.getDay(...args,{isTuWangYongShi:true}).flags.isTuWangYongShi);
+  assert.throws(()=>new HuangliCalendar({tuWangMethod:'invented'}));
+  assert.throws(()=>c.getDay(...args,{isTuWangYongShi:null}));
+  assert.throws(()=>c.getTuWangPeriods(10000));
+  const p=c.getTuWangPeriods(2026);p[0].startDate.year=99;
+  assert.equal(c.getTuWangPeriods(2026)[0].startDate.year,2026);
 });

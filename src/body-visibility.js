@@ -58,7 +58,8 @@ export function bodyHorizontalPosition(body, jdUT1, rawObserver, options = {}) {
 /** Exact input interval is [dayStartUT1,dayStartUT1+1), not an implicit
  * timezone or longitude-derived day. Returns all crossings in that interval. */
 export function bodyRiseSetForDay(body, dayStartUT1, observer, options = {}) {
-  validateSkyBody(body); finite(dayStartUT1, 'dayStartUT1'); observerSettings(observer);
+  validateSkyBody(body); finite(dayStartUT1, 'dayStartUT1');
+  const atmosphere = observerSettings(observer);
   const end = dayStartUT1 + 1;
   const horizon = options.horizonDegrees ?? 0;
   finite(horizon, 'horizonDegrees');
@@ -74,7 +75,12 @@ export function bodyRiseSetForDay(body, dayStartUT1, observer, options = {}) {
   const altitude = t => {
     const p = at(t);
     const radius = Math.asin(clamp(BODY_DISC_RADIUS_KM[body] / AU_KM / p.distanceAu)) * RAD;
-    return p.apparentAltitudeDeg + limbSign * radius - horizon;
+    // The ray at the selected limb has its own refraction, especially near
+    // the horizon; refracting the centre first shifts solar/lunar events.
+    const geometricLimb = p.geometricAltitudeDeg + limbSign * radius;
+    const refraction = options.refraction === false ? 0
+      : hybridAtmosphericRefraction(geometricLimb * DEG, atmosphere) * RAD;
+    return geometricLimb + refraction - horizon;
   };
   // Add refined local extrema to the scan grid. This catches two crossings
   // near a grazing rise/set that can both fit between ordinary samples.

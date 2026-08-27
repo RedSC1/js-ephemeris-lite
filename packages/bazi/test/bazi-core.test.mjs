@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import {
   BAZI_CLOCK_MODE,
   BaziChart,
@@ -35,6 +36,7 @@ import {
   hasShenSha,
   packPillar,
   unpackPillar,
+  shenShaWords,
 } from '../dist/index.js';
 import {
   CALENDAR_DAY_BOUNDARY_MODE,
@@ -42,6 +44,23 @@ import {
   RAT_HOUR_MODE,
   ZonedTime,
 } from 'js-ephemeris-lite';
+
+test('seeded C++ charts cover extra pillars, column rules, merged relations and gendered shen-sha', () => {
+  const { rows } = JSON.parse(readFileSync(process.env.TAIYIN_BAZI_ORACLE_JSON
+    ?? new URL('./fixtures/charts-cpp.json', import.meta.url)));
+  assert.equal(rows.length, 1024);
+  for (const [index, row] of rows.entries()) {
+    const pillars = Object.fromEntries(['year', 'month', 'day', 'hour'].map((k, j) => [k, row.pillars[j]]));
+    const chart = analyzePillars(pillars, { earthPalaceMode: row.mode });
+    const shenSha = row.pillars.flatMap((p, kind) => [undefined, 0, 1].map(gender =>
+      shenShaWords(collectTargetShenSha(chart, p, kind, { gender })).map(String)));
+    assert.deepEqual([
+      ...Object.values(chart.extraPillars),
+      ...chart.columns.map(p => [p.visibleTenGod, p.lifeStage, p.nayinId, p.hiddenStems, p.hiddenTenGods]),
+      collectChartRelations(chart).map(r => [r.kind, r.pillarMask, r.combinedElement ?? 255]), shenSha,
+    ], row.expected, `C++ chart ${index}`);
+  }
+});
 
 test('uint8-compatible pillar encoding covers the whole sexagenary cycle', () => {
   for (let index = 0; index < 60; index += 1) {
@@ -91,6 +110,27 @@ test('pair and triple relation tables retain their stable flags', () => {
   });
   assert.ok(calculateBranchTripleRelation(2, 5, 8).flags
     & BRANCH_TRIPLE_RELATION_FLAG.PUNISHMENT);
+});
+
+test('finite primitive domains exhaust the saved C++ reference inputs', () => {
+  const { rows, counts } = JSON.parse(readFileSync(new URL('./fixtures/primitives-cpp.json', import.meta.url)));
+  const relation = fn => (...args) => { const r = fn(...args); return [r.flags, r.combinedElement ?? 255]; };
+  const functions = {
+    tenGod: getTenGod, hiddenStems: getHiddenStems, kongWang: getKongWang,
+    lifeStage: getLifeStage, stemRelation: relation(calculateStemRelation),
+    branchRelation: relation(calculateBranchRelation), tripleRelation: relation(calculateBranchTripleRelation),
+    flowMonth: calculateFlowMonth, flowHour: calculateFlowHour,
+    siling: (...args) => getRenyuanSilingSegments(...args).map(s => [s.stem, s.origin, s.index, s.startDay, s.endDay]),
+  };
+  const seen = new Set(), actualCounts = {};
+  for (const [name, args, expected] of rows) {
+    const key = JSON.stringify([name, args]);
+    assert(!seen.has(key), `duplicate primitive ${key}`); seen.add(key);
+    assert.deepEqual(functions[name](...args), expected, `C++ ${key}`);
+    actualCounts[name] = (actualCounts[name] ?? 0) + 1;
+  }
+  assert.equal(rows.length, 3848);
+  assert.deepEqual(actualCounts, counts);
 });
 
 test('life-stage rules exhaust both earth-palace modes', () => {
@@ -195,6 +235,35 @@ test('Qi-Yun and timed Da-Yun reproduce the native integration oracle', () => {
     [0x73, 0x84, 0x95, 0x06, 0x17, 0x28, 0x39, 0x4a]);
   assert.deepEqual(daYun.map((item) => item.startVirtualAge),
     [5, 15, 25, 35, 45, 55, 65, 75]);
+});
+
+test('C++ calendar integration covers all Qi-Yun and decade boundary models', () => {
+  const { rows } = JSON.parse(readFileSync(process.env.TAIYIN_FORTUNE_ORACLE_JSON
+    ?? new URL('./fixtures/fortune-cpp.json', import.meta.url)));
+  assert.equal(rows.length, 144);
+  const near = (a, b, seconds, label) => assert.ok(Math.abs(a - b) * 86400 <= seconds,
+    `${label}: ${Math.abs(a - b) * 86400}s > ${seconds}s`);
+  for (const [i, { input: [year, month, gender, timeModel, boundaryModel], expected }] of rows.entries()) {
+    const birth = new ZonedTime({ year, month, day: 19, hour: gender ? 23 : 0, minute: 28, second: 0, offsetMinutes: 480 });
+    const chart = BaziChart.fromZonedTime(birth);
+    assert.deepEqual(Object.values(chart.pillars), expected[0], `C++ fortune ${i} pillars`);
+    const q = calculateQiYun(birth.toJulianTime(), birth, chart, gender, { timeModel });
+    assert.equal(q.direction, expected[1][0]);
+    assert.equal(q.referenceJie.indexFromWinterSolstice, expected[1][1]);
+    near(q.jieIntervalDays, expected[1][2], 1, `C++ fortune ${i} Jie interval`);
+    near(q.startAgeYears * 3, expected[1][3] * 3, 1, `C++ fortune ${i} age ratio`);
+    near(q.referenceJie.jdUT1, expected[1][4], 1, `C++ fortune ${i} Jie time`);
+    // Traditional 3 days -> 1 year scaling amplifies the astronomical error.
+    near(q.startJdUT1, expected[1][5], 125, `C++ fortune ${i} start`);
+    const decades = generateDaYun(birth, chart, q, { count: 8, boundaryModel });
+    for (const [j, d] of decades.entries()) {
+      assert.deepEqual([d.pillar, d.startVirtualAge, d.endVirtualAge], expected[2][j].slice(0, 3));
+      near(d.startJdUT1, expected[2][j][3], 125, `C++ fortune ${i}/${j} decade start`);
+      near(d.endJdUT1, expected[2][j][4], 125, `C++ fortune ${i}/${j} decade end`);
+    }
+    for (const table of [0, 1]) assert.deepEqual(getRenyuanSilingSegments(chart.pillars.month & 15, table)
+      .map(s => [s.stem, s.origin, s.index, s.startDay, s.endDay]), expected[3][table]);
+  }
 });
 
 test('BaziOptions keeps chart, Qi-Yun, Da-Yun and Shen-Sha conventions together', () => {

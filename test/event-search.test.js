@@ -1,9 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { searchCrossings, searchAngleCrossings, searchLongitudeCrossings, searchRelativeLongitude,
   searchStations, searchIngresses } from '../src/event-search.js';
 import { apparentBodyPosition, apparentBodyState } from '../src/apparent.js';
 import { signedDeg } from '../src/sky-math.js';
+
+test('C++ independently enumerates longitude crossings, aspects, stations and ingresses', () => {
+  const { rows } = JSON.parse(readFileSync(process.env.TAIYIN_SKY_ORACLE_JSON
+    ?? new URL('./fixtures/observation-de441.json', import.meta.url)));
+  const ingressGroups = new Map();
+  const compare = (actual, expected, r) => {
+    const label = `${r.kind}/${r.body}/${r.options.apparent.frame}/${r.angle ?? ''}`;
+    assert.equal(actual.length, expected.length, `${label} event count`);
+    // Slow outer-planet motion amplifies an angular model error into seconds.
+    const seconds = ['uranus', 'neptune'].includes(r.body) ? 60 : 10;
+    for (const [i, p] of actual.entries()) assert.ok(Math.abs(p.jdTT - expected[i]) * 86400 <= seconds,
+      `${label} event ${i}: ${Math.abs(p.jdTT - expected[i]) * 86400}s > ${seconds}s`);
+  };
+  for (const r of rows) {
+    if (r.kind === 'ingress-boundary') {
+      const key = `${r.body}/${r.options.apparent.frame}/${r.start}/${r.end}`;
+      if (!ingressGroups.has(key)) ingressGroups.set(key, { row: r, expected: [] });
+      ingressGroups.get(key).expected.push(...r.expected); continue;
+    }
+    const args = [r.start, r.end, r.options];
+    if (r.kind === 'stations') compare(searchStations(r.body, ...args), r.expected, r);
+    if (r.kind === 'longitude') compare(searchLongitudeCrossings(r.body, r.angle, ...args), r.expected, r);
+    if (r.kind === 'relative') compare(searchRelativeLongitude(r.body, r.other, r.angle, ...args), r.expected, r);
+  }
+  assert.equal(ingressGroups.size, 27);
+  for (const { row: r, expected } of ingressGroups.values()) {
+    compare(searchIngresses(r.body, r.start, r.end, r.options), expected.sort((a, b) => a - b), r);
+  }
+});
 
 test('scalar search is half-open, deduplicated, and rejects invalid scans', () => {
   assert.deepEqual(searchCrossings(t => t * (t - 1) * (t - 2), 0, 2).map(x => x.time), [0, 1]);

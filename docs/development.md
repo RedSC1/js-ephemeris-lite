@@ -17,6 +17,7 @@ npm run test:exhaustive --workspace=huangli-lite
 
 根目录 `npm test` 使用 Node 测试发现机制；workspace 测试包含各包的构建和示例类型检查。
 黄历的 `test:exhaustive` 在规则输入矩阵上计算结果，并核对仓库保存的 SHA-256 指纹。
+需要现场运行参考实现时，参见仓库的 `scripts/oracles/README.md`；常规测试不依赖 C++ 或 Dart 运行时。
 
 ## 打包验证
 
@@ -30,7 +31,7 @@ npm pack --dry-run --workspace=huangli-lite
 这些命令不会发布 npm；各包 `prepack` 会执行其测试。
 包内应包含入口、类型声明、README、docs 与许可证，核心另包含生成数据。
 确认构建产物新鲜后，可使用 `--ignore-scripts` 仅检查打包文件清单。
-黄历保持 `private: true`，尚不允许发布。
+发布使用 `npm publish --workspace=huangli-lite`，需要对应 npm 账号的发布权限。
 
 ## 参考数据与再生成
 
