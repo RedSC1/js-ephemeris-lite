@@ -11,7 +11,11 @@ npm install js-ephemeris-lite ziwei-lite
 ## 创建命盘
 
 ```ts
-import { ZonedTime } from 'js-ephemeris-lite';
+import {
+  CALENDAR_DAY_BOUNDARY_MODE,
+  CALENDAR_MODE,
+  ZonedTime,
+} from 'js-ephemeris-lite';
 import {
   ZIWEI_GENDER,
   ZiweiChart,
@@ -30,6 +34,8 @@ const birth = new ZonedTime({
 
 const options = new ZiweiOptions({
   gender: ZIWEI_GENDER.MALE,
+  mode: CALENDAR_MODE.HISTORICAL,
+  dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET,
 });
 
 const chart = ZiweiChart.fromZonedTime(birth, options);
@@ -109,6 +115,29 @@ console.log(STAR_CATALOG.length); // 本命星和预留流曜共 159 个稳定 I
 
 `starBitset` 是 `bigint`，bit `n` 表示 StarId `n`。需要 JSON 时使用 `starIds`，不要直接 `JSON.stringify(bigint)`。
 
+### JSON 命盘导出
+
+```ts
+const snapshot = chart.toJSON(); // ZiweiChartJSON，schemaVersion: ziwei-chart-v1
+const json = JSON.stringify(chart, null, 2);
+```
+
+导出完整本命盘：十二宫、星曜 ID/key、亮度及标签、生年四化/自化/向心四化、命身主、
+anchors 和计算设置。星曜使用数组，不序列化 BigInt；自定义星曜、规则模块 label、
+编译后 patch 和覆盖顺序一并保留。内置星曜的稳定标识为 `key`，应用可按自己的语言增加显示名称。
+
+- `birth.clockTime`：原始出生年月日时分秒和固定 `offsetMinutes`，与历法归日偏移分开保存。
+- `birth.virtualTime`：排盘所用钟表/平太阳/真太阳时间；`birth.jdUT1` 是实际输入瞬间。
+- `birth.logicalLunarDate`：经过早晚子时等规则处理的排盘农历，不冒充原始生日。
+- `fromLunar()` 额外保留 `birth.lunarInput`，同时记录转换后的原始钟表。
+- 只有 instant/facts 的低层入口不虚构出生钟表，`clockTime` 为 `null`。
+- 日期使用儒略历/格里历 1582 年切换及天文学纪年（0 = 公元前 1 年）。
+
+这是本命盘快照，不是 Dart AI JSON 的兼容格式，不含当前流运选择或 UI 的姓名、地点名称。
+应用可另加 `profile`。恢复自定义规则时，将 `options.rules.ruleset.modules` 中每项用
+`new ZiweiRuleModule(module)` 构造，再传给 `new ZiweiRuleset(modules)`；不要将解析出的普通对象
+直接当成规则类实例。
+
 ## 读取四化
 
 每颗星的 `transformMask` 是十二位 mask：
@@ -170,7 +199,7 @@ const options = new ZiweiOptions({
 });
 ```
 
-默认值与 C++ 默认 profile 对齐：历史中国历法、UTC+8、晚子时进入次日、民用钟表、闰月十五后作下月、天盘，以及五虎遁/生年四化/身主均采用农历年界。太阳时不会自动启用。
+默认值与 C++ 默认 profile 对齐：历史中国历法、按钟表 UTC+8 划日、晚子时进入次日、民用钟表、闰月十五后作下月、天盘，以及五虎遁/生年四化/身主均采用农历年界。地方天文历法需显式选择 `CALENDAR_MODE.LOCAL_ASTRONOMICAL`，再通过 `dayBoundaryMode` 选择固定 UTC offset 或指定 `meridianDeg`；经度日界和太阳时都不会自动启用。
 
 使用 `options.with({ ... })` 可从现有配置派生新实例，不会修改旧命盘的口径。
 
@@ -305,14 +334,32 @@ for (const candidate of candidates) {
 
 ## 自定义规则资源
 
-内置 `option1..option4` 适合固定流派差异；用户自己保存的规则资料用不可变 `ZiweiRuleset`：
+内置 TOML variant 和用户 JSON 都会先编译成同一种不可变 `ZiweiRuleModule`。每个模块必须有唯一
+`label`，随后按 `ZiweiRuleset.modules` 的顺序合并；后加入的模块覆盖前面重叠的星曜或字段。
+
+内置 option 也可以显式编译成模块：
+
+```ts
+let ruleset = ZiweiConfigLoader.withOptions(
+  ZiweiConfigLoader.getDefault(),
+  {
+    label: 'my-option2-base',
+    longevity: 'option2',
+    placement: { tianshang: 'option2', tianshi: 'option2' },
+    sihua: { geng: 'option4', gui: 'option2' },
+  },
+);
+```
+
+用户自己保存的 JSON 规则再编译为另一个带标签模块：
 
 ```ts
 import { ZiweiConfigLoader } from 'ziwei-lite';
 
-const ruleset = ZiweiConfigLoader.overrideWith(
-  ZiweiConfigLoader.getDefault(),
+ruleset = ZiweiConfigLoader.overrideWith(
+  ruleset,
   {
+    label: 'my-custom-rules',
     sihuaJson: customSiHuaJson,
     starsJson: customStarsJson,
     brightnessJson: customBrightnessJson,
@@ -325,9 +372,40 @@ const options = new ZiweiOptions({
   gender: ZIWEI_GENDER.MALE,
   rules: { ruleset },
 });
+
+const chart = ZiweiChart.fromZonedTime(birth, options);
 ```
 
-该兼容入口能读取旧 Dart app 保存的 `constant`、`anchor_offset`、`lookup`、`lookup_offset` 和 `pipeline` 安星 JSON。规则在载入时编译一次，之后本命和流曜仍使用扁平答案表。`ruleset.with(...)` 也可以直接接受类型安全的 compiled placement、亮度、四化及命身主 patch。
+如果先加入 JSON、再调用 `withOptions()`，后面的 option 会覆盖 JSON 的重叠规则；反过来则 JSON 胜出。
+相同 label 会直接抛出 `RangeError`，用户 JSON 也不能冒用保留名 `option1..option4`。
+
+`starsJson` 与 `flowJson` 只需列出想覆盖或新增的星曜。未知 `key` 会成为 ruleset 私有的新星，内置
+`0..158` ID 保持不变，新星从 `159` 起按模块顺序分配：
+
+```ts
+ruleset = ZiweiConfigLoader.overrideWith(ruleset, {
+  label: 'my-extra-stars',
+  starsJson: JSON.stringify([{
+    key: 'custom_star',
+    type: 'minor',
+    rule: { type: 'anchor_offset', anchor: 'ziwei', offset: 2 },
+  }]),
+});
+
+const customChart = ZiweiChart.fromZonedTime(
+  birth,
+  options.with({ rules: { ruleset } }),
+);
+const id = customChart.findStarId('custom_star');
+customChart.getStarInfo(id);
+```
+
+新星会进入当前命盘的 `starCatalog`、`starPositions`、宫位 `starIds` 和任意长度的 `BigInt`
+`starBitset`。数字 ID 只在编译后的 ruleset 内有效，持久化配置应始终保存稳定 `key`。
+
+该兼容入口能读取旧 Dart app 保存的 `constant`、`anchor_offset`、`lookup`、`lookup_offset` 和
+`pipeline` 安星 JSON。规则只在载入时编译一次，排盘时继续使用扁平答案表。需要直接提供机器码时，
+可构造带 label 的 `ZiweiRuleModule`，再用 `ruleset.with(module)` 追加。
 
 ## 实现范围
 

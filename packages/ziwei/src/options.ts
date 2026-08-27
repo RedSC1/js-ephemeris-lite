@@ -1,7 +1,9 @@
 import {
+  CALENDAR_DAY_BOUNDARY_MODE,
   CALENDAR_MODE,
   PILLAR_HISTORICAL_MODE,
   RAT_HOUR_MODE,
+  type CalendarDayBoundaryMode,
   type CalendarMode,
   type PillarHistoricalMode,
   type RatHourMode,
@@ -68,6 +70,7 @@ export interface ZiweiRuleSelection {
 export interface ZiweiOptionsInput {
   gender: ZiweiGender;
   mode?: CalendarMode;
+  dayBoundaryMode?: CalendarDayBoundaryMode;
   utcOffsetMinutes?: number;
   meridianDeg?: number;
   pillarHistoricalMode?: PillarHistoricalMode;
@@ -132,6 +135,7 @@ const ZiweiConfigDefaults = Object.freeze({ ruleset: new ZiweiRuleset() });
 export class ZiweiOptions {
   readonly gender: ZiweiGender;
   readonly mode: CalendarMode;
+  readonly dayBoundaryMode: CalendarDayBoundaryMode;
   readonly utcOffsetMinutes: number;
   readonly meridianDeg: number | undefined;
   readonly pillarHistoricalMode: PillarHistoricalMode;
@@ -151,6 +155,8 @@ export class ZiweiOptions {
   constructor(input: ZiweiOptionsInput) {
     this.gender = input.gender;
     this.mode = input.mode ?? CALENDAR_MODE.HISTORICAL;
+    this.dayBoundaryMode = input.dayBoundaryMode
+      ?? CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET;
     this.utcOffsetMinutes = input.utcOffsetMinutes ?? 480;
     this.meridianDeg = input.meridianDeg;
     this.pillarHistoricalMode = input.pillarHistoricalMode
@@ -172,12 +178,23 @@ export class ZiweiOptions {
 
     if (!includes(Object.values(ZIWEI_GENDER), this.gender)) throw new RangeError('unknown Ziwei gender');
     if (!includes(Object.values(CALENDAR_MODE), this.mode)) throw new RangeError('unknown calendar mode');
+    if (!includes(Object.values(CALENDAR_DAY_BOUNDARY_MODE), this.dayBoundaryMode)) {
+      throw new RangeError('unknown calendar day-boundary mode');
+    }
     if (!Number.isFinite(this.utcOffsetMinutes) || Math.abs(this.utcOffsetMinutes) > 840) {
       throw new RangeError('utcOffsetMinutes must be within ±14 hours');
     }
     if (this.meridianDeg !== undefined
       && (!Number.isFinite(this.meridianDeg) || Math.abs(this.meridianDeg) > 180)) {
       throw new RangeError('meridianDeg must be within ±180 degrees');
+    }
+    if (this.dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN
+      && this.meridianDeg === undefined) {
+      throw new RangeError('meridianDeg is required for mean-solar-meridian day boundaries');
+    }
+    if (this.dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET
+      && this.meridianDeg !== undefined) {
+      throw new RangeError('meridianDeg is only valid with mean-solar-meridian day boundaries');
     }
     if (!includes(Object.values(PILLAR_HISTORICAL_MODE), this.pillarHistoricalMode)) {
       throw new RangeError('unknown pillar historical mode');
@@ -227,11 +244,13 @@ export class ZiweiOptions {
 
   toCalendarOptions(): {
     mode: CalendarMode;
+    dayBoundaryMode: CalendarDayBoundaryMode;
     utcOffsetMinutes: number;
     meridianDeg: number | undefined;
   } {
     return Object.freeze({
       mode: this.mode,
+      dayBoundaryMode: this.dayBoundaryMode,
       utcOffsetMinutes: this.utcOffsetMinutes,
       meridianDeg: this.meridianDeg,
     });
@@ -241,6 +260,7 @@ export class ZiweiOptions {
     return {
       gender: this.gender,
       mode: this.mode,
+      dayBoundaryMode: this.dayBoundaryMode,
       utcOffsetMinutes: this.utcOffsetMinutes,
       meridianDeg: this.meridianDeg,
       pillarHistoricalMode: this.pillarHistoricalMode,

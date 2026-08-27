@@ -1,7 +1,9 @@
 import {
+  CALENDAR_DAY_BOUNDARY_MODE,
   CALENDAR_MODE,
   PILLAR_HISTORICAL_MODE,
   RAT_HOUR_MODE,
+  type CalendarDayBoundaryMode,
   type CalendarMode,
   type FourPillarsOptions,
   type PillarHistoricalMode,
@@ -31,6 +33,7 @@ export type BaziClockMode = typeof BAZI_CLOCK_MODE[keyof typeof BAZI_CLOCK_MODE]
 /** All persistent choices that define a BaZi calculation. */
 export interface BaziOptionsInput {
   mode?: CalendarMode;
+  dayBoundaryMode?: CalendarDayBoundaryMode;
   utcOffsetMinutes?: number;
   meridianDeg?: number;
   pillarHistoricalMode?: PillarHistoricalMode;
@@ -55,6 +58,7 @@ function includes<T>(values: readonly T[], value: T): boolean {
  */
 export class BaziOptions {
   readonly mode: CalendarMode;
+  readonly dayBoundaryMode: CalendarDayBoundaryMode;
   readonly utcOffsetMinutes: number;
   readonly meridianDeg: number | undefined;
   readonly pillarHistoricalMode: PillarHistoricalMode;
@@ -70,6 +74,8 @@ export class BaziOptions {
 
   constructor(input: BaziOptionsInput = {}) {
     this.mode = input.mode ?? CALENDAR_MODE.HISTORICAL;
+    this.dayBoundaryMode = input.dayBoundaryMode
+      ?? CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET;
     this.utcOffsetMinutes = input.utcOffsetMinutes ?? 480;
     this.meridianDeg = input.meridianDeg;
     this.pillarHistoricalMode = input.pillarHistoricalMode
@@ -86,12 +92,23 @@ export class BaziOptions {
       ?? RENYUAN_SILING_TABLE.SAN_MING_TONG_HUI;
 
     if (!includes(Object.values(CALENDAR_MODE), this.mode)) throw new RangeError('unknown calendar mode');
+    if (!includes(Object.values(CALENDAR_DAY_BOUNDARY_MODE), this.dayBoundaryMode)) {
+      throw new RangeError('unknown calendar day-boundary mode');
+    }
     if (!Number.isFinite(this.utcOffsetMinutes) || Math.abs(this.utcOffsetMinutes) > 14 * 60) {
       throw new RangeError('utcOffsetMinutes must be within ±14 hours');
     }
     if (this.meridianDeg !== undefined
       && (!Number.isFinite(this.meridianDeg) || Math.abs(this.meridianDeg) > 180)) {
       throw new RangeError('meridianDeg must be within ±180 degrees');
+    }
+    if (this.dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN
+      && this.meridianDeg === undefined) {
+      throw new RangeError('meridianDeg is required for mean-solar-meridian day boundaries');
+    }
+    if (this.dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET
+      && this.meridianDeg !== undefined) {
+      throw new RangeError('meridianDeg is only valid with mean-solar-meridian day boundaries');
     }
     if (!includes(Object.values(PILLAR_HISTORICAL_MODE), this.pillarHistoricalMode)) {
       throw new RangeError('unknown pillar historical mode');
@@ -137,6 +154,7 @@ export class BaziOptions {
   toFourPillarsOptions(): FourPillarsOptions {
     return Object.freeze({
       mode: this.mode,
+      dayBoundaryMode: this.dayBoundaryMode,
       utcOffsetMinutes: this.utcOffsetMinutes,
       meridianDeg: this.meridianDeg,
       pillarHistoricalMode: this.pillarHistoricalMode,
@@ -147,6 +165,7 @@ export class BaziOptions {
   toQiYunOptions(): QiYunOptions {
     return Object.freeze({
       mode: this.mode,
+      dayBoundaryMode: this.dayBoundaryMode,
       utcOffsetMinutes: this.utcOffsetMinutes,
       meridianDeg: this.meridianDeg,
       timeModel: this.qiYunTimeModel,
@@ -164,6 +183,7 @@ export class BaziOptions {
     & Pick<BaziOptionsInput, 'meridianDeg' | 'gender' | 'longitudeDeg'> {
     return {
       mode: this.mode,
+      dayBoundaryMode: this.dayBoundaryMode,
       utcOffsetMinutes: this.utcOffsetMinutes,
       meridianDeg: this.meridianDeg,
       pillarHistoricalMode: this.pillarHistoricalMode,

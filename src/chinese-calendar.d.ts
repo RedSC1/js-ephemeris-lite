@@ -8,6 +8,14 @@ export const CALENDAR_MODE: Readonly<{
 
 export type CalendarMode = typeof CALENDAR_MODE[keyof typeof CALENDAR_MODE];
 
+export const CALENDAR_DAY_BOUNDARY_MODE: Readonly<{
+  FIXED_UTC_OFFSET: 'fixed-utc-offset';
+  MEAN_SOLAR_MERIDIAN: 'mean-solar-meridian';
+}>;
+
+export type CalendarDayBoundaryMode =
+  typeof CALENDAR_DAY_BOUNDARY_MODE[keyof typeof CALENDAR_DAY_BOUNDARY_MODE];
+
 export const MONTH_NAME: Readonly<{
   NORMAL: 0;
   THIRTEEN: 1;
@@ -21,7 +29,11 @@ export type LunarMonthName = typeof MONTH_NAME[keyof typeof MONTH_NAME];
 
 export interface CalendarOptions {
   mode?: CalendarMode;
+  /** Civil-day boundary used outside the fixed China-standard calendar structure. */
+  dayBoundaryMode?: CalendarDayBoundaryMode;
+  /** Clock offset used by fixed-utc-offset boundaries and civil-time conversion. */
   utcOffsetMinutes?: number;
+  /** Required only for mean-solar-meridian boundaries. */
   meridianDeg?: number;
 }
 
@@ -64,6 +76,7 @@ export interface ChineseCalendarYear {
   firstWinterSolsticeDayNumber: number;
   secondWinterSolsticeDayNumber: number;
   mode: CalendarMode;
+  dayBoundaryMode: CalendarDayBoundaryMode;
 }
 
 export interface LunarDate {

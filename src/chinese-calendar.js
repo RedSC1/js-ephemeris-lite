@@ -31,6 +31,11 @@ export const CALENDAR_MODE = Object.freeze({
   LOCAL_ASTRONOMICAL: 'local-astronomical',
 });
 
+export const CALENDAR_DAY_BOUNDARY_MODE = Object.freeze({
+  FIXED_UTC_OFFSET: 'fixed-utc-offset',
+  MEAN_SOLAR_MERIDIAN: 'mean-solar-meridian',
+});
+
 export const MONTH_NAME = Object.freeze({
   NORMAL: 0,
   THIRTEEN: 1,
@@ -51,6 +56,11 @@ function normalizeRadians(value) {
 function normalizeOptions(options = {}) {
   const mode = options.mode ?? CALENDAR_MODE.HISTORICAL;
   if (!Object.values(CALENDAR_MODE).includes(mode)) throw new RangeError(`unknown calendar mode: ${mode}`);
+  const dayBoundaryMode = options.dayBoundaryMode
+    ?? CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET;
+  if (!Object.values(CALENDAR_DAY_BOUNDARY_MODE).includes(dayBoundaryMode)) {
+    throw new RangeError(`unknown calendar day-boundary mode: ${dayBoundaryMode}`);
+  }
   const utcOffsetMinutes = options.utcOffsetMinutes ?? CHINA_OFFSET_MINUTES;
   if (!Number.isFinite(utcOffsetMinutes) || Math.abs(utcOffsetMinutes) > 14 * 60) {
     throw new RangeError('utcOffsetMinutes must be within ±14 hours');
@@ -59,9 +69,20 @@ function normalizeOptions(options = {}) {
   if (meridianDeg !== undefined && (!Number.isFinite(meridianDeg) || Math.abs(meridianDeg) > 180)) {
     throw new RangeError('meridianDeg must be within ±180 degrees');
   }
-  const localOffset = meridianDeg === undefined ? utcOffsetMinutes / 1440 : meridianDeg / 360;
+  if (dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN
+    && meridianDeg === undefined) {
+    throw new RangeError('meridianDeg is required for mean-solar-meridian day boundaries');
+  }
+  if (dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET
+    && meridianDeg !== undefined) {
+    throw new RangeError('meridianDeg is only valid with mean-solar-meridian day boundaries');
+  }
+  const localOffset = dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET
+    ? utcOffsetMinutes / 1440
+    : meridianDeg / 360;
   return {
     mode,
+    dayBoundaryMode,
     utcOffsetMinutes,
     meridianDeg,
     localOffset,
@@ -405,6 +426,7 @@ export function calculateChineseCalendarYear(jdUT1, rawOptions = {}) {
     firstWinterSolsticeDayNumber: solarTerms[0].civilDayNumber,
     secondWinterSolsticeDayNumber: solarTerms[24].civilDayNumber,
     mode: options.mode,
+    dayBoundaryMode: options.dayBoundaryMode,
   };
   year.months = assignMonths(year, options);
   return year;

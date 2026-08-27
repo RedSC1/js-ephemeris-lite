@@ -1,4 +1,4 @@
-import type { CalendarMode } from './chinese-calendar.js';
+import type { CalendarDayBoundaryMode, CalendarMode } from './chinese-calendar.js';
 import type { CivilDate, CivilDateTime } from './time.js';
 import type { EventRoot, NewMoonRoot } from './calendar-events.js';
 
@@ -8,6 +8,7 @@ export const LUNAR_PHASE_NAMES: Readonly<Record<number, string>>;
 export interface QiShuoYearOptions {
   utcOffsetMinutes?: number;
   mode?: CalendarMode;
+  dayBoundaryMode?: CalendarDayBoundaryMode;
   meridianDeg?: number;
   includeSolarTerms?: boolean;
   includePentads?: boolean;
@@ -29,6 +30,8 @@ export interface QiShuoEventBase {
 
 export interface QiShuoSolarEvent extends QiShuoEventBase, EventRoot {
   kind: 'solar-term' | 'pentad';
+  /** Target-angle index, not a unique occurrence ID; may repeat within a civil year. */
+  index: number;
   termIndex: number;
   pentadIndex?: number;
   targetLongitude: number;
@@ -47,9 +50,11 @@ export interface QiShuoYear {
   civilYear: number;
   utcOffsetMinutes: number;
   mode: CalendarMode;
+  dayBoundaryMode: CalendarDayBoundaryMode;
   meridianDeg?: number;
   startJdUT1: number;
   endJdUT1: number;
+  /** All occurrences in the civil year; the pentad count is not fixed at 72. */
   events: QiShuoEvent[];
 }
 
@@ -59,5 +64,7 @@ export const QI_SHUO_INFO: Readonly<{
   rangeStartYear: -6000;
   rangeEndYear: 10000;
   defaultUtcOffsetMinutes: 480;
+  defaultDayBoundaryMode: 'fixed-utc-offset';
+  dayBoundaryModes: readonly CalendarDayBoundaryMode[];
   civilCalendar: string;
 }>;

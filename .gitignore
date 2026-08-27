@@ -7,6 +7,7 @@ private/
 tools/*
 !tools/build-chinese-era-data.mjs
 !tools/generate-calendar-data.mjs
+!tools/generate-planet-model-data.mjs
 !tools/verify-chinese-era-data.mjs
 !packages/ziwei/tools/
 !packages/ziwei/tools/*.mjs

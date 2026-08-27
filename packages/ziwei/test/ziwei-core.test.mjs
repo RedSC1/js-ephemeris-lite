@@ -14,7 +14,12 @@ import {
   findStarId,
   selectZiweiRules,
 } from '../dist/index.js';
-import { ZonedTime, makeGanzhi } from 'js-ephemeris-lite';
+import {
+  CALENDAR_DAY_BOUNDARY_MODE,
+  CALENDAR_MODE,
+  ZonedTime,
+  makeGanzhi,
+} from 'js-ephemeris-lite';
 
 function pillars(year, month, day, hour) {
   return Object.freeze({ year, month, day, hour });
@@ -51,6 +56,7 @@ test('finite natal rule core matches the native C++ oracle fixture', () => {
 test('runtime rulesets patch former Dart JSON profiles without mutating defaults', () => {
   const defaults = ZiweiConfigLoader.getDefault();
   const custom = ZiweiConfigLoader.overrideWith(defaults, {
+    label: 'runtime-json-profile',
     starsJson: JSON.stringify([{ key: 'ziwei', rule: { type: 'constant', value: 0 } }]),
     brightnessJson: JSON.stringify({
       brightness_labels: { 6: '超亮' },
@@ -77,6 +83,92 @@ test('runtime rulesets patch former Dart JSON profiles without mutating defaults
   assert.equal(chart.birthYearTransformations.lu, ziwei);
   assert.equal(chart.birthYearTransformations.quan, baseChart.birthYearTransformations.quan);
   assert.equal(selectZiweiRules(new ZiweiOptions({ gender: 0 }).rules).natalPlacements[ziwei].positions.length > 1, true);
+});
+
+test('labelled compiled modules merge in explicit order and reject duplicate labels', () => {
+  const birth = new ZonedTime({
+    year: 2004, month: 8, day: 1, hour: 12, minute: 0, second: 0, offsetMinutes: 480,
+  });
+  const customInput = {
+    label: 'fixed-ziwei',
+    starsJson: JSON.stringify([{ key: 'ziwei', rule: { type: 'constant', value: 0 } }]),
+  };
+  const optionFirst = ZiweiConfigLoader.withOptions(ZiweiConfigLoader.getDefault(), {
+    label: 'builtin-ziwei',
+    placement: { ziwei: 'option1' },
+  });
+  const customLast = ZiweiConfigLoader.overrideWith(optionFirst, customInput);
+  const customFirst = ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), customInput);
+  const optionLast = ZiweiConfigLoader.withOptions(customFirst, {
+    label: 'builtin-ziwei',
+    placement: { ziwei: 'option1' },
+  });
+  const chartFor = (ruleset) => ZiweiChart.fromZonedTime(
+    birth,
+    new ZiweiOptions({ gender: ZIWEI_GENDER.MALE, rules: { ruleset } }),
+  );
+  const ziwei = findStarId('ziwei');
+  assert.equal(chartFor(customLast).starPositions[ziwei], 0);
+  assert.notEqual(chartFor(optionLast).starPositions[ziwei], 0);
+  assert.throws(() => ZiweiConfigLoader.overrideWith(customLast, customInput), /duplicate rule module label/);
+  assert.throws(
+    () => ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), { ...customInput, label: 'option2' }),
+    /reserved by a built-in option/,
+  );
+
+  const gengOption = {
+    label: 'geng-option4',
+    sihua: { geng: 'option4' },
+  };
+  const gengJson = {
+    label: 'geng-custom-ke',
+    sihuaJson: JSON.stringify({ geng: { ke: 'tianfu' } }),
+  };
+  const optionThenJson = ZiweiConfigLoader.overrideWith(
+    ZiweiConfigLoader.withOptions(ZiweiConfigLoader.getDefault(), gengOption),
+    gengJson,
+  );
+  const jsonThenOption = ZiweiConfigLoader.withOptions(
+    ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), gengJson),
+    gengOption,
+  );
+  const selected = (ruleset) => selectZiweiRules(
+    new ZiweiOptions({ gender: ZIWEI_GENDER.MALE, rules: { ruleset } }).rules,
+  ).sihua[6];
+  assert.equal(selected(optionThenJson).ke, findStarId('tianfu'));
+  assert.equal(selected(jsonThenOption).ke, findStarId('tiantong'));
+  assert.deepEqual(
+    [selected(optionThenJson).lu, selected(optionThenJson).quan, selected(optionThenJson).ji],
+    [findStarId('taiyang'), findStarId('wuqu'), findStarId('tianxiang')],
+  );
+});
+
+test('custom natal stars receive ruleset-local ids and participate in BigInt palace bitsets', () => {
+  const ruleset = ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), {
+    label: 'extra-stars',
+    starsJson: JSON.stringify([{
+      key: 'custom_star',
+      type: 'minor',
+      rule: { type: 'constant', value: 11 },
+    }]),
+    brightnessJson: JSON.stringify({ custom_star: Array(12).fill(6) }),
+    sihuaJson: JSON.stringify({ jia: { lu: 'custom_star' } }),
+  });
+  const chart = ZiweiChart.fromZonedTime(
+    new ZonedTime({
+      year: 2004, month: 8, day: 1, hour: 12, minute: 0, second: 0, offsetMinutes: 480,
+    }),
+    new ZiweiOptions({ gender: ZIWEI_GENDER.MALE, rules: { ruleset } }),
+  );
+  const id = chart.findStarId('custom_star');
+  assert.equal(id, 159);
+  assert.equal(findStarId('custom_star'), undefined);
+  assert.equal(chart.starCatalog[id].category, 'minor');
+  assert.equal(chart.starPositions[id], 11);
+  assert.equal(chart.getStarPosition(id).brightness, 6);
+  assert.equal(chart.birthYearTransformations.lu, id);
+  assert.ok((chart.palaces[11].starBitset & (1n << BigInt(id))) !== 0n);
+  assert.ok(chart.palaces[11].starIds.includes(id));
 });
 
 test('calendar-backed chart matches the native 2003 historical-China fixture', () => {
@@ -135,6 +227,22 @@ test('ZiweiOptions validates gender and solar-clock longitude', () => {
   const updated = original.with({ clockMode: ZIWEI_CLOCK_MODE.CIVIL });
   assert.notEqual(updated, original);
   assert.equal(updated.gender, ZIWEI_GENDER.FEMALE);
+
+  const meridian = new ZiweiOptions({
+    gender: ZIWEI_GENDER.FEMALE,
+    mode: CALENDAR_MODE.LOCAL_ASTRONOMICAL,
+    dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN,
+    utcOffsetMinutes: 420,
+    meridianDeg: 105,
+  });
+  assert.equal(
+    meridian.toCalendarOptions().dayBoundaryMode,
+    CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN,
+  );
+  assert.throws(
+    () => new ZiweiOptions({ gender: ZIWEI_GENDER.FEMALE, meridianDeg: 105 }),
+    /only valid/,
+  );
 });
 
 test('rule families switch independently and preserve unrelated placements', () => {

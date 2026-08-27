@@ -36,7 +36,12 @@ import {
   packPillar,
   unpackPillar,
 } from '../dist/index.js';
-import { CALENDAR_MODE, RAT_HOUR_MODE, ZonedTime } from 'js-ephemeris-lite';
+import {
+  CALENDAR_DAY_BOUNDARY_MODE,
+  CALENDAR_MODE,
+  RAT_HOUR_MODE,
+  ZonedTime,
+} from 'js-ephemeris-lite';
 
 test('uint8-compatible pillar encoding covers the whole sexagenary cycle', () => {
   for (let index = 0; index < 60; index += 1) {
@@ -214,6 +219,19 @@ test('BaziOptions keeps chart, Qi-Yun, Da-Yun and Shen-Sha conventions together'
     /longitudeDeg/,
   );
   assert.equal(options.with({ daYunCount: 10 }).daYunCount, 10);
+
+  const meridian = new BaziOptions({
+    mode: CALENDAR_MODE.LOCAL_ASTRONOMICAL,
+    dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN,
+    utcOffsetMinutes: 420,
+    meridianDeg: 105,
+  });
+  assert.equal(
+    meridian.toFourPillarsOptions().dayBoundaryMode,
+    CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN,
+  );
+  assert.equal(meridian.toQiYunOptions().meridianDeg, 105);
+  assert.throws(() => new BaziOptions({ meridianDeg: 105 }), /only valid/);
 
 });
 

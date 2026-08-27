@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  CALENDAR_DAY_BOUNDARY_MODE,
   CALENDAR_MODE,
   HISTORICAL_PROFILE_INFO,
   MONTH_NAME,
@@ -94,12 +95,48 @@ test('China-standard and local-astronomical lunar calendars stay distinct at a n
   });
   const indiaLocal = instantToLunar(instant, {
     mode: CALENDAR_MODE.LOCAL_ASTRONOMICAL,
+    dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN,
     meridianDeg: 82.5,
     utcOffsetMinutes: 330,
   });
 
   assert.deepEqual([indiaChina.month, indiaChina.day], [6, 30]);
   assert.deepEqual([indiaLocal.month, indiaLocal.day], [7, 1]);
+});
+
+test('local astronomical calendar makes clock and meridian day boundaries explicit', () => {
+  const clockOptions = {
+    mode: CALENDAR_MODE.LOCAL_ASTRONOMICAL,
+    dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET,
+    utcOffsetMinutes: 7 * 60,
+  };
+  const meridianOptions = {
+    mode: CALENDAR_MODE.LOCAL_ASTRONOMICAL,
+    dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN,
+    utcOffsetMinutes: 7 * 60,
+    meridianDeg: 105,
+  };
+  const probe = julianDay({ year: 1800, month: 6, day: 1, hour: 12 });
+  const clock = calculateChineseCalendarYear(probe, clockOptions);
+  const meridian = calculateChineseCalendarYear(probe, meridianOptions);
+
+  assert.equal(clock.dayBoundaryMode, CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET);
+  assert.equal(meridian.dayBoundaryMode, CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN);
+  assert.deepEqual(
+    clock.newMoons.map(event => event.civilDayNumber),
+    meridian.newMoons.map(event => event.civilDayNumber),
+  );
+  assert.ok(clock.newMoons.every((event, index) => event.jdUT1 === meridian.newMoons[index].jdUT1));
+
+  assert.throws(() => calculateChineseCalendarYear(probe, {
+    ...clockOptions,
+    meridianDeg: 105,
+  }), /only valid/);
+  assert.throws(() => calculateChineseCalendarYear(probe, {
+    mode: CALENDAR_MODE.LOCAL_ASTRONOMICAL,
+    dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN,
+    utcOffsetMinutes: 7 * 60,
+  }), /required/);
 });
 
 test('historical month reforms match the C++ regression fixtures', () => {

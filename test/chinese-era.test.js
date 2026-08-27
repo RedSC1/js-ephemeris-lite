@@ -134,6 +134,22 @@ test('Liao and Jin public labels use temple titles and common Chinese names', ()
   assert.equal(jin?.text, '[金]世宗 完颜雍 大定2年');
 });
 
+test('year-precision era ordinals always change on the historical China UTC+8 lunar boundary', () => {
+  const newYearDate = lunarToSolar({ year:1000, month:1, day:1, isLeap:false }, HISTORICAL_CHINA);
+  const boundary = new ZonedTime({
+    ...newYearDate,
+    hour:0,
+    offsetMinutes:480,
+  }).toJulianTime().jdUT1;
+  const before = getChineseEraNames(boundary - 1 / 86400);
+  const at = getChineseEraNames(boundary);
+
+  assert.equal(before.find((entry) => entry.dynasty === '北宋')?.yearNumber, 2);
+  assert.equal(at.find((entry) => entry.dynasty === '北宋')?.yearNumber, 3);
+  assert.equal(before.find((entry) => entry.dynasty === '辽')?.yearNumber, 17);
+  assert.equal(at.find((entry) => entry.dynasty === '辽')?.yearNumber, 18);
+});
+
 test('East Dan Ganlu changes ruler labels without resetting its era year', () => {
   const foundingRuler = getChineseEraNames(civilNoon(927, 1, 1))
     .find((entry) => entry.dynasty === '东丹');

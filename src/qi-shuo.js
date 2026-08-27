@@ -5,6 +5,7 @@ import {
   solveSolarLongitude,
 } from './calendar-events.js';
 import {
+  CALENDAR_DAY_BOUNDARY_MODE,
   CALENDAR_MODE,
   civilDayNumber,
   historicalEventCivilDay,
@@ -63,6 +64,13 @@ function normalizeMode(value) {
   return value;
 }
 
+function normalizeDayBoundaryMode(value) {
+  if (!Object.values(CALENDAR_DAY_BOUNDARY_MODE).includes(value)) {
+    throw new RangeError(`unknown calendar day-boundary mode: ${value}`);
+  }
+  return value;
+}
+
 function normalizeMeridian(value) {
   if (value === undefined) return undefined;
   if (!Number.isFinite(value) || Math.abs(value) > 180) {
@@ -95,13 +103,16 @@ function phaseName(angleDeg) {
   return `${Number(angleDeg.toFixed(6))}°月相`;
 }
 
-function structureOffset(mode, utcOffsetMinutes, meridianDeg) {
+function structureOffset(mode, dayBoundaryMode, utcOffsetMinutes, meridianDeg) {
   if (mode !== CALENDAR_MODE.LOCAL_ASTRONOMICAL) return CHINA_OFFSET_MINUTES / 1440;
-  return meridianDeg === undefined ? utcOffsetMinutes / 1440 : meridianDeg / 360;
+  return dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET
+    ? utcOffsetMinutes / 1440
+    : meridianDeg / 360;
 }
 
 function decorateEvent(event, {
   mode,
+  dayBoundaryMode,
   utcOffsetMinutes,
   meridianDeg,
   historicalKind,
@@ -110,7 +121,7 @@ function decorateEvent(event, {
   const localCivilDayNumber = civilDayNumber(event.jdUT1, utcOffsetMinutes / 1440);
   let assignedCivilDayNumber = civilDayNumber(
     event.jdUT1,
-    structureOffset(mode, utcOffsetMinutes, meridianDeg),
+    structureOffset(mode, dayBoundaryMode, utcOffsetMinutes, meridianDeg),
   );
   let assignmentSource = mode === CALENDAR_MODE.LOCAL_ASTRONOMICAL
     ? 'local-astronomical'
@@ -148,26 +159,30 @@ function solarEvents(startJdUT1, endJdUT1, stepCount, options) {
     if (solved.jdUT1 < startJdUT1 - ROOT_EQUALITY_DAYS) {
       solved = solveSolarLongitude(targetLongitude, solved.jdTT + DAYS_PER_TROPICAL_YEAR);
     }
-    if (solved.jdUT1 >= endJdUT1 - ROOT_EQUALITY_DAYS) continue;
     const degree = step * 360 / stepCount;
     const termIndex = stepCount === 24 ? step : Math.floor(step / 3);
     const pentadIndex = stepCount === 72 ? step % 3 : undefined;
     const name = stepCount === 24
       ? SOLAR_TERM_NAMES[termIndex]
       : `${SOLAR_TERM_NAMES[termIndex]}·${PENTAD_SUFFIXES[pentadIndex]}`;
-    events.push(decorateEvent({
-      kind: stepCount === 24 ? 'solar-term' : 'pentad',
-      name,
-      index: step,
-      termIndex,
-      pentadIndex,
-      targetLongitude,
-      targetLongitudeDeg: degree,
-      ...solved,
-    }, {
-      ...options,
-      historicalKind: stepCount === 24 || pentadIndex === 0 ? 'solarTerm' : null,
-    }));
+    // A civil year can be longer than a solar cycle: the same target may occur
+    // near both January 1 and December 31. Keep occurrences, not unique angles.
+    while (solved.jdUT1 < endJdUT1 - ROOT_EQUALITY_DAYS) {
+      events.push(decorateEvent({
+        kind: stepCount === 24 ? 'solar-term' : 'pentad',
+        name,
+        index: step,
+        termIndex,
+        pentadIndex,
+        targetLongitude,
+        targetLongitudeDeg: degree,
+        ...solved,
+      }, {
+        ...options,
+        historicalKind: stepCount === 24 || pentadIndex === 0 ? 'solarTerm' : null,
+      }));
+      solved = solveSolarLongitude(targetLongitude, solved.jdTT + DAYS_PER_TROPICAL_YEAR);
+    }
   }
   return events;
 }
@@ -209,12 +224,25 @@ function lunarPhaseEvents(startJdUT1, endJdUT1, anglesDeg, options) {
 /**
  * Calculate the requested solar terms, pentads, and lunar phases occurring
  * inside one fixed-offset civil year.
+ * A civil year need not contain exactly 72 pentads; repeated target angles
+ * from consecutive solar cycles are retained as separate occurrences.
  */
 export function getQiShuoYear(civilYear, rawOptions = {}) {
   const year = normalizeYear(civilYear);
   const utcOffsetMinutes = normalizeOffset(rawOptions.utcOffsetMinutes ?? CHINA_OFFSET_MINUTES);
   const mode = normalizeMode(rawOptions.mode ?? CALENDAR_MODE.HISTORICAL);
+  const dayBoundaryMode = normalizeDayBoundaryMode(
+    rawOptions.dayBoundaryMode ?? CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET,
+  );
   const meridianDeg = normalizeMeridian(rawOptions.meridianDeg);
+  if (dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN
+    && meridianDeg === undefined) {
+    throw new RangeError('meridianDeg is required for mean-solar-meridian day boundaries');
+  }
+  if (dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET
+    && meridianDeg !== undefined) {
+    throw new RangeError('meridianDeg is only valid with mean-solar-meridian day boundaries');
+  }
   const includeSolarTerms = rawOptions.includeSolarTerms ?? true;
   const includePentads = rawOptions.includePentads ?? false;
   if (typeof includeSolarTerms !== 'boolean' || typeof includePentads !== 'boolean') {
@@ -239,7 +267,7 @@ export function getQiShuoYear(civilYear, rawOptions = {}) {
     second: 0,
     offsetMinutes: utcOffsetMinutes,
   }).toJulianTime().jdUT1;
-  const options = { mode, utcOffsetMinutes, meridianDeg };
+  const options = { mode, dayBoundaryMode, utcOffsetMinutes, meridianDeg };
   const events = [];
   if (includeSolarTerms) events.push(...solarEvents(start, end, 24, options));
   if (includePentads) {
@@ -254,6 +282,7 @@ export function getQiShuoYear(civilYear, rawOptions = {}) {
     civilYear: year,
     utcOffsetMinutes,
     mode,
+    dayBoundaryMode,
     meridianDeg,
     startJdUT1: start,
     endJdUT1: end,
@@ -265,5 +294,7 @@ export const QI_SHUO_INFO = Object.freeze({
   rangeStartYear: RANGE_START_YEAR,
   rangeEndYear: RANGE_END_YEAR,
   defaultUtcOffsetMinutes: CHINA_OFFSET_MINUTES,
+  defaultDayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET,
+  dayBoundaryModes: Object.values(CALENDAR_DAY_BOUNDARY_MODE),
   civilCalendar: 'hybrid Julian/Gregorian, switch at 1582-10-15',
 });

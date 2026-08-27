@@ -1,4 +1,8 @@
-import type { CalendarMode, CalendarOptions } from './chinese-calendar.js';
+import type {
+  CalendarDayBoundaryMode,
+  CalendarMode,
+  CalendarOptions,
+} from './chinese-calendar.js';
 import type { CivilDate, CivilDateTime, Ut1Input, ZonedTime } from './time.js';
 
 export type Ganzhi = number;
@@ -75,4 +79,5 @@ export const GANZHI_INFO: Readonly<{
   defaultRatHourMode: RatHourMode;
   historicalTermBoundary: string;
   calendarModes: readonly CalendarMode[];
+  calendarDayBoundaryModes: readonly CalendarDayBoundaryMode[];
 }>;

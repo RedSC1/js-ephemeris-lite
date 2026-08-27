@@ -38,5 +38,5 @@ export const HONGXIAN_ERA_START_JD: number;
 /** 1916-03-24 00:00:00 at UTC+8; March 23 is included. */
 export const HONGXIAN_ERA_END_JD_EXCLUSIVE: number;
 
-/** Return every known Chinese historical era name active at this physical instant. */
+/** Return active Chinese era names using the historical China calendar and a fixed UTC+8 day boundary. */
 export function getChineseEraNames(value: Ut1Input): readonly ChineseEraName[];

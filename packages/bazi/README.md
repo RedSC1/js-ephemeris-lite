@@ -14,6 +14,7 @@ npm install js-ephemeris-lite bazi-lite
 
 ```ts
 import {
+  CALENDAR_DAY_BOUNDARY_MODE,
   CALENDAR_MODE,
   RAT_HOUR_MODE,
   ZonedTime,
@@ -40,6 +41,7 @@ const birth = new ZonedTime({
 
 const options = new BaziOptions({
   mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
+  dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET,
   ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
   earthPalaceMode: EARTH_PALACE_MODE.FIRE_EARTH,
   gender: GENDER.MALE,
@@ -222,6 +224,28 @@ console.log(shenShaNames(flowYearShenSha));
 
 如需与 C++ 互传，`shenShaWords(bitset)` 返回 `[low64, high64]`。`bigint` 不能直接 `JSON.stringify()`；序列化时使用 ID 数组、名称数组或 `bitset.toString(16)`。
 
+### JSON 命盘导出
+
+```ts
+const snapshot = chart.toJSON(); // BaziChartJSON，schemaVersion: bazi-chart-v1
+const json = JSON.stringify(chart, null, 2); // 自动调用 toJSON()
+```
+
+导出四柱、十神、藏干、十二长生、神煞 ID/名称、附加柱、干支关系、司令分段及起运/大运。
+未提供性别时 `birth.gender` 与 `fortune` 为 `null`，不会为导出擅自指定性别。
+
+- `birth.clockTime`：`fromZonedTime()` 收到的原始出生年月日时分秒及 `offsetMinutes`。
+- `birth.virtualTime`：排盘采用的钟表/平太阳/真太阳时间；不附带虚假的 UTC 偏移。
+- `birth.jdUT1`：出生瞬间。时区设置 `options.utcOffsetMinutes` 用于历法归日，
+  不一定等于原始钟表的偏移，因此两者分别保存。
+- `birth.calendar` 为 1582 年切换的儒略历/格里历，`yearNumbering` 为天文学纪年（0 = 公元前 1 年）。
+- 低层 `fromInstant()` 没收到原始钟表，`clockTime` 明确为 `null`；不要将 `birthCivilTime`
+  误作原始钟表，它是计算用的 virtual time。仍可用导出的 `jdUT1`、`virtualTime`、`options` 重算。
+
+神煞 bitset 已转为普通数组，无 BigInt 序列化问题。起运/大运的民用日期沿用现有
+virtual-time 基准，导出内以 `fortune.clockBasis` 标明。本 schema 为本命盘快照，
+不是 Dart 的 AI JSON schema，也不含 UI 当前选中的流运、姓名或地点名称；应用可另加 `profile`。
+
 ## 4. 起运与大运
 
 `BaziOptions` 中已经保存性别、起运模型、大运边界模型和步数。命盘会复用创建时的出生瞬间和虚拟钟表，不需要调用方再次拼装参数：
@@ -300,6 +324,7 @@ for (const item of daYun) {
 | 设置 | 默认值 | 说明 |
 |---|---|---|
 | 历法模式 | `CALENDAR_MODE.HISTORICAL` | 历史表覆盖范围内使用历史分配日；现代阶段使用精确天文事件 |
+| 历法日界 | `CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET` | 默认按钟表 UTC offset 划日；经度模式必须显式选择 |
 | 历史柱边界 | `PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR` | 是否使用历史节气分配日跟随历法模式 |
 | 历法 UTC offset | `480` | 中国标准/历史日期默认 UTC+8 |
 | 晚子时 | `RAT_HOUR_MODE.NEXT_DAY` | 23:00 起进入次日柱 |
@@ -328,7 +353,7 @@ const options = new BaziOptions({
 const chart = BaziChart.fromZonedTime(birth, options);
 ```
 
-`CALENDAR_MODE.LOCAL_ASTRONOMICAL` 用于按当地 offset 或经度处理地方天文历法；它与“只把日时柱钟表改成真太阳时”是两个不同选择，不应混为一个隐式开关。
+`CALENDAR_MODE.LOCAL_ASTRONOMICAL` 用于重建地方天文历法；还必须用 `dayBoundaryMode` 明确选择按钟表 UTC offset 或指定经度划日。选择 `MEAN_SOLAR_MERIDIAN` 时必须传 `meridianDeg`，而固定 UTC offset 模式禁止传它。这个历法日界与“只把日时柱钟表改成真太阳时”是两个不同选择，不应混为一个开关。
 
 ## 6. 关系、流运和人元司令
 

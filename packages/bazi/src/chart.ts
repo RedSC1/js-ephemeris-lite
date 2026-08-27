@@ -5,6 +5,7 @@ import {
   ganzhiBranch,
   ganzhiStem,
   meanSolarTime,
+  normalizeChartVirtualTime,
   trueSolarTime,
   type CivilDateTime,
   type FourPillars,
@@ -26,6 +27,8 @@ import {
   type ShenShaTarget,
   collectNatalShenSha,
   collectTargetShenSha,
+  shenShaIds,
+  SHEN_SHA_NAMES,
 } from './shen-sha.js';
 import {
   BAZI_CLOCK_MODE,
@@ -33,7 +36,8 @@ import {
   resolveBaziOptions,
   type BaziOptionsInput,
 } from './options.js';
-import { type LifeStageId, type TenGodId } from './constants.js';
+import { GENDER, LIFE_STAGE_NAMES, TEN_GOD_NAMES, type LifeStageId, type TenGodId } from './constants.js';
+import { collectChartRelations } from './relations.js';
 import { calculateExtraPillars, getHiddenStems, getLifeStage, getTenGod } from './rules.js';
 import { unpackPillar, type DecodedPillar } from './pillar.js';
 
@@ -123,6 +127,9 @@ export class BaziChart implements BaziPillarAnalysis {
   readonly columns: BaziPillarAnalysis['columns'];
   readonly options: BaziOptions;
   readonly birthJdUT1: number;
+  /** Original clock supplied to fromZonedTime; null for the low-level instant API. */
+  readonly birthClockTime: Readonly<ReturnType<ZonedTime['toJSON']>> | null;
+  /** The calculation's virtual clock, NOT necessarily the original birth clock. */
   readonly birthCivilTime: Readonly<CivilDateTime>;
 
   private constructor(
@@ -130,6 +137,7 @@ export class BaziChart implements BaziPillarAnalysis {
     options: BaziOptions,
     birthJdUT1: number,
     birthCivilTime: Readonly<CivilDateTime>,
+    birthClockTime: BaziChart['birthClockTime'] = null,
   ) {
     this.pillars = analysis.pillars;
     this.extraPillars = analysis.extraPillars;
@@ -138,6 +146,7 @@ export class BaziChart implements BaziPillarAnalysis {
     this.options = options;
     this.birthJdUT1 = birthJdUT1;
     this.birthCivilTime = birthCivilTime;
+    this.birthClockTime = birthClockTime;
     Object.freeze(this);
   }
 
@@ -153,7 +162,7 @@ export class BaziChart implements BaziPillarAnalysis {
       analyzePillars(pillars, { earthPalaceMode: resolved.earthPalaceMode }),
       resolved,
       jdUT1,
-      freezeCivilTime(virtualTime),
+      freezeCivilTime(normalizeChartVirtualTime(virtualTime)),
     );
   }
 
@@ -168,7 +177,52 @@ export class BaziChart implements BaziPillarAnalysis {
     } else if (resolved.clockMode === BAZI_CLOCK_MODE.TRUE_SOLAR) {
       virtualTime = trueSolarTime(zonedTime, resolved.longitudeDeg!);
     }
-    return BaziChart.fromInstant(zonedTime.toJulianTime(), virtualTime, resolved);
+    const chart = BaziChart.fromInstant(zonedTime.toJulianTime(), virtualTime, resolved);
+    return new BaziChart(chart, resolved, chart.birthJdUT1, chart.birthCivilTime,
+      Object.freeze(zonedTime.toJSON()));
+  }
+
+  /** Versioned, JSON-safe natal chart, including the original and calculation clocks. */
+  toJSON() {
+    const shenSha = this.getShenSha();
+    const qiYun = this.options.gender === undefined ? null : this.getQiYun();
+    return {
+      schemaVersion: 'bazi-chart-v1' as const,
+      kind: 'bazi' as const,
+      scope: 'natal' as const,
+      birth: {
+        calendar: 'julian-gregorian-1582' as const,
+        yearNumbering: 'astronomical' as const,
+        jdUT1: this.birthJdUT1,
+        clockTime: this.birthClockTime,
+        virtualTime: this.birthCivilTime,
+        clockMode: this.options.clockMode,
+        longitudeDeg: this.options.longitudeDeg ?? null,
+        gender: this.options.gender === undefined ? null
+          : this.options.gender === GENDER.MALE ? 'male' as const : 'female' as const,
+      },
+      options: this.options.toJSON(),
+      pillars: this.pillars,
+      dayMaster: this.dayMaster,
+      columns: this.columns.map((column) => ({
+        ...column,
+        visibleTenGodName: TEN_GOD_NAMES[column.visibleTenGod],
+        hiddenTenGodNames: column.hiddenTenGods.map((id) => TEN_GOD_NAMES[id]),
+        lifeStageName: LIFE_STAGE_NAMES[column.lifeStage],
+        shenSha: shenShaIds(shenSha[column.key]).map((id) => ({ id, name: SHEN_SHA_NAMES[id] })),
+      })),
+      extraPillars: Object.fromEntries(Object.entries(this.extraPillars).map(
+        ([key, value]) => [key, unpackPillar(value)],
+      )),
+      relations: collectChartRelations(this),
+      renyuanSiling: this.getRenyuanSiling(),
+      fortune: qiYun === null ? null : {
+        clockBasis: 'virtual-time' as const,
+        qiYun,
+        decades: generateDaYun(this.birthCivilTime, this, qiYun, this.options.toDaYunOptions())
+          .map((entry) => ({ ...entry, pillarName: unpackPillar(entry.pillar).name })),
+      },
+    };
   }
 
   getQiYun(): QiYunResult {
@@ -211,6 +265,8 @@ export class BaziChart implements BaziPillarAnalysis {
     return this.options.gender;
   }
 }
+
+export type BaziChartJSON = ReturnType<BaziChart['toJSON']>;
 
 export type CalculateBaziOptions = BaziOptionsInput;
 

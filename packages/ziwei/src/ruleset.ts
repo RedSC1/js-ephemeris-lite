@@ -1,10 +1,24 @@
 import type {
   GeneratedMasterLookup,
+  GeneratedMasterVariant,
   GeneratedPlacement,
+  GeneratedPlacementVariants,
+  GeneratedTransformSet,
 } from './generated/default-rules.js';
-import { findStarId, getStar, requireStarId } from './stars.js';
+import {
+  GENERATED_BRIGHTNESS_VARIANTS,
+  GENERATED_FLOW_PLACEMENT_VARIANTS,
+  GENERATED_MASTER_VARIANTS,
+  GENERATED_PLACEMENT_VARIANTS,
+  GENERATED_SIHUA_VARIANTS,
+} from './generated/default-rules.js';
 
 export type ZiweiCompiledPlacement = Omit<GeneratedPlacement, 'starId'>;
+export interface ZiweiStarDefinition {
+  readonly key: string;
+  readonly category?: string;
+  readonly natal: boolean;
+}
 export type ZiweiMasterLookupPatch = {
   readonly input: GeneratedMasterLookup['input'];
   readonly stars: readonly (number | string)[];
@@ -12,6 +26,8 @@ export type ZiweiMasterLookupPatch = {
 
 /** Runtime rule resources layered after the bundled option tables. */
 export interface ZiweiRulePatch {
+  /** Star declarations are resolved to ruleset-local ids when modules are composed. */
+  readonly stars?: readonly ZiweiStarDefinition[];
   readonly natalPlacements?: Readonly<Record<string, ZiweiCompiledPlacement>>;
   readonly flowPlacements?: Readonly<Record<string, ZiweiCompiledPlacement>>;
   readonly brightness?: Readonly<Record<string, readonly number[]>>;
@@ -34,6 +50,22 @@ export interface ZiweiJsonRuleOverrides {
   readonly sihuaJson?: string;
   readonly flowJson?: string;
   readonly mastersJson?: string;
+}
+
+export interface ZiweiJsonRuleModuleInput extends ZiweiJsonRuleOverrides {
+  readonly label: string;
+}
+
+export interface ZiweiBuiltinRuleModuleInput {
+  readonly label: string;
+  readonly placementDefault?: string;
+  readonly brightnessDefault?: string;
+  readonly sihuaDefault?: string;
+  readonly masters?: string;
+  readonly longevity?: string;
+  readonly placement?: Readonly<Record<string, string>>;
+  readonly brightness?: Readonly<Record<string, string>>;
+  readonly sihua?: Readonly<Record<string, string>>;
 }
 
 const STEM_KEYS = ['jia', 'yi', 'bing', 'ding', 'wu', 'ji', 'geng', 'xin', 'ren', 'gui'];
@@ -224,7 +256,7 @@ export function compileZiweiJsonPlacement(rule: unknown): ZiweiCompiledPlacement
 }
 
 function normalizePlacement(key: string, value: ZiweiCompiledPlacement): ZiweiCompiledPlacement {
-  if (findStarId(key) === undefined) throw new RangeError(`unknown star key: ${key}`);
+  if (key.trim().length === 0) throw new RangeError('placement contains an empty star key');
   if (value.inputs.length !== value.shape.length) throw new RangeError(`${key} placement input/shape mismatch`);
   const count = value.shape.reduce((n, domain) => {
     if (!Number.isInteger(domain) || domain < 1) throw new RangeError(`${key} has an invalid placement domain`);
@@ -242,34 +274,58 @@ function normalizePlacement(key: string, value: ZiweiCompiledPlacement): ZiweiCo
 }
 
 function normalizeBrightness(key: string, values: readonly number[]): readonly number[] {
-  requireStarId(key);
+  if (key.trim().length === 0) throw new RangeError('brightness contains an empty star key');
   if (values.length !== 12 || values.some((v) => !Number.isInteger(v) || v < -1 || v > 6)) {
     throw new RangeError(`${key} brightness must contain twelve values in -1..6`);
   }
   return Object.freeze([...values]);
 }
 
-function starId(value: number | string): number {
-  return typeof value === 'string' ? requireStarId(value) : getStar(value).id;
+function normalizeStarReference(value: number | string, label: string): number | string {
+  if (typeof value === 'number') {
+    if (!Number.isInteger(value) || value < 0) throw new RangeError(`${label} contains an invalid star id`);
+    return value;
+  }
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new RangeError(`${label} contains an empty star key`);
+  }
+  return value;
 }
 
-function normalizeMaster(value: ZiweiMasterLookupPatch): GeneratedMasterLookup {
+function normalizeMaster(value: ZiweiMasterLookupPatch): ZiweiMasterLookupPatch {
   if (!['anchor.life', 'lunar.year_branch', 'solar.year_branch', 'master.year_branch'].includes(value.input)) {
     throw new RangeError(`unsupported master input: ${value.input}`);
   }
   if (value.stars.length !== 12) throw new RangeError('master lookup must contain twelve stars');
-  return Object.freeze({ input: value.input, stars: Object.freeze(value.stars.map(starId)) });
+  return Object.freeze({
+    input: value.input,
+    stars: Object.freeze(value.stars.map((star) => normalizeStarReference(star, 'master lookup'))),
+  });
 }
 
-function mergeRecords<T>(base: Readonly<Record<string, T>> | undefined, patch: Readonly<Record<string, T>> | undefined): Readonly<Record<string, T>> | undefined {
-  if (base === undefined && patch === undefined) return undefined;
-  return Object.freeze({ ...(base ?? {}), ...(patch ?? {}) });
+function normalizeStarDefinition(value: ZiweiStarDefinition): ZiweiStarDefinition {
+  if (typeof value.key !== 'string' || value.key.trim().length === 0) {
+    throw new RangeError('custom star key must be a non-empty string');
+  }
+  if (value.category !== undefined && (typeof value.category !== 'string' || value.category.trim().length === 0)) {
+    throw new RangeError(`${value.key} category must be a non-empty string`);
+  }
+  if (typeof value.natal !== 'boolean') throw new TypeError(`${value.key} natal must be boolean`);
+  return Object.freeze({
+    key: value.key,
+    ...(value.category === undefined ? {} : { category: value.category }),
+    natal: value.natal,
+  });
 }
 
-export class ZiweiRuleset {
-  readonly patch: ZiweiRulePatch;
-
-  constructor(patch: ZiweiRulePatch = {}) {
+function normalizePatch(patch: ZiweiRulePatch): ZiweiRulePatch {
+  const starKeys = new Set<string>();
+  const stars = (patch.stars ?? []).map((star) => {
+    const normalized = normalizeStarDefinition(star);
+    if (starKeys.has(normalized.key)) throw new RangeError(`duplicate star declaration: ${normalized.key}`);
+    starKeys.add(normalized.key);
+    return normalized;
+  });
     const natalPlacements = Object.fromEntries(Object.entries(patch.natalPlacements ?? {}).map(
       ([key, value]) => [key, normalizePlacement(key, value)],
     ));
@@ -288,14 +344,15 @@ export class ZiweiRuleset {
     }));
     const sihua = Object.fromEntries(Object.entries(patch.sihua ?? {}).map(([stem, set]) => {
       if (!STEM_KEYS.includes(stem)) throw new RangeError(`unknown sihua stem: ${stem}`);
-      const result: Record<string, number> = {};
+      const result: Record<string, number | string> = {};
       for (const key of ['lu', 'quan', 'ke', 'ji'] as const) {
-        if (set[key] !== undefined) result[key] = starId(set[key]);
+        if (set[key] !== undefined) result[key] = normalizeStarReference(set[key], `sihua.${stem}.${key}`);
       }
       if (Object.keys(result).length === 0) throw new RangeError(`sihua.${stem} is empty`);
       return [stem, Object.freeze(result)];
     }));
-    this.patch = Object.freeze({
+  return Object.freeze({
+      stars: Object.freeze(stars),
       natalPlacements: Object.freeze(natalPlacements),
       flowPlacements: Object.freeze(flowPlacements),
       brightness: Object.freeze(brightness),
@@ -308,21 +365,47 @@ export class ZiweiRuleset {
         }),
       }),
     });
+}
+
+function normalizeModuleLabel(label: string): string {
+  if (typeof label !== 'string' || label.trim().length === 0) {
+    throw new RangeError('rule module label must be a non-empty string');
+  }
+  return label.trim();
+}
+
+/** A labelled, immutable unit of already compiled Ziwei rule tables. */
+export class ZiweiRuleModule {
+  readonly label: string;
+  readonly patch: ZiweiRulePatch;
+
+  constructor(input: { readonly label: string; readonly patch: ZiweiRulePatch }) {
+    this.label = normalizeModuleLabel(input.label);
+    this.patch = normalizePatch(input.patch);
+    Object.freeze(this);
+  }
+}
+
+/** Ordered rule modules. Later modules override overlapping compiled tables. */
+export class ZiweiRuleset {
+  readonly modules: readonly ZiweiRuleModule[];
+
+  constructor(modules: readonly ZiweiRuleModule[] = []) {
+    const labels = new Set<string>();
+    for (const module of modules) {
+      if (!(module instanceof ZiweiRuleModule)) throw new TypeError('ruleset modules must be ZiweiRuleModule instances');
+      if (labels.has(module.label)) throw new RangeError(`duplicate rule module label: ${module.label}`);
+      labels.add(module.label);
+    }
+    this.modules = Object.freeze([...modules]);
     Object.freeze(this);
   }
 
-  with(patch: ZiweiRulePatch): ZiweiRuleset {
-    return new ZiweiRuleset({
-      natalPlacements: mergeRecords(this.patch.natalPlacements, patch.natalPlacements),
-      flowPlacements: mergeRecords(this.patch.flowPlacements, patch.flowPlacements),
-      brightness: mergeRecords(this.patch.brightness, patch.brightness),
-      brightnessLabels: mergeRecords(this.patch.brightnessLabels, patch.brightnessLabels),
-      sihua: mergeRecords(this.patch.sihua, patch.sihua),
-      masters: {
-        ...this.patch.masters,
-        ...patch.masters,
-      },
-    });
+  with(module: ZiweiRuleModule): ZiweiRuleset {
+    if (this.modules.some((candidate) => candidate.label === module.label)) {
+      throw new RangeError(`duplicate rule module label: ${module.label}`);
+    }
+    return new ZiweiRuleset([...this.modules, module]);
   }
 }
 
@@ -364,33 +447,63 @@ function parseSihuaJson(source: string): ZiweiRulePatch['sihua'] {
   }));
 }
 
-function parseStarsJson(source: string, natal: boolean): Record<string, ZiweiCompiledPlacement> {
+function starDefinitionFromJson(star: JsonObject, natal: boolean, index: number): ZiweiStarDefinition {
+  if (typeof star.key !== 'string' || star.key.trim().length === 0) {
+    throw new TypeError(`star[${index}].key must be a non-empty string`);
+  }
+  const category = star.type ?? star.category;
+  if (category !== undefined && (typeof category !== 'string' || category.trim().length === 0)) {
+    throw new TypeError(`star[${index}].type must be a non-empty string`);
+  }
+  return Object.freeze({
+    key: star.key,
+    ...(category === undefined ? {} : { category }),
+    natal,
+  });
+}
+
+function parseStarsJson(source: string, natal: boolean): {
+  placements: Record<string, ZiweiCompiledPlacement>;
+  stars: readonly ZiweiStarDefinition[];
+} {
   const raw = parseJson(source, natal ? 'starsJson' : 'flowJson');
   if (!Array.isArray(raw)) throw new TypeError(`${natal ? 'starsJson' : 'flowJson'} must be an array`);
-  return Object.fromEntries(raw.map((entry, index) => {
+  const seen = new Set<string>();
+  const stars: ZiweiStarDefinition[] = [];
+  const placements = Object.fromEntries(raw.map((entry, index) => {
     const star = asObject(entry, `star[${index}]`);
-    if (typeof star.key !== 'string') throw new TypeError(`star[${index}].key must be a string`);
+    const definition = starDefinitionFromJson(star, natal, index);
+    if (seen.has(definition.key)) throw new RangeError(`duplicate star declaration: ${definition.key}`);
+    seen.add(definition.key);
+    stars.push(definition);
     if (star.rule === undefined) throw new TypeError(`star[${index}].rule is required`);
-    return [star.key, compileZiweiJsonPlacement(star.rule)];
+    return [definition.key, compileZiweiJsonPlacement(star.rule)];
   }));
+  return { placements, stars: Object.freeze(stars) };
 }
 
 function parseFlowJson(source: string): {
   placements: Record<string, ZiweiCompiledPlacement>;
   brightness: Record<string, readonly number[]>;
+  stars: readonly ZiweiStarDefinition[];
 } {
   const raw = parseJson(source, 'flowJson');
   if (!Array.isArray(raw)) throw new TypeError('flowJson must be an array');
   const placements: Record<string, ZiweiCompiledPlacement> = {};
   const brightness: Record<string, readonly number[]> = {};
+  const stars: ZiweiStarDefinition[] = [];
+  const seen = new Set<string>();
   raw.forEach((entry, index) => {
     const star = asObject(entry, `flow[${index}]`);
-    if (typeof star.key !== 'string') throw new TypeError(`flow[${index}].key must be a string`);
+    const definition = starDefinitionFromJson(star, false, index);
+    if (seen.has(definition.key)) throw new RangeError(`duplicate star declaration: ${definition.key}`);
+    seen.add(definition.key);
+    stars.push(definition);
     if (star.rule === undefined) throw new TypeError(`flow[${index}].rule is required`);
-    placements[star.key] = compileZiweiJsonPlacement(star.rule);
-    if (Array.isArray(star.brightness)) brightness[star.key] = star.brightness.map(Number);
+    placements[definition.key] = compileZiweiJsonPlacement(star.rule);
+    if (Array.isArray(star.brightness)) brightness[definition.key] = star.brightness.map(Number);
   });
-  return { placements, brightness };
+  return { placements, brightness, stars: Object.freeze(stars) };
 }
 
 function parseMastersJson(source: string): ZiweiRulePatch['masters'] {
@@ -419,17 +532,133 @@ function parseMastersJson(source: string): ZiweiRulePatch['masters'] {
   };
 }
 
-/** Compatibility loader for rule profiles saved by the former Dart app. */
+function optionValue<T>(component: string, key: string, option: string, values: Readonly<Record<string, T>>): T {
+  const value = values[option];
+  if (value !== undefined) return value;
+  throw new RangeError(
+    `Ziwei ${component} option "${option}" is unavailable for "${key}"; available: ${Object.keys(values).join(', ') || '(none)'}`,
+  );
+}
+
+function placementValue(value: GeneratedPlacement): ZiweiCompiledPlacement {
+  return Object.freeze({ inputs: value.inputs, shape: value.shape, positions: value.positions });
+}
+
+function compilePlacementOptions(
+  variants: readonly GeneratedPlacementVariants[],
+  component: string,
+  defaultOption: string | undefined,
+  overrides: Readonly<Record<string, string>> | undefined,
+): Record<string, ZiweiCompiledPlacement> {
+  const byKey = new Map(variants.map((variant) => [variant.starKey, variant]));
+  const result: Record<string, ZiweiCompiledPlacement> = {};
+  if (defaultOption !== undefined) {
+    for (const variant of variants) {
+      result[variant.starKey] = placementValue(optionValue(component, variant.starKey, defaultOption, variant.options));
+    }
+  }
+  for (const [key, option] of Object.entries(overrides ?? {})) {
+    const variant = byKey.get(key);
+    if (variant === undefined) continue;
+    result[key] = placementValue(optionValue(component, key, option, variant.options));
+  }
+  return result;
+}
+
+function compileBuiltinRuleModule(input: ZiweiBuiltinRuleModuleInput): ZiweiRuleModule {
+  const knownPlacementKeys = new Set([
+    ...GENERATED_PLACEMENT_VARIANTS.map((variant) => variant.starKey),
+    ...GENERATED_FLOW_PLACEMENT_VARIANTS.map((variant) => variant.starKey),
+  ]);
+  for (const key of Object.keys(input.placement ?? {})) {
+    if (!knownPlacementKeys.has(key)) throw new RangeError(`unknown Ziwei placement rule key: "${key}"`);
+  }
+  const natalPlacements = compilePlacementOptions(
+    GENERATED_PLACEMENT_VARIANTS,
+    'placement',
+    input.placementDefault,
+    input.placement,
+  );
+  const flowPlacements = compilePlacementOptions(
+    GENERATED_FLOW_PLACEMENT_VARIANTS,
+    'placement',
+    input.placementDefault,
+    input.placement,
+  );
+  if (input.longevity !== undefined) {
+    const longevityKeys = new Set(['changsheng', 'muyu', 'guandai', 'linguan', 'diwang', 'shuai', 'bing', 'si', 'mu', 'jue', 'tai', 'yang']);
+    for (const variant of GENERATED_PLACEMENT_VARIANTS) if (longevityKeys.has(variant.starKey)) {
+      natalPlacements[variant.starKey] = placementValue(optionValue(
+        'placement', variant.starKey, input.longevity, variant.options,
+      ));
+    }
+  }
+
+  const brightnessByKey = new Map(GENERATED_BRIGHTNESS_VARIANTS.map((variant) => [variant.starKey, variant]));
+  const brightness: Record<string, readonly number[]> = {};
+  if (input.brightnessDefault !== undefined) {
+    for (const variant of GENERATED_BRIGHTNESS_VARIANTS) {
+      brightness[variant.starKey] = optionValue(
+        'brightness', variant.starKey, input.brightnessDefault, variant.options,
+      );
+    }
+  }
+  for (const [key, option] of Object.entries(input.brightness ?? {})) {
+    const variant = brightnessByKey.get(key);
+    if (variant === undefined) throw new RangeError(`unknown Ziwei brightness rule key: "${key}"`);
+    brightness[key] = optionValue('brightness', key, option, variant.options);
+  }
+
+  const sihuaByKey = new Map(GENERATED_SIHUA_VARIANTS.map((variant) => [variant.stemKey, variant]));
+  const sihua: Record<string, GeneratedTransformSet> = {};
+  if (input.sihuaDefault !== undefined) {
+    for (const variant of GENERATED_SIHUA_VARIANTS) {
+      sihua[variant.stemKey] = optionValue('sihua', variant.stemKey, input.sihuaDefault, variant.options);
+    }
+  }
+  for (const [key, option] of Object.entries(input.sihua ?? {})) {
+    const variant = sihuaByKey.get(key);
+    if (variant === undefined) throw new RangeError(`unknown Ziwei sihua rule key: "${key}"`);
+    sihua[key] = optionValue('sihua', key, option, variant.options);
+  }
+
+  let masters: GeneratedMasterVariant | undefined;
+  if (input.masters !== undefined) {
+    masters = optionValue('masters', 'life/body', input.masters, GENERATED_MASTER_VARIANTS);
+  }
+  return new ZiweiRuleModule({
+    label: input.label,
+    patch: {
+      natalPlacements,
+      flowPlacements,
+      brightness,
+      sihua,
+      ...(masters === undefined ? {} : { masters }),
+    },
+  });
+}
+
+/** Compiler/loader for built-in TOML variants and former-Dart JSON profiles. */
 export class ZiweiConfigLoader {
   static getDefault(): ZiweiRuleset { return new ZiweiRuleset(); }
 
-  static overrideWith(base: ZiweiRuleset, overrides: ZiweiJsonRuleOverrides): ZiweiRuleset {
-    const flow = overrides.flowJson ? parseFlowJson(overrides.flowJson) : undefined;
-    const explicitBrightness = overrides.brightnessJson
-      ? parseBrightnessJson(overrides.brightnessJson)
+  static withOptions(base: ZiweiRuleset, input: ZiweiBuiltinRuleModuleInput): ZiweiRuleset {
+    return base.with(compileBuiltinRuleModule(input));
+  }
+
+  static compileJson(input: ZiweiJsonRuleModuleInput): ZiweiRuleModule {
+    const label = normalizeModuleLabel(input.label);
+    if (/^option[1-4]$/i.test(label)) {
+      throw new RangeError(`custom JSON label is reserved by a built-in option: ${label}`);
+    }
+    const natal = input.starsJson ? parseStarsJson(input.starsJson, true) : undefined;
+    const flow = input.flowJson ? parseFlowJson(input.flowJson) : undefined;
+    const explicitBrightness = input.brightnessJson
+      ? parseBrightnessJson(input.brightnessJson)
       : undefined;
     const patch: ZiweiRulePatch = {
-      ...(overrides.starsJson ? { natalPlacements: parseStarsJson(overrides.starsJson, true) } : {}),
+      ...((natal || flow) ? { stars: [...(natal?.stars ?? []), ...(flow?.stars ?? [])] } : {}),
+      ...(natal ? { natalPlacements: natal.placements } : {}),
       ...(flow ? { flowPlacements: flow.placements } : {}),
       ...((flow || explicitBrightness) ? {
         brightness: { ...flow?.brightness, ...explicitBrightness?.brightness },
@@ -437,10 +666,14 @@ export class ZiweiConfigLoader {
       ...(explicitBrightness && Object.keys(explicitBrightness.labels).length > 0
         ? { brightnessLabels: explicitBrightness.labels }
         : {}),
-      ...(overrides.sihuaJson ? { sihua: parseSihuaJson(overrides.sihuaJson) } : {}),
-      ...(overrides.mastersJson ? { masters: parseMastersJson(overrides.mastersJson) } : {}),
+      ...(input.sihuaJson ? { sihua: parseSihuaJson(input.sihuaJson) } : {}),
+      ...(input.mastersJson ? { masters: parseMastersJson(input.mastersJson) } : {}),
     };
-    return base.with(patch);
+    return new ZiweiRuleModule({ label, patch });
+  }
+
+  static overrideWith(base: ZiweiRuleset, input: ZiweiJsonRuleModuleInput): ZiweiRuleset {
+    return base.with(this.compileJson(input));
   }
 }
 

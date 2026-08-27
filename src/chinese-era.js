@@ -3,6 +3,7 @@ import {
   MANAKAI_SUPPLEMENTAL_ERA_RECORDS,
 } from './generated/chinese-era-data.js';
 import {
+  CALENDAR_DAY_BOUNDARY_MODE,
   CALENDAR_MODE,
   instantToLunar,
   lunarToSolar,
@@ -17,6 +18,7 @@ const CHINA_OFFSET_MINUTES = 480;
 const CHINA_OFFSET_DAYS = CHINA_OFFSET_MINUTES / 1440;
 const ERA_CALENDAR_OPTIONS = Object.freeze({
   mode:CALENDAR_MODE.HISTORICAL,
+  dayBoundaryMode:CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET,
   utcOffsetMinutes:CHINA_OFFSET_MINUTES,
 });
 const LUNAR_YEAR_START_CACHE = new Map();

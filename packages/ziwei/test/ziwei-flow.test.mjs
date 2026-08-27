@@ -382,6 +382,7 @@ test('all supported calendar reforms keep month rows inside one historical annua
 
 test('runtime flow JSON patches placement and brightness together', () => {
   const ruleset = ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), {
+    label: 'runtime-flow-profile',
     flowJson: JSON.stringify([{
       key: 'flow_lucun',
       rule: { type: 'constant', value: 4 },
@@ -396,6 +397,30 @@ test('runtime flow JSON patches placement and brightness together', () => {
   const lucun = dynamic.getFlowStar(findStarId('flow_lucun'));
   assert.equal(lucun.branch, 4);
   assert.equal(lucun.brightness, 6);
+});
+
+test('custom flow stars use ruleset-local ids in every dynamic layer', () => {
+  const ruleset = ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), {
+    label: 'extra-flow-stars',
+    flowJson: JSON.stringify([{
+      key: 'flow_custom_star',
+      type: 'other',
+      rule: { type: 'constant', value: 7 },
+      brightness: Array(12).fill(5),
+    }]),
+  });
+  const chart = ZiweiChart.fromZonedTime(
+    zoned(2003, 3, 13, 14),
+    new ZiweiOptions({ gender: ZIWEI_GENDER.MALE, rules: { ruleset } }),
+  );
+  const dynamic = dynamicChartForTime(chart, zoned(2033, 12, 22)).chart;
+  const id = chart.findStarId('flow_custom_star');
+  const star = dynamic.getFlowStar(id);
+  assert.equal(id, 159);
+  assert.equal(star.key, 'flow_custom_star');
+  assert.equal(star.branch, 7);
+  assert.equal(star.brightness, 5);
+  assert.ok((dynamic.flowStack.at(-1).starBitsets[7] & (1n << BigInt(id))) !== 0n);
 });
 
 test('historical month names do not replace winter-solstice-anchored month building', () => {

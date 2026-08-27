@@ -30,6 +30,8 @@ import type { ZiweiCalendarFacts, ZiweiLunarDateFacts } from './types.js';
 export interface ResolvedZiweiBirth extends ResolvedZiweiAnchors {
   readonly facts: ZiweiCalendarFacts;
   readonly options: ZiweiOptions;
+  /** Original birth clock, not the solar/virtual clock used to place stars. */
+  readonly clockTime?: Readonly<ReturnType<ZonedTime['toJSON']>>;
 }
 
 function mod(value: number, modulus: number): number {
@@ -170,9 +172,10 @@ export function resolveZiweiBirth(
   options: ZiweiOptions | ZiweiOptionsInput,
 ): ResolvedZiweiBirth {
   const resolved = resolveZiweiOptions(options);
-  return resolveZiweiBirthFromInstant(
+  const birth = resolveZiweiBirthFromInstant(
     zonedTime.toJulianTime(),
     resolveZiweiVirtualTime(zonedTime, resolved),
     resolved,
   );
+  return Object.freeze({ ...birth, clockTime: Object.freeze(zonedTime.toJSON()) });
 }

@@ -1,6 +1,6 @@
 import type { ZiweiChart } from './chart.js';
 import { brightnessAt, evaluateFlowPlacement, selectZiweiRules } from './rules.js';
-import { STAR_CATALOG, getStar, type StarInfo } from './stars.js';
+import type { StarInfo } from './stars.js';
 import { FLOW_LEVEL, type Brightness, type FlowCoordinate, type FlowLevel, type PalaceId, type TransformSet } from './types.js';
 
 export interface ZiweiFlowLayer {
@@ -29,7 +29,7 @@ export interface ZiweiFlowStarPlacement extends StarInfo {
 
 function buildLayerData(chart: ZiweiChart, coordinate: Readonly<FlowCoordinate>): Omit<ZiweiFlowLayer, 'level'> {
   const rules = selectZiweiRules(chart.options.rules);
-  const positions = Array<number>(STAR_CATALOG.length).fill(-1);
+  const positions = Array<number>(rules.catalog.length).fill(-1);
   const bitsets = Array<bigint>(12).fill(0n);
   for (const rule of rules.flowPlacements) {
     const branch = evaluateFlowPlacement(rule, coordinate, chart.facts.gender, {
@@ -139,7 +139,7 @@ export class ZiweiDynamicChart {
     const branch = layer.starPositions[starId];
     if (branch === undefined || branch < 0) return null;
     return Object.freeze({
-      ...getStar(starId),
+      ...this.natal.getStarInfo(starId),
       branch,
       palaceId: ((layer.lifePalace - branch + 12) % 12) as PalaceId,
       brightness: brightnessAt(selectZiweiRules(this.natal.options.rules), starId, branch),
@@ -152,7 +152,7 @@ export class ZiweiDynamicChart {
     const branch = layer.starPositions[starId];
     if (branch === undefined || branch < 0) return null;
     return Object.freeze({
-      ...getStar(starId),
+      ...this.natal.getStarInfo(starId),
       branch,
       palaceId: ((layer.lifePalace - branch + 12) % 12) as PalaceId,
       brightness: brightnessAt(selectZiweiRules(this.natal.options.rules), starId, branch),

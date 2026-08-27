@@ -12,7 +12,7 @@ import {
 } from './generated/default-rules.js';
 import type { ZiweiRuleSelection } from './options.js';
 import type { Brightness, TransformSet, ZiweiCalendarFacts } from './types.js';
-import { requireStarId } from './stars.js';
+import { STAR_CATALOG, type StarInfo } from './stars.js';
 
 const LONGEVITY_STAR_KEYS = new Set([
   'changsheng',
@@ -30,6 +30,7 @@ const LONGEVITY_STAR_KEYS = new Set([
 ]);
 
 export interface SelectedZiweiRules {
+  readonly catalog: readonly StarInfo[];
   readonly natalPlacements: readonly GeneratedPlacement[];
   readonly flowPlacements: readonly GeneratedPlacement[];
   readonly brightness: readonly (readonly number[])[];
@@ -79,13 +80,13 @@ export function selectZiweiRules(selection: ZiweiRuleSelection): SelectedZiweiRu
   assertKnownOverrides('brightness', selection.brightness, brightnessKeys);
   assertKnownOverrides('sihua', selection.sihua, stemKeys);
 
-  const natalPlacements = GENERATED_PLACEMENT_VARIANTS.map((variant) => {
+  const initialNatalPlacements = GENERATED_PLACEMENT_VARIANTS.map((variant) => {
     const option = LONGEVITY_STAR_KEYS.has(variant.starKey)
       ? selection.longevity
       : selection.placement[variant.starKey] ?? selection.placementDefault;
     return selectedOption('placement', variant.starKey, option, variant.options);
   });
-  const flowPlacements = GENERATED_FLOW_PLACEMENT_VARIANTS.map((variant) => {
+  const initialFlowPlacements = GENERATED_FLOW_PLACEMENT_VARIANTS.map((variant) => {
     const option = selection.placement[variant.starKey] ?? selection.placementDefault;
     return selectedOption('placement', variant.starKey, option, variant.options);
   });
@@ -103,40 +104,86 @@ export function selectZiweiRules(selection: ZiweiRuleSelection): SelectedZiweiRu
   ) as GeneratedTransformSet);
   let masters = selectedOption('masters', 'life/body', selection.masters, GENERATED_MASTER_VARIANTS);
 
-  const patch = selection.ruleset.patch;
-  for (const [key, rule] of Object.entries(patch.natalPlacements ?? {})) {
-    const id = requireStarId(key);
-    if (id >= natalPlacements.length) throw new RangeError(`${key} is not a natal star`);
-    natalPlacements[id] = Object.freeze({ starId: id, ...rule });
-  }
-  for (const [key, rule] of Object.entries(patch.flowPlacements ?? {})) {
-    const id = requireStarId(key);
-    const index = GENERATED_FLOW_PLACEMENT_VARIANTS.findIndex((variant) => variant.starId === id);
-    if (index < 0) throw new RangeError(`${key} is not a flow star`);
-    flowPlacements[index] = Object.freeze({ starId: id, ...rule });
-  }
-  for (const [key, values] of Object.entries(patch.brightness ?? {})) {
-    brightness[requireStarId(key)] = values;
-  }
-  for (const [stem, set] of Object.entries(patch.sihua ?? {})) {
-    const index = ['jia', 'yi', 'bing', 'ding', 'wu', 'ji', 'geng', 'xin', 'ren', 'gui'].indexOf(stem);
-    if (index < 0) throw new RangeError(`unknown sihua stem: ${stem}`);
-    sihua[index] = Object.freeze({ ...sihua[index]!, ...set }) as GeneratedTransformSet;
-  }
-  if (patch.masters !== undefined) {
-    masters = Object.freeze({
-      life: (patch.masters.life ?? masters.life) as GeneratedMasterVariant['life'],
-      body: (patch.masters.body ?? masters.body) as GeneratedMasterVariant['body'],
-    });
+  const catalog = [...STAR_CATALOG];
+  const starIds = new Map(catalog.map((star) => [star.key, star.id]));
+  const natalPlacements = new Map(initialNatalPlacements.map((rule) => [rule.starId, rule]));
+  const flowPlacements = new Map(initialFlowPlacements.map((rule) => [rule.starId, rule]));
+  const brightnessLabels: Record<string, string> = {
+    '-1': '', '0': '陷', '1': '不', '2': '平', '3': '利', '4': '得', '5': '旺', '6': '庙',
+  };
+  const starId = (reference: number | string, label: string): number => {
+    const id = typeof reference === 'number' ? reference : starIds.get(reference);
+    if (id === undefined || catalog[id] === undefined) throw new RangeError(`${label} references unknown star: ${reference}`);
+    return id;
+  };
+
+  for (const module of selection.ruleset.modules) {
+    const patch = module.patch;
+    for (const definition of patch.stars ?? []) {
+      const existingId = starIds.get(definition.key);
+      if (existingId !== undefined) {
+        const existing = catalog[existingId]!;
+        if (existing.natal !== definition.natal) {
+          throw new RangeError(`${module.label}.${definition.key} cannot change natal/flow scope`);
+        }
+        if (definition.category !== undefined && definition.category !== existing.category) {
+          catalog[existingId] = Object.freeze({ ...existing, category: definition.category });
+        }
+        continue;
+      }
+      const id = catalog.length;
+      const added = Object.freeze({
+        id,
+        key: definition.key,
+        category: definition.category ?? (definition.natal ? 'custom' : 'other'),
+        natal: definition.natal,
+      });
+      catalog.push(added);
+      starIds.set(added.key, id);
+      brightness[id] = Object.freeze(Array<number>(12).fill(0));
+    }
+    for (const [key, rule] of Object.entries(patch.natalPlacements ?? {})) {
+      const id = starId(key, `${module.label}.natalPlacements`);
+      if (!catalog[id]!.natal) throw new RangeError(`${module.label}.${key} is not a natal star`);
+      natalPlacements.set(id, Object.freeze({ starId: id, ...rule }));
+    }
+    for (const [key, rule] of Object.entries(patch.flowPlacements ?? {})) {
+      const id = starId(key, `${module.label}.flowPlacements`);
+      if (catalog[id]!.natal) throw new RangeError(`${module.label}.${key} is not a flow star`);
+      flowPlacements.set(id, Object.freeze({ starId: id, ...rule }));
+    }
+    for (const [key, values] of Object.entries(patch.brightness ?? {})) {
+      brightness[starId(key, `${module.label}.brightness`)] = values;
+    }
+    for (const [stem, set] of Object.entries(patch.sihua ?? {})) {
+      const index = ['jia', 'yi', 'bing', 'ding', 'wu', 'ji', 'geng', 'xin', 'ren', 'gui'].indexOf(stem);
+      if (index < 0) throw new RangeError(`unknown sihua stem: ${stem}`);
+      const resolved: Partial<Record<keyof GeneratedTransformSet, number>> = {};
+      for (const key of ['lu', 'quan', 'ke', 'ji'] as const) {
+        if (set[key] !== undefined) resolved[key] = starId(set[key], `${module.label}.sihua.${stem}.${key}`);
+      }
+      sihua[index] = Object.freeze({ ...sihua[index]!, ...resolved }) as GeneratedTransformSet;
+    }
+    if (patch.masters !== undefined) {
+      const resolveMaster = (value: NonNullable<typeof patch.masters>['life']): GeneratedMasterVariant['life'] | undefined => value === undefined
+        ? undefined
+        : Object.freeze({
+          input: value.input,
+          stars: Object.freeze(value.stars.map((star) => starId(star, `${module.label}.masters`))),
+        });
+      masters = Object.freeze({
+        life: resolveMaster(patch.masters.life) ?? masters.life,
+        body: resolveMaster(patch.masters.body) ?? masters.body,
+      });
+    }
+    Object.assign(brightnessLabels, patch.brightnessLabels);
   }
   const resolved = Object.freeze({
-    natalPlacements: Object.freeze(natalPlacements),
-    flowPlacements: Object.freeze(flowPlacements),
+    catalog: Object.freeze(catalog),
+    natalPlacements: Object.freeze([...natalPlacements.values()].sort((a, b) => a.starId - b.starId)),
+    flowPlacements: Object.freeze([...flowPlacements.values()].sort((a, b) => a.starId - b.starId)),
     brightness: Object.freeze(brightness),
-    brightnessLabels: Object.freeze({
-      '-1': '', '0': '陷', '1': '不', '2': '平', '3': '利', '4': '得', '5': '旺', '6': '庙',
-      ...patch.brightnessLabels,
-    }),
+    brightnessLabels: Object.freeze(brightnessLabels),
     sihua: Object.freeze(sihua),
     masters,
   });

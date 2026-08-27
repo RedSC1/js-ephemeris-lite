@@ -1,4 +1,5 @@
 import {
+  CALENDAR_DAY_BOUNDARY_MODE,
   CALENDAR_MODE,
   civilDayNumber,
   getPreviousJie,
@@ -322,4 +323,5 @@ export const GANZHI_INFO = Object.freeze({
   defaultRatHourMode: RAT_HOUR_MODE.NEXT_DAY,
   historicalTermBoundary: 'assigned civil day 00:00 at UTC+08',
   calendarModes: Object.values(CALENDAR_MODE),
+  calendarDayBoundaryModes: Object.values(CALENDAR_DAY_BOUNDARY_MODE),
 });

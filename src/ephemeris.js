@@ -1,5 +1,8 @@
 import { pathToFileURL } from 'node:url';
 import { MODEL_DATA } from './generated/model-data.js';
+import { PLANET_MODEL_DATA } from './generated/planet-model-data.js';
+import { PLANET_CORRECTION_DATA } from './generated/planet-correction-data.js';
+import { GIANT_PLANET_CORRECTION_DATA } from './generated/giant-planet-correction-data.js';
 import {
   J2000,
   ARCSEC_TO_RAD,
@@ -11,6 +14,16 @@ export { J2000, iau2000bNutation, vondrak2011PrecessionMatrix };
 
 export const AU_KM = 149597870.7;
 export const EARTH_MOON_MASS_RATIO = 81.30056822149722;
+export const PLANET = Object.freeze({
+  MERCURY: 'mercury',
+  VENUS: 'venus',
+  EARTH: 'earth',
+  MARS: 'mars',
+  JUPITER: 'jupiter',
+  SATURN: 'saturn',
+  URANUS: 'uranus',
+  NEPTUNE: 'neptune',
+});
 const DAYS_PER_CENTURY = 36525;
 const DAYS_PER_MILLENNIUM = 365250;
 const MAX_LITE_CENTURIES = 80;
@@ -381,23 +394,23 @@ export const MOON_MODEL_INFO = Object.freeze({
   directionLatitudeTerms: Object.freeze([0, 5, 10, 20, 'full']),
 });
 
-function evaluateVsopEarthState(jdTT) {
+function evaluateVsopState(series, jdTT) {
   const tau = (jdTT - J2000) / DAYS_PER_MILLENNIUM;
   const tauRate = 1 / DAYS_PER_MILLENNIUM;
-  const lbr = Array.from({ length: 3 }, (_, coordinate) => evaluateVsopEarthCoordinateState(
-    coordinate,
+  const lbr = Array.from({ length: 3 }, (_, coordinate) => evaluateVsopCoordinateState(
+    series[coordinate],
     tau,
     tauRate,
   ));
   return { tau, tauRate, lbr };
 }
 
-function evaluateVsopEarthCoordinateState(coordinate, tau, tauRate) {
+function evaluateVsopCoordinateState(powers, tau, tauRate) {
   let value = 0;
   let rate = 0;
-  for (let power = 0; power < MODEL_DATA.vsopEarth[coordinate].length; power += 1) {
+  for (let power = 0; power < powers.length; power += 1) {
     let subtotal = 0, subtotalRate = 0;
-    for (const [amplitude, phase, frequency] of MODEL_DATA.vsopEarth[coordinate][power]) {
+    for (const [amplitude, phase, frequency] of powers[power]) {
       const argument = phase + frequency * tau;
       subtotal += amplitude * Math.cos(argument);
       subtotalRate -= amplitude * frequency * Math.sin(argument) * tauRate;
@@ -459,7 +472,7 @@ export function earthPosition(jdTT, { corrections = true } = {}) {
 /** Heliocentric Earth position (AU) and analytic velocity (AU/day), J2000 ecliptic. */
 export function earthState(jdTT, { corrections = true } = {}) {
   if (!Number.isFinite(jdTT)) throw new TypeError('jdTT must be finite');
-  const { tau, tauRate, lbr } = evaluateVsopEarthState(jdTT);
+  const { lbr } = evaluateVsopState(MODEL_DATA.vsopEarth, jdTT);
   const correction = earthLongitudeCorrectionState(jdTT, corrections);
   lbr[0].value += correction.value;
   lbr[0].rate += correction.rate;
@@ -471,8 +484,8 @@ export function earthDirectionState(jdTT, { corrections = true } = {}) {
   if (!Number.isFinite(jdTT)) throw new TypeError('jdTT must be finite');
   const tau = (jdTT - J2000) / DAYS_PER_MILLENNIUM;
   const tauRate = 1 / DAYS_PER_MILLENNIUM;
-  const longitude = evaluateVsopEarthCoordinateState(0, tau, tauRate);
-  const latitude = evaluateVsopEarthCoordinateState(1, tau, tauRate);
+  const longitude = evaluateVsopCoordinateState(MODEL_DATA.vsopEarth[0], tau, tauRate);
+  const latitude = evaluateVsopCoordinateState(MODEL_DATA.vsopEarth[1], tau, tauRate);
   const correction = earthLongitudeCorrectionState(jdTT, corrections);
   longitude.value += correction.value;
   longitude.rate += correction.rate;
@@ -502,6 +515,328 @@ export function earthHeliocentricState(jdTT, options = {}) {
 export function earthHeliocentricPosition(jdTT, options = {}) {
   return earthHeliocentricState(jdTT, options).position;
 }
+
+const PLANET_SERIES = Object.freeze({
+  [PLANET.MERCURY]: PLANET_MODEL_DATA.vsop.mercury,
+  [PLANET.VENUS]: PLANET_MODEL_DATA.vsop.venus,
+  [PLANET.MARS]: PLANET_MODEL_DATA.vsop.mars,
+  [PLANET.JUPITER]: PLANET_MODEL_DATA.vsop.jupiter,
+  [PLANET.SATURN]: PLANET_MODEL_DATA.vsop.saturn,
+  [PLANET.URANUS]: PLANET_MODEL_DATA.vsop.uranus,
+  [PLANET.NEPTUNE]: PLANET_MODEL_DATA.vsop.neptune,
+});
+const PLANET_NAMES = new Set(Object.values(PLANET));
+const GIANT_CORRECTION_CACHE = new Map();
+
+function assertPlanet(planet) {
+  if (!PLANET_NAMES.has(planet)) {
+    throw new RangeError(`unknown planet: ${planet}`);
+  }
+}
+
+function giantCorrectionCoefficients(planet) {
+  let packed = GIANT_CORRECTION_CACHE.get(planet);
+  if (packed) return packed;
+  const model = GIANT_PLANET_CORRECTION_DATA.models[planet];
+  if (!model) return null;
+  const decode = (encoded, bytesPerValue, read, Type) => {
+    const binary = globalThis.atob(encoded);
+    const view = new DataView(new ArrayBuffer(binary.length));
+    for (let index = 0; index < binary.length; index += 1) {
+      view.setUint8(index, binary.charCodeAt(index));
+    }
+    const values = new Type(binary.length / bytesPerValue);
+    for (let index = 0; index < values.length; index += 1) {
+      values[index] = view[read](index * bytesPerValue, true);
+    }
+    return values;
+  };
+  packed = {
+    scales: decode(model.scalesBase64, 4, 'getFloat32', Float32Array),
+    coefficients: decode(model.coefficientsBase64, 2, 'getInt16', Int16Array),
+  };
+  GIANT_CORRECTION_CACHE.set(planet, packed);
+  return packed;
+}
+
+function giantCorrectionSegmentState(packed, coordinate, segment, year, yearRate) {
+  const data = GIANT_PLANET_CORRECTION_DATA;
+  const coefficientCount = data.degree + 1;
+  const offset = (segment * data.coordinateCount + coordinate) * coefficientCount;
+  const center = data.startYear + (segment + 0.5) * data.segmentYears;
+  const normalized = chebyshevState(
+    packed.coefficients.subarray(offset, offset + coefficientCount),
+    (year - center) / (data.segmentYears / 2),
+    yearRate / (data.segmentYears / 2),
+  );
+  const scale = packed.scales[segment * data.coordinateCount + coordinate];
+  return { value: normalized.value * scale, rate: normalized.rate * scale };
+}
+
+function giantPlanetCorrectionState(planet, coordinate, year, yearRate) {
+  const data = GIANT_PLANET_CORRECTION_DATA;
+  const packed = giantCorrectionCoefficients(planet);
+  if (!packed) return null;
+  const clampedYear = Math.max(data.startYear, Math.min(data.endYear, year));
+  const clampedRate = clampedYear === year ? yearRate : 0;
+  let segment = Math.floor((clampedYear - data.startYear) / data.segmentYears);
+  segment = Math.max(0, Math.min(data.segmentCount - 1, segment));
+  const current = giantCorrectionSegmentState(
+    packed, coordinate, segment, clampedYear, clampedRate,
+  );
+
+  const rightBoundary = data.startYear + (segment + 1) * data.segmentYears;
+  if (segment < data.segmentCount - 1 && clampedYear > rightBoundary - data.blendYears) {
+    const right = giantCorrectionSegmentState(
+      packed, coordinate, segment + 1, clampedYear, clampedRate,
+    );
+    return blendScalarStates(current, right, smoothstepStateBetween(
+      clampedYear, clampedRate,
+      rightBoundary - data.blendYears, rightBoundary + data.blendYears,
+    ));
+  }
+
+  const leftBoundary = data.startYear + segment * data.segmentYears;
+  if (segment > 0 && clampedYear < leftBoundary + data.blendYears) {
+    const left = giantCorrectionSegmentState(
+      packed, coordinate, segment - 1, clampedYear, clampedRate,
+    );
+    return blendScalarStates(left, current, smoothstepStateBetween(
+      clampedYear, clampedRate,
+      leftBoundary - data.blendYears, leftBoundary + data.blendYears,
+    ));
+  }
+  return current;
+}
+
+function correctionModelState(model, coordinateSeries, tau, tauRate, x, xRate) {
+  if (model.kind === 'chebyshev') {
+    return chebyshevState(model.coefficients, x, xRate);
+  }
+  const result = chebyshevState(model.drift, x, xRate);
+  for (const channel of model.channels) {
+    const shift = chebyshevState(channel.shift, x, xRate);
+    for (const [power, index] of channel.terms) {
+      const [amplitude, phase, frequency] = coordinateSeries[power][index];
+      const argument = phase + frequency * tau;
+      const argumentRate = frequency * tauRate;
+      const shiftedArgument = argument + shift.value;
+      const envelope = tau ** power;
+      const envelopeRate = power === 0 ? 0 : power * tau ** (power - 1) * tauRate;
+      const delta = Math.cos(shiftedArgument) - Math.cos(argument);
+      const deltaRate = -Math.sin(shiftedArgument) * (argumentRate + shift.rate)
+        + Math.sin(argument) * argumentRate;
+      result.value += amplitude * envelope * delta;
+      result.rate += amplitude * (envelopeRate * delta + envelope * deltaRate);
+    }
+  }
+  return result;
+}
+
+function blendScalarStates(left, right, weight) {
+  return {
+    value: left.value * (1 - weight.value) + right.value * weight.value,
+    rate: left.rate * (1 - weight.value) + right.rate * weight.value
+      + (right.value - left.value) * weight.rate,
+  };
+}
+
+function smoothstepStateBetween(value, rate, left, right) {
+  const x = (value - left) / (right - left);
+  if (x <= 0) return { value: 0, rate: 0 };
+  if (x >= 1) return { value: 1, rate: 0 };
+  return {
+    value: x * x * (3 - 2 * x),
+    rate: 6 * x * (1 - x) * rate / (right - left),
+  };
+}
+
+function correctionLayerState(layer, coordinate, coordinateSeries, tau, tauRate,
+                              year, yearRate, centerYear, scaleYears) {
+  const evaluate = (model, center, scale) => correctionModelState(
+    model, coordinateSeries, tau, tauRate,
+    (year - center) / scale, yearRate / scale,
+  );
+  if (Array.isArray(layer)) return evaluate(layer[coordinate], centerYear, scaleYears);
+
+  const fallback = evaluate(layer.fallback[coordinate], centerYear, scaleYears);
+  const segments = layer.segments;
+  let local;
+  if (year <= segments[0].centerYear) {
+    local = evaluate(segments[0].coordinates[coordinate], segments[0].centerYear, segments[0].scaleYears);
+  } else if (year >= segments.at(-1).centerYear) {
+    const last = segments.at(-1);
+    local = evaluate(last.coordinates[coordinate], last.centerYear, last.scaleYears);
+  } else {
+    const rightIndex = segments.findIndex(segment => segment.centerYear > year);
+    const left = segments[rightIndex - 1], right = segments[rightIndex];
+    const leftState = evaluate(left.coordinates[coordinate], left.centerYear, left.scaleYears);
+    const rightState = evaluate(right.coordinates[coordinate], right.centerYear, right.scaleYears);
+    local = blendScalarStates(leftState, rightState, smoothstepStateBetween(
+      year, yearRate, left.centerYear, right.centerYear,
+    ));
+  }
+  const [start, full, fade, end] = layer.transitionYears;
+  let localWeight;
+  if (year < full) {
+    localWeight = smoothstepStateBetween(year, yearRate, start, full);
+  } else if (year <= fade) {
+    localWeight = { value: 1, rate: 0 };
+  } else {
+    const out = smoothstepStateBetween(year, yearRate, fade, end);
+    localWeight = { value: 1 - out.value, rate: -out.rate };
+  }
+  return blendScalarStates(fallback, local, localWeight);
+}
+
+/** Native VSOP87B L/B/R correction states: radians, radians and AU. */
+export function planetCorrectionState(planet, jdTT, corrections = true) {
+  assertPlanet(planet);
+  if (!Number.isFinite(jdTT)) throw new TypeError('jdTT must be finite');
+  if (planet === PLANET.EARTH) {
+    return [earthLongitudeCorrectionState(jdTT, corrections), { value: 0, rate: 0 }, { value: 0, rate: 0 }];
+  }
+  if (!corrections) return Array.from({ length: 3 }, () => ({ value: 0, rate: 0 }));
+  const model = PLANET_CORRECTION_DATA.models[planet];
+  const series = PLANET_SERIES[planet];
+  const tau = (jdTT - J2000) / DAYS_PER_MILLENNIUM;
+  const tauRate = 1 / DAYS_PER_MILLENNIUM;
+  const year = 2000 + tau * 1000;
+  const yearRate = 1000 * tauRate;
+  const weight = correctionWeightState(jdTT);
+  const modernWeight = { value: 1 - weight.value, rate: -weight.rate };
+  return Array.from({ length: 3 }, (_, coordinate) => {
+    const modern = modernWeight.value === 0 && modernWeight.rate === 0
+      ? { value: 0, rate: 0 }
+      : correctionLayerState(
+        model.modern, coordinate, series[coordinate], tau, tauRate, year, yearRate,
+        PLANET_CORRECTION_DATA.modernCenterYear, PLANET_CORRECTION_DATA.modernScaleYears,
+      );
+    const long = weight.value === 0 && weight.rate === 0
+      ? { value: 0, rate: 0 }
+      : giantPlanetCorrectionState(planet, coordinate, year, yearRate)
+        ?? correctionLayerState(
+          model.long, coordinate, series[coordinate], tau, tauRate, year, yearRate,
+          PLANET_CORRECTION_DATA.longCenterYear, PLANET_CORRECTION_DATA.longScaleYears,
+        );
+    return {
+      value: modern.value * modernWeight.value + long.value * weight.value,
+      rate: modern.rate * modernWeight.value + modern.value * modernWeight.rate
+        + long.rate * weight.value + long.value * weight.rate,
+    };
+  });
+}
+
+function rawPlanetHeliocentricState(planet, jdTT, corrections) {
+  if (!Number.isFinite(jdTT)) throw new TypeError('jdTT must be finite');
+  const { lbr } = evaluateVsopState(PLANET_SERIES[planet], jdTT);
+  const correction = planetCorrectionState(planet, jdTT, corrections);
+  for (let coordinate = 0; coordinate < 3; coordinate += 1) {
+    lbr[coordinate].value += correction[coordinate].value;
+    lbr[coordinate].rate += correction[coordinate].rate;
+  }
+  return sphericalState(lbr[0], lbr[1], lbr[2]);
+}
+
+/** Geometric heliocentric planet state, J2000 dynamical ecliptic/equinox, AU and AU/day. */
+export function planetHeliocentricState(planet, jdTT, options = {}) {
+  assertPlanet(planet);
+  return planet === PLANET.EARTH
+    ? earthHeliocentricState(jdTT, options)
+    : rawPlanetHeliocentricState(planet, jdTT, options.corrections !== false);
+}
+
+export function planetHeliocentricPosition(planet, jdTT, options = {}) {
+  return planetHeliocentricState(planet, jdTT, options).position;
+}
+
+/** Geometric geocentric planet state; light time and aberration are not applied. */
+export function planetGeocentricState(planet, jdTT, options = {}) {
+  const target = planetHeliocentricState(planet, jdTT, options);
+  const earth = earthHeliocentricState(jdTT, options);
+  return {
+    position: target.position.map((value, index) => value - earth.position[index]),
+    velocity: target.velocity.map((value, index) => value - earth.velocity[index]),
+  };
+}
+
+export function planetGeocentricPosition(planet, jdTT, options = {}) {
+  return planetGeocentricState(planet, jdTT, options).position;
+}
+
+export const PLANET_MODEL_INFO = Object.freeze(Object.fromEntries([
+  [PLANET.EARTH, MODEL_DATA.vsopEarth],
+  ...Object.entries(PLANET_SERIES),
+].map(([planet, series]) => [planet, Object.freeze({
+  longitudeTerms: series[0].reduce((sum, block) => sum + block.length, 0),
+  latitudeTerms: series[1].reduce((sum, block) => sum + block.length, 0),
+  radiusTerms: series[2].reduce((sum, block) => sum + block.length, 0),
+  totalTerms: series.flat(2).length,
+})])));
+
+function deepFreeze(value) {
+  if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  Object.freeze(value);
+  for (const child of Object.values(value)) deepFreeze(child);
+  return value;
+}
+
+/** Fit intervals and disjoint-sample residual metrics for the non-Earth planets. */
+export const PLANET_CORRECTION_INFO = deepFreeze({
+  oracle: 'JPL DE441',
+  coordinates: ['heliocentric longitude', 'heliocentric latitude', 'radius'],
+  modernFitIntervalYears: PLANET_CORRECTION_DATA.fitIntervalYears.modern,
+  longFitIntervalYears: PLANET_CORRECTION_DATA.fitIntervalYears.long,
+  blendDistanceFromJ2000Years: PLANET_CORRECTION_DATA.blendDistanceYears,
+  validation: Object.fromEntries(Object.entries(PLANET_CORRECTION_DATA.validationRms).map(
+    ([planet, layers]) => [planet, GIANT_PLANET_CORRECTION_DATA.models[planet]
+      ? { ...layers, long: GIANT_PLANET_CORRECTION_DATA.models[planet].validation }
+      : layers],
+  )),
+});
+
+export const mercuryHeliocentricState = (jdTT, options = {}) => (
+  planetHeliocentricState(PLANET.MERCURY, jdTT, options)
+);
+export const mercuryHeliocentricPosition = (jdTT, options = {}) => (
+  mercuryHeliocentricState(jdTT, options).position
+);
+export const venusHeliocentricState = (jdTT, options = {}) => (
+  planetHeliocentricState(PLANET.VENUS, jdTT, options)
+);
+export const venusHeliocentricPosition = (jdTT, options = {}) => (
+  venusHeliocentricState(jdTT, options).position
+);
+export const marsHeliocentricState = (jdTT, options = {}) => (
+  planetHeliocentricState(PLANET.MARS, jdTT, options)
+);
+export const marsHeliocentricPosition = (jdTT, options = {}) => (
+  marsHeliocentricState(jdTT, options).position
+);
+export const jupiterHeliocentricState = (jdTT, options = {}) => (
+  planetHeliocentricState(PLANET.JUPITER, jdTT, options)
+);
+export const jupiterHeliocentricPosition = (jdTT, options = {}) => (
+  jupiterHeliocentricState(jdTT, options).position
+);
+export const saturnHeliocentricState = (jdTT, options = {}) => (
+  planetHeliocentricState(PLANET.SATURN, jdTT, options)
+);
+export const saturnHeliocentricPosition = (jdTT, options = {}) => (
+  saturnHeliocentricState(jdTT, options).position
+);
+export const uranusHeliocentricState = (jdTT, options = {}) => (
+  planetHeliocentricState(PLANET.URANUS, jdTT, options)
+);
+export const uranusHeliocentricPosition = (jdTT, options = {}) => (
+  uranusHeliocentricState(jdTT, options).position
+);
+export const neptuneHeliocentricState = (jdTT, options = {}) => (
+  planetHeliocentricState(PLANET.NEPTUNE, jdTT, options)
+);
+export const neptuneHeliocentricPosition = (jdTT, options = {}) => (
+  neptuneHeliocentricState(jdTT, options).position
+);
 
 /** Geometric geocentric Sun, J2000 ecliptic, AU and AU/day. */
 export function sunGeocentricState(jdTT, options = {}) {
@@ -553,6 +888,8 @@ export const EPHEMERIS_FRAME_INFO = Object.freeze({
   geometric: true,
   lightTimeApplied: false,
   earthHeliocentricUnit: 'AU',
+  planetHeliocentricUnit: 'AU',
+  planetGeocentricUnit: 'AU',
   sunGeocentricUnit: 'AU',
   moonGeocentricUnit: 'km',
   moonHeliocentricUnit: 'AU',

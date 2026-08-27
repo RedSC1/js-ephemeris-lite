@@ -5,6 +5,9 @@ import {
   AU_KM,
   EARTH_MOON_MASS_RATIO,
   MOON_MODEL_INFO,
+  PLANET,
+  PLANET_CORRECTION_INFO,
+  PLANET_MODEL_INFO,
   correctionWeight,
   earthDirectionState,
   earthHeliocentricPosition,
@@ -17,6 +20,10 @@ import {
   moonDirectionState,
   moonElpLongitudeState,
   moonPosition,
+  planetGeocentricState,
+  planetCorrectionState,
+  planetHeliocentricPosition,
+  planetHeliocentricState,
   sunGeocentricPosition,
   sunGeocentricState,
   embHeliocentricPosition,
@@ -37,6 +44,26 @@ test('modern and long-span correction layers use a smooth complementary blend', 
   assert.equal(correctionWeight(J2000 - 800 * 365.25), 0);
   near(correctionWeight(J2000 + 900 * 365.25), 0.5, 1e-15);
   assert.equal(correctionWeight(J2000 + 1000 * 365.25), 1);
+  assert.deepEqual(PLANET_CORRECTION_INFO.modernFitIntervalYears, [1000, 3000]);
+  assert.deepEqual(PLANET_CORRECTION_INFO.longFitIntervalYears, [-6000, 10000]);
+  assert.deepEqual(PLANET_CORRECTION_INFO.blendDistanceFromJ2000Years, [800, 1000]);
+});
+
+test('planet correction states share the Earth/Moon switch and blend boundaries', () => {
+  for (const planet of Object.values(PLANET)) {
+    assert.deepEqual(planetCorrectionState(planet, J2000, false), [
+      { value: 0, rate: 0 }, { value: 0, rate: 0 }, { value: 0, rate: 0 },
+    ]);
+    for (const years of [-1000, -900, -800, 0, 800, 900, 1000]) {
+      const state = planetCorrectionState(planet, J2000 + years * 365.25);
+      assert.ok(state.every(({ value, rate }) => Number.isFinite(value) && Number.isFinite(rate)));
+    }
+  }
+  assert.equal(PLANET_CORRECTION_INFO.oracle, 'JPL DE441');
+  assert.ok(PLANET_CORRECTION_INFO.validation.mercury.modern.longitudeArcsec.rms < 0.04);
+  assert.ok(PLANET_CORRECTION_INFO.validation.jupiter.long.longitudeArcsec.rms < 0.25);
+  assert.ok(PLANET_CORRECTION_INFO.validation.saturn.long.longitudeArcsec.rms < 0.3);
+  assert.ok(PLANET_CORRECTION_INFO.validation.neptune.long.longitudeArcsec.rms < 2);
 });
 
 test('J2000 modern-corrected and raw truncated Earth and Moon values', () => {
@@ -50,6 +77,94 @@ test('J2000 modern-corrected and raw truncated Earth and Moon values', () => {
     [-0.17713539623857041, 0.9672416027622578, -0.000003945988425422161]);
   assert.deepEqual(moonPosition(J2000, { corrections: false }),
     [-291608.5374584195, -274979.66456961766, 36271.36061049973]);
+});
+
+test('planet budgets follow the Shou Xing per-coordinate envelope on VSOP87B', () => {
+  assert.deepEqual(PLANET_MODEL_INFO, {
+    earth: { longitudeTerms: 376, latitudeTerms: 27, radiusTerms: 479, totalTerms: 882 },
+    mercury: { longitudeTerms: 268, latitudeTerms: 124, radiusTerms: 209, totalTerms: 601 },
+    venus: { longitudeTerms: 146, latitudeTerms: 70, radiusTerms: 142, totalTerms: 358 },
+    mars: { longitudeTerms: 478, latitudeTerms: 90, radiusTerms: 521, totalTerms: 1089 },
+    jupiter: { longitudeTerms: 510, latitudeTerms: 147, radiusTerms: 644, totalTerms: 1301 },
+    saturn: { longitudeTerms: 771, latitudeTerms: 231, radiusTerms: 1170, totalTerms: 2172 },
+    uranus: { longitudeTerms: 356, latitudeTerms: 79, radiusTerms: 599, totalTerms: 1034 },
+    neptune: { longitudeTerms: 94, latitudeTerms: 41, radiusTerms: 107, totalTerms: 242 },
+  });
+});
+
+test('truncated planets stay close to the official full VSOP87B J2000 checks', () => {
+  const oracles = {
+    mercury: [4.4293481043, -0.0527573411, 0.4664714751, 1e-6],
+    venus: [3.1870221910, 0.0569782849, 0.7202129248, 1e-6],
+    earth: [1.7519238637, -0.0000039656, 0.9833276823, 1e-6],
+    mars: [6.2735389872, -0.0247779824, 1.3912076937, 2e-6],
+    jupiter: [0.6334614217, -0.0205001039, 4.9653812803, 1e-5],
+    saturn: [0.7980038867, -0.0401984149, 9.1838482881, 1e-5],
+    uranus: [5.5225485297, -0.0119527878, 19.9240478952, 1e-4],
+    neptune: [5.3045629284, 0.0042236790, 30.1205329332, 1e-4],
+  };
+  for (const [planet, [longitude, latitude, radius, tolerance]] of Object.entries(oracles)) {
+    const cosLatitude = Math.cos(latitude);
+    const expected = [
+      radius * cosLatitude * Math.cos(longitude),
+      radius * cosLatitude * Math.sin(longitude),
+      radius * Math.sin(latitude),
+    ];
+    const actual = planetHeliocentricPosition(planet, J2000, { corrections: false });
+    near(Math.hypot(...actual.map((value, axis) => value - expected[axis])), 0, tolerance, planet);
+  }
+});
+
+test('planet velocities are analytic derivatives and geocentric states subtract Earth', () => {
+  const h = 0.001;
+  for (const planet of Object.values(PLANET)) {
+    const state = planetHeliocentricState(planet, J2000);
+    const before = planetHeliocentricPosition(planet, J2000 - h);
+    const after = planetHeliocentricPosition(planet, J2000 + h);
+    for (let axis = 0; axis < 3; axis += 1) {
+      near(state.velocity[axis], (after[axis] - before[axis]) / (2 * h), 1e-8, `${planet}[${axis}]`);
+    }
+
+    const geocentric = planetGeocentricState(planet, J2000);
+    const earth = planetHeliocentricState(PLANET.EARTH, J2000);
+    for (let axis = 0; axis < 3; axis += 1) {
+      near(geocentric.position[axis], state.position[axis] - earth.position[axis], 0);
+      near(geocentric.velocity[axis], state.velocity[axis] - earth.velocity[axis], 0);
+    }
+  }
+  assert.throws(() => planetHeliocentricState('pluto', J2000), /unknown planet/u);
+});
+
+test('planet analytic velocities remain continuous at correction-layer bridges', () => {
+  const h = 0.002;
+  for (const planet of Object.values(PLANET).filter(value => value !== PLANET.EARTH)) {
+    for (const year of [990, 1000, 1200, 2800, 3000, 3010]) {
+      const jd = J2000 + (year - 2000) * 365.25;
+      const state = planetHeliocentricState(planet, jd);
+      const before = planetHeliocentricPosition(planet, jd - h);
+      const after = planetHeliocentricPosition(planet, jd + h);
+      for (let axis = 0; axis < 3; axis += 1) {
+        near(state.velocity[axis], (after[axis] - before[axis]) / (2 * h), 2e-7,
+          `${planet}/${year}[${axis}]`);
+      }
+    }
+  }
+});
+
+test('giant-planet residual segments preserve analytic velocity across their joins', () => {
+  const h = 0.002;
+  for (const planet of [PLANET.JUPITER, PLANET.SATURN]) {
+    for (const year of [-5975, -4000, 0, 4000, 9975]) {
+      const jd = J2000 + (year - 2000) * 365.25;
+      const state = planetHeliocentricState(planet, jd);
+      const before = planetHeliocentricPosition(planet, jd - h);
+      const after = planetHeliocentricPosition(planet, jd + h);
+      for (let axis = 0; axis < 3; axis += 1) {
+        near(state.velocity[axis], (after[axis] - before[axis]) / (2 * h), 2e-7,
+          `${planet}/${year}[${axis}]`);
+      }
+    }
+  }
 });
 
 test('event direction skips radius while matching the complete Moon state', () => {
@@ -163,7 +278,10 @@ test('Vondrak 2011 matches C++/SOFA long-term precession oracles', () => {
 test('models remain finite over the intended wide interval', () => {
   for (const year of [-6000, -4712, 0, 2000, 9999, 10000]) {
     const jd = J2000 + (year - 2000) * 365.25;
-    for (const vector of [earthPosition(jd), moonPosition(jd), embPosition(jd)]) {
+    const vectors = [moonPosition(jd), embPosition(jd), ...Object.values(PLANET).map(planet => (
+      planetHeliocentricPosition(planet, jd)
+    ))];
+    for (const vector of vectors) {
       assert.equal(vector.length, 3);
       assert.ok(vector.every(Number.isFinite), `${year}: ${vector}`);
     }

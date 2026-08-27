@@ -14,8 +14,16 @@ compressed historical civil-day profile.
 
 ## VSOP87B
 
-The Earth series in `src/generated/model-data.js` contains a truncated,
-reordered subset selected from the VSOP87B Earth coefficient table.
+The planetary series in `src/generated/model-data.js` and
+`src/generated/planet-model-data.js` contain truncated subsets selected from
+the VSOP87B Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune
+coefficient tables. Per-coordinate totals and, where available, per-power
+allocations follow the compact budget used by Shou Xing Tian Wen Li;
+coefficients themselves are
+read at generation time from the full-precision VSOP87B J2000 tables. Where a
+high-order term exists only in the corresponding VSOP87D table, its slot is
+reallocated to a real omitted VSOP87B term with the largest long-span
+envelope; no synthetic coefficient is introduced.
 
 - P. Bretagnon and G. Francou, "Planetary theories in rectangular and
   spherical variables: VSOP87 solutions," *Astronomy & Astrophysics* 202
@@ -65,9 +73,10 @@ or endorsed by the IAU SOFA Board.
 
 ## JPL DE441 reference fits
 
-Some correction coefficients in the Earth and Moon models were fitted by
-this project against locally evaluated JPL DE441 samples. The DE441 binary
-kernel is not distributed with this package.
+Some correction coefficients in the Earth, Moon, Mercury, Venus, Mars,
+Jupiter, Saturn, Uranus, and Neptune models were fitted by this project
+against locally evaluated JPL DE441 samples. The DE441 binary kernel and the
+private fitting workspace are not distributed with this package.
 
 - R. S. Park, W. M. Folkner, J. G. Williams, and D. H. Boggs, "The JPL
   Planetary and Lunar Ephemerides DE440 and DE441," *The Astronomical
