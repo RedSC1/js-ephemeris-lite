@@ -1,3 +1,11 @@
+export {
+  SKY_BODIES, SKY_FRAME, LIGHT_TIME_DAYS_PER_AU, APPARENT_MODEL_INFO,
+  apparentBodyPosition, apparentBodyState, greenwichSiderealTime,
+} from './apparent.js';
+export * from './body-visibility.js';
+export * from './event-search.js';
+export * from './orbital-events.js';
+export * from './phenomena.js';
 export * from './calendar-events.js';
 export * from './chinese-calendar.js';
 export * from './chinese-era.js';

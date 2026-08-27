@@ -1,0 +1,25 @@
+{
+  "name": "huangli-lite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chinese almanac rules and daily Yi/Ji on js-ephemeris-lite",
+  "type": "module",
+  "license": "MIT",
+  "author": "RedSC1",
+  "sideEffects": false,
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": { "types": "./src/index.d.ts", "default": "./src/index.js" },
+    "./rules": { "types": "./src/rules.d.ts", "default": "./src/rules.js" }
+  },
+  "files": ["src", "docs", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md"],
+  "engines": { "node": ">=18" },
+  "dependencies": { "js-ephemeris-lite": "^0.1.0" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "test:exhaustive": "node audit/replay-dart-rules.mjs",
+    "prepack": "npm test"
+  },
+  "keywords": ["huangli", "almanac", "chinese-calendar", "ganzhi", "yi-ji", "shen-sha"]
+}

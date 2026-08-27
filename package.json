@@ -10,6 +10,7 @@
     "packages/*"
   ],
   "files": [
+    "docs",
     "src",
     "README.md",
     "LICENSE",
@@ -25,6 +26,26 @@
     "./ephemeris": {
       "types": "./src/ephemeris.d.ts",
       "default": "./src/ephemeris.js"
+    },
+    "./apparent": {
+      "types": "./src/apparent.d.ts",
+      "default": "./src/apparent.js"
+    },
+    "./event-search": {
+      "types": "./src/event-search.d.ts",
+      "default": "./src/event-search.js"
+    },
+    "./phenomena": {
+      "types": "./src/phenomena.d.ts",
+      "default": "./src/phenomena.js"
+    },
+    "./orbital-events": {
+      "types": "./src/orbital-events.d.ts",
+      "default": "./src/orbital-events.js"
+    },
+    "./body-visibility": {
+      "types": "./src/body-visibility.d.ts",
+      "default": "./src/body-visibility.js"
     },
     "./coordinates": {
       "types": "./src/coordinates.d.ts",

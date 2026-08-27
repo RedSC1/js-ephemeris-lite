@@ -1,330 +1,91 @@
 # js-ephemeris-lite
 
-轻量、零运行时依赖的纯 JavaScript 半解析星历与中国历法库，内置完整 TypeScript 类型声明。当前 API 以 `0.x` 版本发布，在 `1.0` 前仍可能调整。
+用于浏览器和 Node.js 的天文与中国历法库。提供天体位置、节气与月相、
+农历转换、干支和太阳时计算，采用纯 JavaScript 实现，附带 TypeScript 类型声明，
+无运行时依赖。
 
-原创实现以 MPL-2.0 发布；星历模型、科学数据与历史历表的来源和权利边界见 [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md)。
+## 安装
 
-安装：
+需要 Node.js 18 或更高版本；浏览器项目可通过支持 ES modules 的构建工具使用。
 
-```bash
+```sh
 npm install js-ephemeris-lite
 ```
 
-本仓库使用 npm workspaces：根目录发布 `js-ephemeris-lite` 天文历法核心，`packages/bazi` 发布 `bazi-lite`，`packages/ziwei` 发布 `ziwei-lite`。八字包包含紧凑四柱、十神藏干、合冲刑害关系、起运、大小运、人元司令和 66 位神煞 bitset；紫微包包含出生解析、31 anchors、十二宫、115 颗本命星、亮度、命主身主、十二位四化 mask、大限/小限、五层流运、44 流曜、历史流月、时间线、导航管理和时辰反查。
-
-八字的创建、真太阳时、神煞、起运、大运和默认设置见 [`packages/bazi/README.md`](./packages/bazi/README.md)。
-
-紫微本命盘、流运时间线、历史流月、自定义规则和反查的完整用法见 [`packages/ziwei/README.md`](./packages/ziwei/README.md)。
-
-目前包含：
-
-- 按 SXWNL 分坐标预算截断的 VSOP87B 水星、金星、地球、火星、木星、土星、天王星和海王星（共 7679 项，J2000 坐标）；
-- 经度优先截断的 ELP/MPP02 Moon（627 经度项、277 纬度项、327 距离项）；
-- `EMB = Earth + Moon / (1 + EMRAT)`；
-- 月球、地球与水星至海王星各自的 DE441 现代/长期残差修正，并在距 J2000 800～1000 年之间平滑换层；
-- C++ 项目移植的 IAU 2000B 章动和 Vondrák 2011 长期岁差矩阵。
-- 独立从上述数据选择的 10 项气朔低模、解析导数和带区间保护的 Newton 求根。
-- C++ 时间层迁移的 ΔT：1953～2050 年表使用 Catmull–Rom 三次插值，早期使用 S15 分段三次模型，远期平滑接长期抛物线；另以 `-820～-720` 的三次 Hermite 桥接修复原模型在 `-720` 年的 253.272 秒硬跳变。
-- C++ 历法层迁移的 25 节气、15 朔、14 农历月排布，支持前后节气/节/气搜索、阴阳历互转、2033 闰十一月和历史改历月名。
-- 干支历底层：立春年界、逐节月界、日时柱、五虎遁、五鼠遁、纳音，并独立支持三种晚子时约定。
-- 历史定朔/定气日期压缩表：分段线性基准加稀疏 `±1 day` 位修正，覆盖 33161 个朔和 52324 个节气事件。
-- C++ fast2 结构迁移的日出日落：普通纬度使用解析种子加 2～3 次 Newton，高纬/浅切退化为 2 小时窗口扫描和精确残差二分；默认上边缘、hybrid 大气折射。
-- C++ 太阳时链路迁移的均时差、地方平太阳时和地方视太阳时（真太阳时），可直接作为四柱的虚拟钟面。
-
-运行：
-
-```bash
-npm run demo
-node src/ephemeris.js 2451545.0
-npm test
-```
+本文档对应当前源码。标注“开发中”的接口尚未发布到 npm；
+使用已安装版本时，请以该版本随包文档为准。当前 API 为 0.x，1.0 前可能调整。
 
 ## 快速开始
 
-```js
-import {
-  JulianTime,
-  ZonedTime,
-  moonGeocentricPosition,
-  solveSolarLongitude,
-  solveNewMoon,
-  CALENDAR_MODE,
-  solarToLunar,
-  lunarToSolar,
-  getChineseEraNames,
-  RAT_HOUR_MODE,
-  fourPillarsForZonedTime,
-  describeFourPillars,
-} from 'js-ephemeris-lite';
-
-const moonKm = moonGeocentricPosition(2451545.0);
-const springEquinox = solveSolarLongitude(0, 2451623.0);
-const newMoon = solveNewMoon(2451550.0);
-const lunarNewYear = solarToLunar({ year: 2025, month: 1, day: 29 });
-const solarDate = lunarToSolar({ year: 2033, month: 11, day: 1, isLeap: true });
-
-// JavaScript Date 已经是绝对瞬时：直接 Date.getTime() → Unix ms → JD。
-const now = JulianTime.fromDate(new Date());
-
-// 自己填写民用墙钟时间时必须明确固定 UTC offset。
-const birth = new ZonedTime({
-  year: 2000, month: 1, day: 1,
-  hour: 12, minute: 0, second: 0,
-  offsetMinutes: 480,
-}).toJulianTime();
-const eraNames = getChineseEraNames(birth);
-
-const birthClock = new ZonedTime({
-  year: 2000, month: 1, day: 1,
-  hour: 23, minute: 30, second: 0,
-  offsetMinutes: 480,
-});
-const pillars = fourPillarsForZonedTime(birthClock, {
-  mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
-  ratHourMode: RAT_HOUR_MODE.CURRENT_DAY_TOMORROW_STEM,
-});
-console.log(describeFourPillars(pillars));
-```
-
-## 行星、太阳和月球位置
-
-位置函数接收 TT 的 Julian Day（`jdTT`），返回 `[x, y, z]`；对应的 `*State()` 返回 `{ position, velocity }`。速度单位中的时间均为 day。
-
-| API | 原点 → 目标 | 位置单位 | 速度单位 |
-| --- | --- | --- | --- |
-| `planetHeliocentricPosition/State` | 太阳 → 指定行星 | AU | AU/day |
-| `planetGeocentricPosition/State` | 地球 → 指定行星 | AU | AU/day |
-| `earthHeliocentricPosition/State` | 太阳 → 地球 | AU | AU/day |
-| `sunGeocentricPosition/State` | 地球 → 太阳 | AU | AU/day |
-| `moonGeocentricPosition/State` | 地球 → 月球 | km | km/day |
-| `moonHeliocentricPosition/State` | 太阳 → 月球 | AU | AU/day |
-| `embHeliocentricPosition/State` | 太阳 → 地月质心 | AU | AU/day |
+将公历日期转换为农历，或生成一年的节气和月相表：
 
 ```js
-import {
-  JulianTime,
-  PLANET,
-  planetHeliocentricState,
-  planetGeocentricPosition,
-  earthHeliocentricState,
-  sunGeocentricPosition,
-  moonGeocentricPosition,
-  moonHeliocentricPosition,
-} from 'js-ephemeris-lite';
+import { solarToLunar, lunarToSolar, getQiShuoYear } from 'js-ephemeris-lite';
 
-const time = JulianTime.fromDate(new Date());
-const jupiter = planetHeliocentricState(PLANET.JUPITER, time.jdTT);
-const marsFromEarth = planetGeocentricPosition(PLANET.MARS, time.jdTT);
-const earth = earthHeliocentricState(time.jdTT);
-const sunFromEarthAu = sunGeocentricPosition(time.jdTT);
-const moonFromEarthKm = moonGeocentricPosition(time.jdTT);
-const moonFromSunAu = moonHeliocentricPosition(time.jdTT);
+const options = { mode: 'china-astronomical', utcOffsetMinutes: 480 };
 
-console.log(jupiter.position, jupiter.velocity, marsFromEarth);
-console.log(earth.position, earth.velocity);
-```
+const lunar = solarToLunar({ year: 2025, month: 1, day: 29 }, options);
+console.log(lunar.month, lunar.day); // 1 1
 
-`PLANET` 覆盖水星、金星、地球、火星、木星、土星、天王星和海王星；也提供 `mercuryHeliocentricState()` 等具名日心快捷函数。冥王星不属于 VSOP87，本版没有把它伪装进同一模型。
+const solar = lunarToSolar({
+  year: 2033, month: 11, day: 1, isLeap: true,
+}, options);
+console.log(solar);
 
-这些是 J2000 黄道/春分坐标架中的**几何位置**，不含光行时、光行差、章动、大气折射或观测者视差。`sunGeocentricPosition()` 因而就是日心地球向量的反向；日心太阳的位置按定义恒为零，不单设 API。需要视太阳高度或日出日落时，应使用下面的观测 API。
-
-旧名称继续兼容：`earthPosition/State`、`moonPosition/State`、`embPosition/State` 分别等价于日心地球、地心月球、日心地月质心。默认情况下，月球、地球以及水星至海王星都会应用各自的 DE441 残差修正；`{ corrections: false }` 可统一关闭修正并取得原始截断 ELP/VSOP87B 结果。地心行星 API 会使用同一时刻、同一修正设置的地球模型作向量差，这与光行时等视位置修正无关。
-
-行星修正与月球/地球使用相同的时间分层：距离 J2000 不超过 800 年时使用现代拟合，800～1000 年以 smoothstep 平滑过渡，超过 1000 年使用长期修正。现代拟合区间为公元 1000～3000 年；长期层在本库的目标范围 `-6000～10000` 年内以独立 DE441 样本验证。水星、金星、火星、天王星和海王星使用慢漂移与主周期相位项；木星和土星的长期残差不能由这组少量相位项充分表示，因此使用 25 年分段的 Chebyshev residual，以每段独立缩放的 Int16 系数压缩，并在段界平滑拼接。木土 oracle 分别为 DE441 的木星系统质心（5）、土星系统质心（6），减去太阳（10），不使用行星本体中心（599/699）。经度、纬度、距离分别修正，速度由同一表达式解析求导。`PLANET_CORRECTION_INFO` 暴露现代/长期分层边界以及水星至海王星各层验证集的 RMS、p95 和最大残差，经纬度单位为角秒、距离单位为千米。该信息描述几何日心模型，不包含光行时或视位置误差。
-
-## 日出日落与太阳高度
-
-```js
-import {
-  JulianTime,
-  ZonedTime,
-  SOLAR_LIMB,
-  solarAltitude,
-  solarRiseSetForDate,
-} from 'js-ephemeris-lite';
-
-const riseSet = solarRiseSetForDate(
-  new ZonedTime({
-    year: 2025, month: 1, day: 1,
-    hour: 0, minute: 0, second: 0,
-    offsetMinutes: 480,
-  }),
-  {
-    longitudeDeg: 116.4,
-    latitudeDeg: 39.9,
-    heightMeters: 50,
-    pressureMbar: 1013.25,
-    temperatureCelsius: 15,
-  },
-  {
-    limb: SOLAR_LIMB.UPPER,
-    refraction: true,
-    horizonDegrees: 0,
-  },
-);
-
-console.log(riseSet.rise, riseSet.set); // ZonedTime | null
-console.log(riseSet.altitudeState);     // crosses / always-above / always-below / tangent
-
-const jdRiseSet = solarRiseSetForDate(
-  2460676.0, // 作为搜索窗口中心的 UT1 Julian Day
-  { longitudeDeg: 116.4, latitudeDeg: 39.9 },
-);
-console.log(jdRiseSet.rise, jdRiseSet.set); // number | null
-
-const altitude = solarAltitude(
-  JulianTime.fromDate(new Date()),
-  { longitudeDeg: 116.4, latitudeDeg: 39.9, heightMeters: 50 },
-  { limb: SOLAR_LIMB.CENTER, refraction: true },
-);
-console.log(altitude.apparentAltitudeRad, altitude.azimuthRad);
-```
-
-`solarRiseSetForDate(dateOrCenter, observer, options)` 保持输入输出类型一致：传数值 UT1 Julian Day，`rise`/`set` 返回数值 JD；传 `JulianTime`，返回 `JulianTime`；传 `ZonedTime`，则取它所属的当地民用日期并返回同一 offset 的 `ZonedTime`。数值 JD 和 `JulianTime` 被解释为待搜索 24 小时窗口的中心，不带民用时区语义。
-
-经纬度单位为 degree，东经/北纬为正；高度单位为 metre。返回的 `path` 是 `analytic-newton` 或 `fallback-window`，`sampleCount`/`refineCount` 可用于检查是否走了高纬退化路径。极昼极夜时 `rise`/`set` 为 `null`，原因由 `altitudeState` 给出。底层的 `computeSolarRiseSetFast(center, observer, options)` 始终返回 `JulianTime`。
-
-默认大气为 `1013.25 mbar`、`15°C`，默认太阳上边缘和 hybrid 折射。`hybridAtmosphericRefraction()` 使用 `≤14°` Bennett、`≥16°` Smart、其间线性混合，真高度低于 `-1°` 时关闭折射。还可传 `fixedDiscSize: true` 固定太阳视半径，或用 `horizonDegrees` 表示地平遮挡高度。
-
-`solarAltitude()` 返回 `centerAltitudeRad`、`apparentAltitudeRad`、`azimuthRad`、相对目标地平的 `residualRad` 和解析斜率 `slopeRadPerDay`。它和日出日落求解器使用同一套地心太阳、太阳光行差、章动、地球自转、观测者视差、太阳视半径和折射链路。
-
-## 地方平太阳时与真太阳时
-
-```js
-import {
-  CALENDAR_MODE,
-  RAT_HOUR_MODE,
-  ZonedTime,
-  calculateFourPillars,
-  equationOfTime,
-  meanSolarTime,
-  trueSolarTime,
-} from 'js-ephemeris-lite';
-
-const civilClock = new ZonedTime({
-  year: 2000, month: 1, day: 1,
-  hour: 23, minute: 10, second: 0,
-  offsetMinutes: 480,
-});
-const instant = civilClock.toJulianTime();
-
-const meanClock = meanSolarTime(civilClock, 116.4);
-const trueClock = trueSolarTime(civilClock, 116.4);
-console.log(equationOfTime(instant).equationSeconds);
-console.log(meanClock, trueClock);
-console.log(trueClock.sourceClock.offsetMinutes); // 原民用钟仍为 UTC+08
-
-const pillars = calculateFourPillars(trueClock.instant, trueClock, {
-  mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
-  ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
-});
-```
-
-经度采用东正西负 degree。定义与 C++ 层一致：`LMT = UT1 + longitude / 360°`，`LAT = LMT + equationOfTime`；`trueSolarTime()` 即地方视太阳时。均时差不是现代日期拟合，而是由同一套地心视太阳赤经和 GAST 计算。
-
-`SolarClock` 是专供日柱、时柱等规则使用的**虚拟钟面**，没有自己的 `offsetMinutes`、`toDate()` 或 `toJulianTime()`，不会伪装成物理瞬时。传入 `ZonedTime` 时，原民用钟及其 offset 完整保存在 `sourceClock`；传数值 JD 或 `JulianTime` 时，因为没有来源时区，`sourceClock` 为 `null`。经度差和均时差修正使用完整 Julian Day，因此结果跨过午夜时，年月日会自然落到前一天或后一天。调用 `calculateFourPillars()` 时用 `solarClock.instant` 判定立春和节令，用 `SolarClock` 自身判定日柱和时柱。
-
-底层另提供 `localMeanToApparentSolarTime()` 与 `localApparentToMeanSolarTime()`，输入输出都是虚拟太阳钟的数值 JD；后者按 C++ 路径迭代反解。
-
-## 干支历与四柱
-
-普通固定时区墙钟可直接调用 `fourPillarsForZonedTime()`：
-
-```js
-import {
-  CALENDAR_MODE,
-  PILLAR_HISTORICAL_MODE,
-  RAT_HOUR_MODE,
-  ZonedTime,
-  describeFourPillars,
-  fourPillarsForZonedTime,
-} from 'js-ephemeris-lite';
-
-const clock = new ZonedTime({
-  year: 2000, month: 1, day: 1,
-  hour: 23, minute: 30, second: 0,
-  offsetMinutes: 480,
-});
-
-const packed = fourPillarsForZonedTime(clock, {
-  mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
-  ratHourMode: RAT_HOUR_MODE.CURRENT_DAY_TOMORROW_STEM,
-  pillarHistoricalMode: PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR,
-});
-
-console.log(packed);                        // 年月日时：压缩数值干支
-console.log(describeFourPillars(packed));   // { year: '己卯', ... }
-```
-
-年柱以立春为界，月柱以十二节为界，日柱按民用日，时柱使用五鼠遁；另导出 `calculateDayPillar()`、`getMonthGanzhi()`、`getHourGanzhi()`、`ganzhiName()`、`getNayinId()` 和 `getNayinElement()` 等底层函数。
-
-`RAT_HOUR_MODE` 只决定 23:00～00:00 的日柱/时干规则：`NEXT_DAY` 在 23:00 整体换入次日，`CURRENT_DAY` 的日柱和时干都沿用当天，`CURRENT_DAY_TOMORROW_STEM` 保留当天日柱但按次日五鼠遁取时干。它不会改变农历月份。`PILLAR_HISTORICAL_MODE` 决定年月柱节界是否采用历史分配日；历史分配日固定为 UTC+08 的中国历日，不能随本地时区平移。
-
-需要真太阳时或平太阳时时，调用 `calculateFourPillars(instant, virtualTime, options)`：`instant` 保留真实物理瞬时供立春节界使用，`virtualTime` 放已经换算好的当地太阳钟字段，二者不会被库偷偷混成一个时间。
-
-## 时间约定
-
-星历与事件求根输入都是 TT 的 Julian Day；事件结果同时给出 `jdTT`、估算的 `jdUT1` 和 `deltaTSeconds`。
-
-lite 时间层约定 `UTC ≈ UT1`，不携带闰秒、TAI 或 EOP 表；TT 仍通过 `TT = UT1 + ΔT` 单独计算。`JulianTime` 保存 `jdUT1`、`jdTT` 和 `deltaTSeconds`，`ZonedTime` 表示强制带 `offsetMinutes` 的民用时间。`JulianTime.fromDate()` 只读取原生 `Date.getTime()`，不会拆分或重新解释原生 Date 的年月日。历法查询可直接接收 `JulianTime`，事件结果也附带 `event.time`，原有数值 JD 字段继续保留。
-
-`src/generated/model-data.js`、`src/generated/planet-model-data.js` 和历史日期数据已提交在发布包中，安装及运行不需要上游 VSOP87B、ELP/MPP02、DE441 或 C++ 项目。
-
-高精度定朔路径只计算月球经度和纬度的单位方向，跳过全部 327 个距离项；完整 `moonState()`/`moonPosition()` 才计算距离，因此补强三维参数不会拖慢通常的气朔调用。
-
-原始 ELP `W1` 和周期项不会写入岁差或经验旋转。`moonElpLongitudeState()` 可单独取得原始经度状态；`solveNewMoon(jd, { moonLatitudeTerms: 0 | 5 | 10 | 20 | 'full' })` 可在运行时选择日期框架转换使用的黄纬预算。定朔默认使用 10 项：相对完整 277 项路径，在 `-6000～10000` 的 1001 个朔时样本中 RMS 根差约 0.010 秒、p99 约 0.044 秒、采样最大约 0.073 秒；完整三维 API 始终使用全部纬度项。
-
-低精度事件模型没有复制 SXWNL 的公式或常数：Earth/Moon 各 10 项按
-`-6000..10000` 区间内最大 `|A*T^n|` 从本项目模型重新选择，再以本项目完整截断模型为目标拟合 4 次慢差。低模只负责找根；定朔快速路径会消去月、日视黄经共有的章动项，共用日期框架，并以 30 项地球半径级数计算仅影响光行差的距离。它在求根越界或不收敛时自动回退到完整模型的区间保护 Newton；也可传 `solver: 'safeguarded'` 强制使用参考路径。`-6000～10000` 的四相抽样中，快速路径与参考路径的根差保持在 1 毫秒以内。
-
-## 农历与历史日期表
-
-`src/chinese-calendar.js` 提供：
-
-- `calculateChineseCalendarYear(jdUT1)`：生成从前一冬至开始的 25 个节气、15 个朔和 14 个月；
-- `findSolarTerm(jdUT1, { direction, filter })`：搜索前后节气，`filter` 可取 `any`、`jie` 或 `qi`；同时提供 `getPreviousJie()` 等便捷函数；
-- `getSpecificSolarTerm(year, index)`：按 `0=春分、18=冬至` 直接查询；
-- `solarToLunar()`、`lunarToSolar()`、`instantToLunar()` 和 `getLunarMonthDays()`；
-- `historical`、`china-astronomical`、`local-astronomical` 三种历法结构/历史规则模式；
-- `fixed-utc-offset`（按钟表时区划日）与 `mean-solar-meridian`（按指定经度的平太阳日界划日）两种显式日界模式。
-
-`src/ganzhi.js` 把这些规则分开：农历结构由 `CALENDAR_MODE` 选择；选择 `LOCAL_ASTRONOMICAL` 后，再用 `CALENDAR_DAY_BOUNDARY_MODE` 明确指定按固定 UTC offset 还是按经度重新归日。二者不会根据是否出现 `meridianDeg` 自动切换。晚子时另由 `RAT_HOUR_MODE` 选择，不会偷偷改变农历月序。`calculateFourPillars()` 刻意分开物理瞬时与 `virtualTime`；八字包已通过 `BaziOptions.clockMode` 接入民用时、平太阳时和真太阳时，而不改动历法核心。
-
-例如越南现行钟表日界应写成 UTC+7；105°E 只是与 UTC+7 等价的标准经线。若要按出生地实际经度（例如河内约 105.8°E）的平太阳日界排历，则应显式选择经度模式：
-
-```js
-const vietnamClock = {
-  mode: CALENDAR_MODE.LOCAL_ASTRONOMICAL,
-  dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET,
-  utcOffsetMinutes: 420,
-};
-
-const customMeridian = {
-  mode: CALENDAR_MODE.LOCAL_ASTRONOMICAL,
-  dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN,
-  utcOffsetMinutes: 420, // 仍用于输入、输出钟表时间
-  meridianDeg: 105.8,   // 只用于朔气归日和农历结构
-};
-```
-
-历史表不是逐日数组。每个事件先由若干精确线性段或长尾线性式得到基准民用日；长尾只有在 `residualMask` 对应位为 1 时才读 `residualSigns`，修正 `+1` 或 `-1 day`。每 256 个事件保存一次 rank 前缀，因此符号位定位不需要从头数。C++ 的 `uint64_t` 在生成阶段按低 32 位、高 32 位拆入 `Uint32Array`，浏览器运行时只做精确的 32 位位运算，不依赖 `BigInt`，四组位图共 3648 bytes。
-
-`src/generated/historical-calendar-data.js` 已提交，可直接使用。
-
-`src/qi-shuo.js` 的 `getQiShuoYear(civilYear, options)` 按固定时区的民用年汇总二十四节气、七十二候和任意月相角。默认返回节气与朔；可用 `lunarPhaseAnglesDeg: [0, 90, 180, 270]` 加入朔、上弦、望和下弦，或用 `includePentads: true` 加入七十二候。每个事件同时返回精确 `jdTT` / `jdUT1`、当地钟表时间、ΔT、求根诊断和历法归日；历史模式会保留历书归日与真实天象日的差异。
-
-```js
-const qishuo = getQiShuoYear(2026, {
-  utcOffsetMinutes: 480,
-  mode: CALENDAR_MODE.HISTORICAL,
-  dayBoundaryMode: CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET,
-  includeSolarTerms: true,
-  includePentads: false,
+const year = getQiShuoYear(2026, {
+  ...options,
   lunarPhaseAnglesDeg: [0, 90, 180, 270],
 });
-console.log(qishuo.events);
+console.log(year.events); // 节气、朔、上弦、望、下弦
 ```
 
-`src/chinese-era.js` 的 `getChineseEraNames(jdUT1)` 返回该物理瞬时同时有效的全部中国历史纪年。纪年年界始终强制使用中国历史历法和固定 `UTC+8` 日界，不继承调用方的当地经度、钟表时区或现代天文历法设置。每条记录都带 double JD 的 `startJd`、`endJdExclusive`，以及 `instant`、`day` 或 `year` 边界精度；月日无从确定的寿星记录只按相应农历年首兜底。中华民国从 `1912-01-01 00:00 UTC+8` 起算；当代公元纪年覆盖完整的 1949 年，因此从 `1949-01-01 00:00 UTC+8` 起显示，并与民国三十八年并存至 `1949-10-01 15:00 UTC+8`，该时刻起仅保留当代公元纪年。项目另补充了少量可核对的历史边界与历史政权，并继续按同一规则返回同时有效的纪年候选。
+需要单独求某次事件时，可用 `solveSolarLongitude(targetRadians, nearJdTT)`
+或 `solveNewMoon(nearJdTT)`。完整示例见[历法与时间指南](./docs/time-and-calendar.md)。
 
-历史月份制度规则也从本人的 C++ 项目按语义迁移，包括早期三套岁首、秦汉至武周改月名、同名月份结构化区分，以及 237 年景初历交接的记录性 28 日月。没有逐字复制寿星万年历实现。
+## 功能
+
+- 太阳、月球及水星至海王星的位置与速度，提供日心、地心及地月质心接口。
+- 二十四节气、七十二候、朔与指定月相求解。
+- 阴阳历互转、闰月，以及中国历史历法和历史纪年查询。
+- 年月日时干支、三种晚子时规则、地方平太阳时与真太阳时。
+- 太阳高度、日出日落及极昼极夜判断。
+
+开发中的[视位置与天象搜索](./docs/sky-events.md)还提供三种参考面、
+行星留与黄经穿越、月球照明、天体出没、近远点、交点、大距和赤经事件。
+暂不支持冥王星、小行星及日月食。
+
+## 时间、单位与精度
+
+- 位置和定气定朔求解使用 **JD(TT)**；历法、民用时间和地平观测使用 **JD(UT1)**。
+  `JulianTime` 与 `ZonedTime` 可用于转换。
+- 几何位置采用 J2000 黄道坐标；行星距离为 AU，地心月球距离为 km。
+  其他接口的单位见对应指南。
+- 民用日期在 1582-10-15 起采用格里历，之前采用儒略历；天文年号 `0` 表示公元前 1 年。
+- 主要星历模型面向天文年 `-6000..10000`，具体查询范围依 API 而异。
+  精度随天体、年代和计算模式变化，求根容差不等于天文绝对精度。
+- 时间层使用 `UTC ≈ UT1`，不包含闰秒或 EOP 数据；固定时区不自动处理夏令时。
+
+精度指标、适用范围及限制见[精度说明](./docs/accuracy.md)。
+
+## 相关包
+
+各包可单独使用，八字、紫微和黄历包均依赖本天文核心。
+
+| 包 | 用途 |
+| --- | --- |
+| `js-ephemeris-lite` | 天文位置、事件、时间与中国历法 |
+| [bazi-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/bazi) | 四柱、十神藏干、神煞、起运大运与反查 |
+| [ziwei-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/ziwei) | 紫微命盘、流运、自定义规则与星曜反查 |
+| [huangli-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/huangli)（开发中） | 每日宜忌、神煞、节日和九宫飞星 |
+
+## 文档与许可
+
+- [天体位置](./docs/positions.md)
+- [时间、太阳时、干支与农历](./docs/time-and-calendar.md)
+- [历史历法与纪年](./docs/calendar-history.md)
+- [日出日落、视位置与事件搜索](./docs/sky-events.md)
+- [精度与模型限制](./docs/accuracy.md)
+- [架构](./docs/architecture.md)、[模型修正](./docs/model-corrections.md)、[开发与测试](./docs/development.md)
+
+代码采用 [MPL-2.0](./LICENSE)。科学模型与历史数据的来源、许可和适用范围见
+[第三方声明](./THIRD_PARTY_NOTICES.md)。

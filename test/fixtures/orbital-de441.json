@@ -1,0 +1,5015 @@
+{
+  "source": "taiyin-ephemeris C++ / JPL DE441; TT; matched geometric/apparent conventions",
+  "samples": [
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451548.016234707,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 406417.9343055185,
+        "distanceAu": 0.0027167360899176124
+      },
+      "oracleJdTT": 2451548.0162468324
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451563.4504234977,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 359361.3060524078,
+        "distanceAu": 0.002402181958679495
+      },
+      "oracleJdTT": 2451563.4504426965
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451575.5559259765,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 405608.246078554,
+        "distanceAu": 0.002711323658422593
+      },
+      "oracleJdTT": 2451575.55591107
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451591.6063536145,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 364494.5846879098,
+        "distanceAu": 0.0024364958069413873
+      },
+      "oracleJdTT": 2451591.6062597414
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451603.3651749007,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404614.9806717497,
+        "distanceAu": 0.002704684089275274
+      },
+      "oracleJdTT": 2451603.365179883
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451618.485993799,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 369533.2120938714,
+        "distanceAu": 0.002470176950813187
+      },
+      "oracleJdTT": 2451618.486092061
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451631.2227465473,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404167.4000462744,
+        "distanceAu": 0.0027016921975900453
+      },
+      "oracleJdTT": 2451631.2227171687
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451643.4214944206,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 368257.92923202633,
+        "distanceAu": 0.002461652211417648
+      },
+      "oracleJdTT": 2451643.4214764214
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451659.0183423497,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404558.4304800686,
+        "distanceAu": 0.002704306074592201
+      },
+      "oracleJdTT": 2451659.01837078
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451670.8796585016,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 363168.7979026854,
+        "distanceAu": 0.0024276334696700028
+      },
+      "oracleJdTT": 2451670.8796217935
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451686.6653990857,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 405427.8992841186,
+        "distanceAu": 0.0027101181145629677
+      },
+      "oracleJdTT": 2451686.665494773
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451699.0551814325,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 359089.5159644386,
+        "distanceAu": 0.002400365154157496
+      },
+      "oracleJdTT": 2451699.055152689
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451714.0403817184,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 406112.5209129548,
+        "distanceAu": 0.002714694527486713
+      },
+      "oracleJdTT": 2451714.0402603783
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451727.428820338,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 357362.67437175737,
+        "distanceAu": 0.0023888219310848613
+      },
+      "oracleJdTT": 2451727.428789449
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451741.1482522823,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 406200.3806935512,
+        "distanceAu": 0.0027152818338446526
+      },
+      "oracleJdTT": 2451741.1483772285
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451755.823129397,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 358375.2083425577,
+        "distanceAu": 0.0023955903026269326
+      },
+      "oracleJdTT": 2451755.823083239
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451768.4337087907,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 405652.06100228464,
+        "distanceAu": 0.002711616543097526
+      },
+      "oracleJdTT": 2451768.433749766
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451784.082422171,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 361906.0482940153,
+        "distanceAu": 0.002419192509897237
+      },
+      "oracleJdTT": 2451784.0823505926
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451796.0249517523,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404760.75365288026,
+        "distanceAu": 0.002705658521467714
+      },
+      "oracleJdTT": 2451796.0250622127
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451811.849007223,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 366961.07188678114,
+        "distanceAu": 0.002452983255508203
+      },
+      "oracleJdTT": 2451811.848912339
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451823.793853957,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404170.33738563245,
+        "distanceAu": 0.0027017118324908916
+      },
+      "oracleJdTT": 2451823.7940287176
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451837.415929977,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 370115.58188091713,
+        "distanceAu": 0.002474069852392071
+      },
+      "oracleJdTT": 2451837.415989665
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451851.6464320906,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404376.82859964715,
+        "distanceAu": 0.002703092141000956
+      },
+      "oracleJdTT": 2451851.6465424765
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451863.4599989913,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 366047.3845745986,
+        "distanceAu": 0.002446875633067407
+      },
+      "oracleJdTT": 2451863.460045057
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451879.4856024124,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 405272.8607416849,
+        "distanceAu": 0.0027090817459187603
+      },
+      "oracleJdTT": 2451879.485741747
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451891.4317680635,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 360601.52343444113,
+        "distanceAu": 0.0024104722998202484
+      },
+      "oracleJdTT": 2451891.431685479
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2451907.128914412,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 406192.5385845111,
+        "distanceAu": 0.0027152294125835515
+      },
+      "oracleJdTT": 2451907.129082165
+    },
+    {
+      "fn": "searchEarthApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "earth",
+        "jdTT": 2451546.7207591347,
+        "center": "sun",
+        "kind": "periapsis",
+        "distanceKm": 147102786.34242436,
+        "distanceAu": 0.9833213912343765
+      },
+      "oracleJdTT": 2451546.7213326497
+    },
+    {
+      "fn": "searchEarthApsides",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "earth",
+        "jdTT": 2451729.493850399,
+        "center": "sun",
+        "kind": "apoapsis",
+        "distanceKm": 152102302.69465348,
+        "distanceAu": 1.0167410938600578
+      },
+      "oracleJdTT": 2451729.493025668
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451551.757756572,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 303.65680226710015,
+        "latitudeDeg": -8.042299746652739e-10,
+        "distanceKm": 401909.35045322904
+      },
+      "oracleJdTT": 2451551.757753571
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451564.913592715,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 123.68835875100694,
+        "latitudeDeg": 2.405036591250527e-9,
+        "distanceKm": 361290.4124447632
+      },
+      "oracleJdTT": 2451564.9135722322
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451579.040282797,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 303.75326666383404,
+        "latitudeDeg": -2.932652410795373e-9,
+        "distanceKm": 400456.30492535484
+      },
+      "oracleJdTT": 2451579.0402675024
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451592.3400044926,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 123.62168743421807,
+        "latitudeDeg": 1.5063826945785548e-9,
+        "distanceKm": 364850.5641688719
+      },
+      "oracleJdTT": 2451592.339961274
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451606.320439633,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 303.2470528720064,
+        "latitudeDeg": -3.853695112495504e-9,
+        "distanceKm": 399752.3109505158
+      },
+      "oracleJdTT": 2451606.3204050884
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451619.5790798627,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 122.45524500398324,
+        "latitudeDeg": 4.720641393057686e-9,
+        "distanceKm": 369920.9350769583
+      },
+      "oracleJdTT": 2451619.5790895503
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451633.504737798,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 301.2629019225103,
+        "latitudeDeg": -2.0825361964621054e-10,
+        "distanceKm": 400854.3406425766
+      },
+      "oracleJdTT": 2451633.5047122957
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451646.631653499,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 119.92895984185384,
+        "latitudeDeg": -3.1107576323516692e-9,
+        "distanceKm": 371627.5281914667
+      },
+      "oracleJdTT": 2451646.6316660214
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451660.595487941,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 298.3076397820472,
+        "latitudeDeg": -3.4622596839869136e-9,
+        "distanceKm": 403037.3514835029
+      },
+      "oracleJdTT": 2451660.5955026406
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451673.670910988,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 117.07060357250958,
+        "latitudeDeg": 2.1505886287475826e-10,
+        "distanceKm": 367900.1226498124
+      },
+      "oracleJdTT": 2451673.6709056078
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451687.6876070015,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 295.80992352629585,
+        "latitudeDeg": -1.037345426374076e-9,
+        "distanceKm": 404907.1865419792
+      },
+      "oracleJdTT": 2451687.6876223586
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451700.8718339317,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 115.17833487079236,
+        "latitudeDeg": 3.623730266571908e-9,
+        "distanceKm": 361895.3814774175
+      },
+      "oracleJdTT": 2451700.8718191683
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451714.859479036,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 294.6777504866383,
+        "latitudeDeg": -1.657543160674668e-9,
+        "distanceKm": 405862.29353902896
+      },
+      "oracleJdTT": 2451714.8594549494
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451728.2532944195,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 114.6062325913183,
+        "latitudeDeg": -2.2334561579766775e-9,
+        "distanceKm": 358021.7692340254
+      },
+      "oracleJdTT": 2451728.2532625883
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451742.105735179,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 294.6153872264233,
+        "latitudeDeg": -2.089650901936438e-9,
+        "distanceKm": 405891.7559892882
+      },
+      "oracleJdTT": 2451742.1057305154
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451755.7035413645,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 114.63095691083282,
+        "latitudeDeg": -5.171320635734892e-9,
+        "distanceKm": 358388.52801426034
+      },
+      "oracleJdTT": 2451755.7034779508
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451769.363330204,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 294.562440214241,
+        "latitudeDeg": 2.9250232120634293e-9,
+        "distanceKm": 405287.42951480736
+      },
+      "oracleJdTT": 2451769.3633181215
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451783.071164895,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 114.09963256583887,
+        "latitudeDeg": 2.97624019585942e-9,
+        "distanceKm": 362665.4196668952
+      },
+      "oracleJdTT": 2451783.0711249285
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451796.5599724837,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 293.42837896766883,
+        "latitudeDeg": 3.789625059329236e-9,
+        "distanceKm": 404602.4998945487
+      },
+      "oracleJdTT": 2451796.5599418166
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451810.2492158897,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 112.23136507107915,
+        "latitudeDeg": -2.9159819929780174e-9,
+        "distanceKm": 368114.5205096002
+      },
+      "oracleJdTT": 2451810.2492262768
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451823.668625351,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 290.8833746475739,
+        "latitudeDeg": 1.545992186220394e-9,
+        "distanceKm": 404160.2373391531
+      },
+      "oracleJdTT": 2451823.668615374
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451837.2740311734,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 109.33883730983507,
+        "latitudeDeg": -3.547417735641298e-14,
+        "distanceKm": 370120.42931501445
+      },
+      "oracleJdTT": 2451837.2740505496
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451850.7523478605,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 287.87983264088723,
+        "latitudeDeg": -2.9504800023326662e-9,
+        "distanceKm": 403872.5337237657
+      },
+      "oracleJdTT": 2451850.7523597917
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451864.342315551,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 106.76276763051197,
+        "latitudeDeg": 3.6818437475591142e-9,
+        "distanceKm": 366462.165892752
+      },
+      "oracleJdTT": 2451864.342318193
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451877.9117187597,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 285.91248873365566,
+        "latitudeDeg": -2.415497072997071e-9,
+        "distanceKm": 403994.12843078433
+      },
+      "oracleJdTT": 2451877.9117469145
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451891.6216242425,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 105.5874361137445,
+        "latitudeDeg": 3.712226270430762e-9,
+        "distanceKm": 360631.65096712305
+      },
+      "oracleJdTT": 2451891.6215680307
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451905.1652391218,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 285.4544995160378,
+        "latitudeDeg": -3.7995329350180635e-9,
+        "distanceKm": 404752.4718628407
+      },
+      "oracleJdTT": 2451905.1652590903
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451551.757754881,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 303.65704034312466,
+        "latitudeDeg": -3.1450979920822193e-9,
+        "distanceKm": 401909.3542598235
+      },
+      "oracleJdTT": 2451551.7577518774
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451564.9135886915,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 123.68906049587503,
+        "latitudeDeg": 7.435614640017826e-10,
+        "distanceKm": 361290.4019217626
+      },
+      "oracleJdTT": 2451564.9135682103
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451579.0402743556,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 303.75446606306326,
+        "latitudeDeg": 2.7899881472496878e-9,
+        "distanceKm": 400456.3267332831
+      },
+      "oracleJdTT": 2451579.0402590656
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451592.3399946354,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 123.62335419906168,
+        "latitudeDeg": -3.2018187958618777e-9,
+        "distanceKm": 364850.55450883694
+      },
+      "oracleJdTT": 2451592.33995142
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451606.320424039,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 303.24920887909553,
+        "latitudeDeg": -1.0121661705523188e-10,
+        "distanceKm": 399752.3577825097
+      },
+      "oracleJdTT": 2451606.3203894976
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451619.5790632106,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 122.45786168416151,
+        "latitudeDeg": -3.798523235114354e-9,
+        "distanceKm": 369920.9228916758
+      },
+      "oracleJdTT": 2451619.5790729057
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451633.504713949,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 301.2660004439709,
+        "latitudeDeg": -2.1861730870372996e-9,
+        "distanceKm": 400854.4078335957
+      },
+      "oracleJdTT": 2451633.5046884445
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451646.631629411,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 119.93250993292219,
+        "latitudeDeg": -4.486188504877493e-9,
+        "distanceKm": 371627.4832930335
+      },
+      "oracleJdTT": 2451646.6316419346
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451660.5954550914,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 298.3116710544416,
+        "latitudeDeg": -2.359696608364197e-9,
+        "distanceKm": 403037.41537753533
+      },
+      "oracleJdTT": 2451660.595469793
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451673.6708802767,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 117.07508628052449,
+        "latitudeDeg": -2.975299553290247e-9,
+        "distanceKm": 367900.02921768976
+      },
+      "oracleJdTT": 2451673.6708748983
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451687.687565718,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 295.8148937084419,
+        "latitudeDeg": 1.4349337144883402e-9,
+        "distanceKm": 404907.2294350525
+      },
+      "oracleJdTT": 2451687.6875810768
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451700.871798072,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 115.1837660785335,
+        "latitudeDeg": 1.1720363842781006e-9,
+        "distanceKm": 361895.2755035918
+      },
+      "oracleJdTT": 2451700.8717833096
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451714.859430354,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 294.683672689471,
+        "latitudeDeg": 3.504596936276155e-9,
+        "distanceKm": 405862.32372621377
+      },
+      "oracleJdTT": 2451714.8594062724
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451728.2532537617,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 114.6126258669899,
+        "latitudeDeg": -6.950952902942757e-10,
+        "distanceKm": 358021.7047108374
+      },
+      "oracleJdTT": 2451728.2532219286
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451742.105679307,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 294.62226545561145,
+        "latitudeDeg": -1.7394953155265498e-9,
+        "distanceKm": 405891.79170300125
+      },
+      "oracleJdTT": 2451742.105674644
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451755.70349456,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 114.63830826264189,
+        "latitudeDeg": -6.353133506443166e-10,
+        "distanceKm": 358388.5384344506
+      },
+      "oracleJdTT": 2451755.7034311425
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451769.363266047,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 294.57026217097194,
+        "latitudeDeg": -3.6427198439327497e-9,
+        "distanceKm": 405287.47859767673
+      },
+      "oracleJdTT": 2451769.363253958
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451783.071109358,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 114.10791959492087,
+        "latitudeDeg": -4.354016221524417e-10,
+        "distanceKm": 362665.50121488515
+      },
+      "oracleJdTT": 2451783.071069394
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451796.5598980896,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 293.43712104113416,
+        "latitudeDeg": -2.5791448547589075e-9,
+        "distanceKm": 404602.5434073699
+      },
+      "oracleJdTT": 2451796.5598674156
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451810.2491494156,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 112.24056147689743,
+        "latitudeDeg": -3.35724736543727e-9,
+        "distanceKm": 368114.61098508857
+      },
+      "oracleJdTT": 2451810.249159803
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451823.6685396098,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 290.893020936703,
+        "latitudeDeg": -3.3339353376365933e-9,
+        "distanceKm": 404160.22349529393
+      },
+      "oracleJdTT": 2451823.668529628
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451837.2739547826,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 109.34893842259453,
+        "latitudeDeg": -3.3121901399295223e-9,
+        "distanceKm": 370120.4345441874
+      },
+      "oracleJdTT": 2451837.27397416
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451850.7522522993,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 287.8903959376853,
+        "latitudeDeg": -1.627752530739229e-9,
+        "distanceKm": 403872.42723513773
+      },
+      "oracleJdTT": 2451850.7522642324
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451864.342233669,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 106.77380088876157,
+        "latitudeDeg": -3.751962888775538e-9,
+        "distanceKm": 366462.0909762825
+      },
+      "oracleJdTT": 2451864.342236317
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451877.9116160087,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 285.92400016997203,
+        "latitudeDeg": -5.984675802412783e-10,
+        "distanceKm": 403993.969001238
+      },
+      "oracleJdTT": 2451877.9116441654
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451891.621539753,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 105.59943233674403,
+        "latitudeDeg": 3.640222416018238e-9,
+        "distanceKm": 360631.62422543037
+      },
+      "oracleJdTT": 2451891.6214835383
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451905.165129591,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 285.46697237945614,
+        "latitudeDeg": 4.395906070039642e-10,
+        "distanceKm": 404752.32017515524
+      },
+      "oracleJdTT": 2451905.165149564
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451551.757754881,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 303.65331281940115,
+        "latitudeDeg": -3.1450979920822197e-9,
+        "distanceKm": 401909.35425982345
+      },
+      "oracleJdTT": 2451551.7577518774
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451564.9135886915,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 123.68545140752417,
+        "latitudeDeg": 7.435614640017826e-10,
+        "distanceKm": 361290.4019217626
+      },
+      "oracleJdTT": 2451564.9135682103
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451579.0402743556,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 303.7508532046048,
+        "latitudeDeg": 2.7899881472496874e-9,
+        "distanceKm": 400456.3267332832
+      },
+      "oracleJdTT": 2451579.0402590656
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451592.3399946354,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 123.61969422427313,
+        "latitudeDeg": -3.2018187958618777e-9,
+        "distanceKm": 364850.55450883694
+      },
+      "oracleJdTT": 2451592.33995142
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451606.320424039,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 303.2453838540154,
+        "latitudeDeg": -1.0121661705523189e-10,
+        "distanceKm": 399752.35778250964
+      },
+      "oracleJdTT": 2451606.3203894976
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451619.5790632106,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 122.45386808110203,
+        "latitudeDeg": -3.798523235114354e-9,
+        "distanceKm": 369920.92289167584
+      },
+      "oracleJdTT": 2451619.5790729057
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451633.504713949,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 301.26178317880436,
+        "latitudeDeg": -2.1861730870373e-9,
+        "distanceKm": 400854.40783359564
+      },
+      "oracleJdTT": 2451633.5046884445
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451646.631629411,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 119.92814391491214,
+        "latitudeDeg": -4.486188504877493e-9,
+        "distanceKm": 371627.4832930335
+      },
+      "oracleJdTT": 2451646.6316419346
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451660.5954550914,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 298.30716190787655,
+        "latitudeDeg": -2.3596966083641966e-9,
+        "distanceKm": 403037.4153775354
+      },
+      "oracleJdTT": 2451660.595469793
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451673.6708802767,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 117.07055493962093,
+        "latitudeDeg": -2.9752995532902467e-9,
+        "distanceKm": 367900.0292176898
+      },
+      "oracleJdTT": 2451673.6708748983
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451687.687565718,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 295.81036679738116,
+        "latitudeDeg": 1.4349337144883404e-9,
+        "distanceKm": 404907.22943505243
+      },
+      "oracleJdTT": 2451687.6875810768
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451700.871798072,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 115.17934486803927,
+        "latitudeDeg": 1.1720363842781006e-9,
+        "distanceKm": 361895.2755035918
+      },
+      "oracleJdTT": 2451700.8717833096
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451714.859430354,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 294.67935647189245,
+        "latitudeDeg": 3.504596936276156e-9,
+        "distanceKm": 405862.32372621365
+      },
+      "oracleJdTT": 2451714.8594062724
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451728.2532537617,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 114.60845004315314,
+        "latitudeDeg": -6.950952902942758e-10,
+        "distanceKm": 358021.70471083734
+      },
+      "oracleJdTT": 2451728.2532219286
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451742.105679307,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 294.6181751995263,
+        "latitudeDeg": -1.7394953155265498e-9,
+        "distanceKm": 405891.7917030013
+      },
+      "oracleJdTT": 2451742.105674644
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451755.70349456,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 114.63427079227108,
+        "latitudeDeg": -6.353133506443166e-10,
+        "distanceKm": 358388.5384344505
+      },
+      "oracleJdTT": 2451755.7034311425
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451769.363266047,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 294.56619145821645,
+        "latitudeDeg": -3.6427198439327505e-9,
+        "distanceKm": 405287.4785976767
+      },
+      "oracleJdTT": 2451769.363253958
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451783.071109358,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 114.10375277219026,
+        "latitudeDeg": -4.354016221524416e-10,
+        "distanceKm": 362665.5012148852
+      },
+      "oracleJdTT": 2451783.071069394
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451796.5598980896,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 293.4327976318332,
+        "latitudeDeg": -2.579144854758907e-9,
+        "distanceKm": 404602.54340737005
+      },
+      "oracleJdTT": 2451796.5598674156
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451810.2491494156,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 112.23604721185399,
+        "latitudeDeg": -3.3572473654372707e-9,
+        "distanceKm": 368114.6109850885
+      },
+      "oracleJdTT": 2451810.249159803
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451823.6685396098,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 290.8883211263485,
+        "latitudeDeg": -3.3339353376365933e-9,
+        "distanceKm": 404160.22349529393
+      },
+      "oracleJdTT": 2451823.668529628
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451837.2739547826,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 109.3440884949826,
+        "latitudeDeg": -3.3121901399295223e-9,
+        "distanceKm": 370120.4345441874
+      },
+      "oracleJdTT": 2451837.27397416
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451850.7522522993,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 287.8854599877904,
+        "latitudeDeg": -1.627752530739229e-9,
+        "distanceKm": 403872.42723513773
+      },
+      "oracleJdTT": 2451850.7522642324
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451864.342233669,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 106.76886738833485,
+        "latitudeDeg": -3.751962888775538e-9,
+        "distanceKm": 366462.09097628243
+      },
+      "oracleJdTT": 2451864.342236317
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451877.9116160087,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 285.9191445317608,
+        "latitudeDeg": -5.984675802412783e-10,
+        "distanceKm": 403993.969001238
+      },
+      "oracleJdTT": 2451877.9116441654
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451891.621539753,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 105.59472454243814,
+        "latitudeDeg": 3.640222416018238e-9,
+        "distanceKm": 360631.62422543037
+      },
+      "oracleJdTT": 2451891.6214835383
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2451905.165129591,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 285.46243554796945,
+        "latitudeDeg": 4.395906070039642e-10,
+        "distanceKm": 404752.3201751553
+      },
+      "oracleJdTT": 2451905.165149564
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451589.5528576933,
+        "frame": "true-of-date",
+        "kind": "eastern",
+        "elongationDeg": 18.1485394712203,
+        "longitudeDeg": 343.78052075116204,
+        "latitudeDeg": 0.9489156802802087
+      },
+      "oracleJdTT": 2451589.552863707
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451632.3849803247,
+        "frame": "true-of-date",
+        "kind": "western",
+        "elongationDeg": 27.825017820340843,
+        "longitudeDeg": 340.7006710997598,
+        "latitudeDeg": -1.4795356563006354
+      },
+      "oracleJdTT": 2451632.3849907154
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451705.064536754,
+        "frame": "true-of-date",
+        "kind": "eastern",
+        "elongationDeg": 24.04903858475753,
+        "longitudeDeg": 103.02455621929778,
+        "latitudeDeg": 1.3059841332748896
+      },
+      "oracleJdTT": 2451705.06454812
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451752.887196813,
+        "frame": "true-of-date",
+        "kind": "western",
+        "elongationDeg": 19.797690211579766,
+        "longitudeDeg": 104.94712453517809,
+        "latitudeDeg": -2.081007565211349
+      },
+      "oracleJdTT": 2451752.887199943
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451823.930255983,
+        "frame": "true-of-date",
+        "kind": "eastern",
+        "elongationDeg": 25.51423192757426,
+        "longitudeDeg": 218.82776645508014,
+        "latitudeDeg": -2.8761985183702268
+      },
+      "oracleJdTT": 2451823.9302647132
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451863.724395301,
+        "frame": "true-of-date",
+        "kind": "western",
+        "elongationDeg": 19.34027156205721,
+        "longitudeDeg": 213.9453885105921,
+        "latitudeDeg": 2.3350370608697584
+      },
+      "oracleJdTT": 2451863.7244123155
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451595.4295521826,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 347.2155450060204,
+        "declinationDeg": -2.8033330947178943,
+        "rightAscensionSpeedDegPerDay": 0,
+        "direction": "retrograde"
+      },
+      "oracleJdTT": 2451595.4295583637
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451617.4581686296,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 334.23537560003587,
+        "declinationDeg": -9.087051182377754,
+        "rightAscensionSpeedDegPerDay": -4.5474727634757696e-10,
+        "direction": "direct"
+      },
+      "oracleJdTT": 2451617.4581697406
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451718.3374082707,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 111.33167171963947,
+        "declinationDeg": 20.33868641871181,
+        "rightAscensionSpeedDegPerDay": 0,
+        "direction": "retrograde"
+      },
+      "oracleJdTT": 2451718.3374146568
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451742.919864446,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 100.94692232923205,
+        "declinationDeg": 18.77274938604664,
+        "rightAscensionSpeedDegPerDay": 0,
+        "direction": "direct"
+      },
+      "oracleJdTT": 2451742.9198702015
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451836.243286904,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 222.35901588754004,
+        "declinationDeg": -19.59666908883982,
+        "rightAscensionSpeedDegPerDay": -2.2737363817378848e-10,
+        "direction": "retrograde"
+      },
+      "oracleJdTT": 2451836.2432863927
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2451856.2640408315,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 208.51087049010343,
+        "declinationDeg": -9.75721722827311,
+        "rightAscensionSpeedDegPerDay": 1.1368681908689424e-10,
+        "direction": "direct"
+      },
+      "oracleJdTT": 2451856.2640491277
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451549.743062962,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 280.2638811978238,
+        "declinationDeg": -24.525014865516187,
+        "declinationDifferenceDeg": -3.5812032066300823
+      },
+      "oracleJdTT": 2451549.7430614745
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451581.312113542,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 334.7189871199008,
+        "declinationDeg": -11.38846883806817,
+        "declinationDifferenceDeg": 1.7671526319677398
+      },
+      "oracleJdTT": 2451581.312112853
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451608.8804743625,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 337.9551547780608,
+        "declinationDeg": -5.6478712633589625,
+        "declinationDifferenceDeg": 6.538217407797599
+      },
+      "oracleJdTT": 2451608.8804758815
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451637.02107485,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 347.6940471661177,
+        "declinationDeg": -7.475907364946156,
+        "declinationDifferenceDeg": 1.6164576501379226
+      },
+      "oracleJdTT": 2451637.021077171
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451668.093354095,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 34.94463808666933,
+        "declinationDeg": 12.964714708512064,
+        "declinationDifferenceDeg": 4.288924543440327
+      },
+      "oracleJdTT": 2451668.09335554
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451699.6643553264,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 97.71135505327169,
+        "declinationDeg": 25.199508811743506,
+        "declinationDifferenceDeg": 3.558814423934791
+      },
+      "oracleJdTT": 2451699.6643568818
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451727.740676906,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 108.1581128734764,
+        "declinationDeg": 18.353868491973156,
+        "declinationDifferenceDeg": -3.3129688659628194
+      },
+      "oracleJdTT": 2451727.7406798424
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451755.214560095,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 108.60984739019324,
+        "declinationDeg": 20.828203345788964,
+        "declinationDifferenceDeg": -0.8215370055720257
+      },
+      "oracleJdTT": 2451755.2145622354
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451786.3997289576,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 166.06879777643485,
+        "declinationDeg": 7.488357006302261,
+        "declinationDifferenceDeg": -2.7137525350810563
+      },
+      "oracleJdTT": 2451786.399732395
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451817.035937179,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 208.27955946482822,
+        "declinationDeg": -13.922717558022878,
+        "declinationDifferenceDeg": -7.642690341123885
+      },
+      "oracleJdTT": 2451817.0359414555
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451845.119691994,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 217.1863051670931,
+        "declinationDeg": -16.240534597051376,
+        "declinationDifferenceDeg": -6.551222412755159
+      },
+      "oracleJdTT": 2451845.1196931005
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451872.9684222974,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 223.86715431164836,
+        "declinationDeg": -14.927990674761995,
+        "declinationDifferenceDeg": -2.9190211612231654
+      },
+      "oracleJdTT": 2451872.968423906
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2451904.227575358,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 274.62367290225006,
+        "declinationDeg": -24.977413668004868,
+        "declinationDifferenceDeg": -2.636417087939037
+      },
+      "oracleJdTT": 2451904.227571871
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451546.657539215,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 241.95764716356706,
+        "declinationDeg": -18.88370657650174,
+        "declinationDifferenceDeg": -2.607047013135375
+      },
+      "oracleJdTT": 2451546.6575376373
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451577.138820272,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 281.7106737045812,
+        "declinationDeg": -22.293524212604993,
+        "declinationDifferenceDeg": -1.3548019663290312
+      },
+      "oracleJdTT": 2451577.1388178635
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451607.533062134,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 320.98889574633165,
+        "declinationDeg": -16.026035926216398,
+        "declinationDifferenceDeg": 0.6410971101570553
+      },
+      "oracleJdTT": 2451607.5330602275
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451637.73069245,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 356.56869073541895,
+        "declinationDeg": -3.0925902490685964,
+        "declinationDifferenceDeg": 2.8113204756317582
+      },
+      "oracleJdTT": 2451637.730694441
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451667.796203155,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 30.91529532122928,
+        "declinationDeg": 11.23519464732756,
+        "declinationDifferenceDeg": 4.018376793638053
+      },
+      "oracleJdTT": 2451667.7962047085
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451697.796377804,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 67.94231460238439,
+        "declinationDeg": 21.626749658558673,
+        "declinationDifferenceDeg": 3.5110369788501927
+      },
+      "oracleJdTT": 2451697.7963784896
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451727.720706571,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 107.83060136999654,
+        "declinationDeg": 23.299867255304576,
+        "declinationDifferenceDeg": 1.6233089990032639
+      },
+      "oracleJdTT": 2451727.720707777
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451757.5675267316,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 145.87142758472737,
+        "declinationDeg": 15.223429914914773,
+        "declinationDifferenceDeg": -1.082002485187898
+      },
+      "oracleJdTT": 2451757.567527934
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451787.4393434264,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 180.2106299969043,
+        "declinationDeg": 1.1367699073710618,
+        "declinationDifferenceDeg": -3.837463330278995
+      },
+      "oracleJdTT": 2451787.439349442
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451817.50624403,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 214.19676706003733,
+        "declinationDeg": -13.774726744559718,
+        "declinationDifferenceDeg": -5.2601317371712835
+      },
+      "oracleJdTT": 2451817.5062483745
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451847.8483749814,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 251.82906612235251,
+        "declinationDeg": -23.948746011903605,
+        "declinationDifferenceDeg": -4.497688485240392
+      },
+      "oracleJdTT": 2451847.8483767835
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451878.270938318,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 291.8929477153821,
+        "declinationDeg": -24.297471634540866,
+        "declinationDifferenceDeg": -1.992355601625686
+      },
+      "oracleJdTT": 2451878.2709388444
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2451544.5,
+      "end": 2451910.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2451908.4357924275,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 327.5334765444215,
+        "declinationDeg": -14.837701233497498,
+        "declinationDifferenceDeg": 1.7784518265390261
+      },
+      "oracleJdTT": 2451908.435791036
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461042.406628754,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 360347.96468853345,
+        "distanceAu": 0.0024087773642926156
+      },
+      "oracleJdTT": 2461042.406652546
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461054.36689559,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 405438.0836400479,
+        "distanceAu": 0.002710186192777461
+      },
+      "oracleJdTT": 2461054.36681715
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461070.4077163003,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 365870.7482379473,
+        "distanceAu": 0.0024456948920861033
+      },
+      "oracleJdTT": 2461070.407710354
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461082.203429546,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404576.4041043016,
+        "distanceAu": 0.002704426220849289
+      },
+      "oracleJdTT": 2461082.203393101
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461096.4688986056,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 370135.0351872947,
+        "distanceAu": 0.0024741998897133684
+      },
+      "oracleJdTT": 2461096.4690050525
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461110.072399605,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404384.4890038756,
+        "distanceAu": 0.002703143347640413
+      },
+      "oracleJdTT": 2461110.0723629748
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461121.9869105928,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 366857.13697778044,
+        "distanceAu": 0.0024522884935539425
+      },
+      "oracleJdTT": 2461121.9868800677
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461137.8556545638,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404970.13806442777,
+        "distanceAu": 0.0027070581698087487
+      },
+      "oracleJdTT": 2461137.8556948006
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461149.78943887,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 361630.25751198526,
+        "distanceAu": 0.0024173489623872386
+      },
+      "oracleJdTT": 2461149.789382186
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461165.438453097,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 405839.1910553959,
+        "distanceAu": 0.0027128674302407427
+      },
+      "oracleJdTT": 2461165.438476085
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461178.07307693,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 358075.28328109154,
+        "distanceAu": 0.00239358542742341
+      },
+      "oracleJdTT": 2461178.073070071
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461192.6903930195,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 406365.88638313586,
+        "distanceAu": 0.0027163881710459124
+      },
+      "oracleJdTT": 2461192.690116048
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461206.4727924503,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 357196.5727255024,
+        "distanceAu": 0.002387711610159318
+      },
+      "oracleJdTT": 2461206.472804187
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461219.799774777,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 406264.92230047,
+        "distanceAu": 0.0027157132678391127
+      },
+      "oracleJdTT": 2461219.7999274237
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461234.831972707,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 359112.2158553287,
+        "distanceAu": 0.0024005168935558167
+      },
+      "oracleJdTT": 2461234.8319693035
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461247.199003484,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 405547.89390953444,
+        "distanceAu": 0.002710920229090764
+      },
+      "oracleJdTT": 2461247.1990323095
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461262.9715599604,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 363283.8562997822,
+        "distanceAu": 0.0024284025875495447
+      },
+      "oracleJdTT": 2461262.9715592912
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461274.848394815,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404641.73325745703,
+        "distanceAu": 0.002704862919265181
+      },
+      "oracleJdTT": 2461274.8484128155
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461290.363905009,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 368258.75215163134,
+        "distanceAu": 0.002461657712295442
+      },
+      "oracleJdTT": 2461290.3638195656
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461302.6259131543,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404220.81222326163,
+        "distanceAu": 0.0027020492359405065
+      },
+      "oracleJdTT": 2461302.625995154
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461315.370186422,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 369334.40571584663,
+        "distanceAu": 0.002468848012258818
+      },
+      "oracleJdTT": 2461315.370074713
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461330.456235122,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 404642.6429737679,
+        "distanceAu": 0.0027048690003431174
+      },
+      "oracleJdTT": 2461330.4563119477
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461342.2547620423,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 364407.2719579073,
+        "distanceAu": 0.0024359121573908024
+      },
+      "oracleJdTT": 2461342.2547790958
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461358.244195368,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 405618.9501356844,
+        "distanceAu": 0.0027113952106250427
+      },
+      "oracleJdTT": 2461358.2441783655
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461370.3767701797,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 359346.7307509432,
+        "distanceAu": 0.0024020845288070213
+      },
+      "oracleJdTT": 2461370.376727932
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461385.7824678756,
+        "center": "earth",
+        "kind": "apoapsis",
+        "distanceKm": 406419.2648576395,
+        "distanceAu": 0.0027167449841091857
+      },
+      "oracleJdTT": 2461385.7823930252
+    },
+    {
+      "fn": "searchLunarApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "moon",
+        "jdTT": 2461398.8560385443,
+        "center": "earth",
+        "kind": "periapsis",
+        "distanceKm": 356650.3092045505,
+        "distanceAu": 0.002384060064061798
+      },
+      "oracleJdTT": 2461398.8559508435
+    },
+    {
+      "fn": "searchEarthApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "earth",
+        "jdTT": 2461044.2199643888,
+        "center": "sun",
+        "kind": "periapsis",
+        "distanceKm": 147099893.19812587,
+        "distanceAu": 0.9833020517592559
+      },
+      "oracleJdTT": 2461044.2199908327
+    },
+    {
+      "fn": "searchEarthApsides",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "earth",
+        "jdTT": 2461228.2309487946,
+        "center": "sun",
+        "kind": "apoapsis",
+        "distanceKm": 152087768.37397495,
+        "distanceAu": 1.0166439379272192
+      },
+      "oracleJdTT": 2461228.2304157247
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461047.974383991,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 159.90939355341675,
+        "latitudeDeg": 4.2864576776534955e-9,
+        "distanceKm": 382426.25690447714
+      },
+      "oracleJdTT": 2461047.9743545963
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461062.501732383,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 338.9689988590819,
+        "latitudeDeg": 2.9611754467759764e-9,
+        "distanceKm": 384879.2152051385
+      },
+      "oracleJdTT": 2461062.5017194333
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461075.3045975827,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 158.65691460192295,
+        "latitudeDeg": -3.104256984206697e-9,
+        "distanceKm": 379755.02984537446
+      },
+      "oracleJdTT": 2461075.304566313
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461089.7630740292,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 338.5631058626217,
+        "latitudeDeg": -4.425763121531156e-9,
+        "distanceKm": 381642.4246299317
+      },
+      "oracleJdTT": 2461089.763051418
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461102.691156853,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 158.60725037308487,
+        "latitudeDeg": 4.581256708889206e-10,
+        "distanceKm": 381482.4581573203
+      },
+      "oracleJdTT": 2461102.691112935
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461117.1407028474,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 338.60324068465144,
+        "latitudeDeg": 2.8989356541525453e-9,
+        "distanceKm": 379428.4627189493
+      },
+      "oracleJdTT": 2461117.140675934
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461129.981746707,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 158.41634733836918,
+        "latitudeDeg": 2.8877092753127027e-9,
+        "distanceKm": 384740.6291972882
+      },
+      "oracleJdTT": 2461129.981751004
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461144.487689737,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 337.74811254183373,
+        "latitudeDeg": -1.1554120817799055e-9,
+        "distanceKm": 380955.984980093
+      },
+      "oracleJdTT": 2461144.487690183
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461157.108079497,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 156.98419486262276,
+        "latitudeDeg": -1.1406300563137867e-9,
+        "distanceKm": 385661.0129567249
+      },
+      "oracleJdTT": 2461157.108088338
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461171.6913927086,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 335.46992199904884,
+        "latitudeDeg": -2.7680601615425383e-9,
+        "distanceKm": 386120.2155975963
+      },
+      "oracleJdTT": 2461171.691433689
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461184.142889213,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 154.31069890276808,
+        "latitudeDeg": 2.9516346735855343e-9,
+        "distanceKm": 381965.7283311247
+      },
+      "oracleJdTT": 2461184.1428888137
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461198.7627801113,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 332.5382534707665,
+        "latitudeDeg": -1.6133209940507389e-9,
+        "distanceKm": 391800.2064215899
+      },
+      "oracleJdTT": 2461198.7628162736
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461211.2475988306,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 151.52007207763904,
+        "latitudeDeg": 6.499394304195607e-10,
+        "distanceKm": 375431.59754065383
+      },
+      "oracleJdTT": 2461211.247566908
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461225.8263021074,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 330.305088914059,
+        "latitudeDeg": 3.539109097187108e-9,
+        "distanceKm": 394614.6030210882
+      },
+      "oracleJdTT": 2461225.8262960124
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461238.519100968,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 149.81541081531157,
+        "latitudeDeg": -4.7494904956388565e-9,
+        "distanceKm": 370384.20940392214
+      },
+      "oracleJdTT": 2461238.519088985
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461252.9948007725,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 329.43056717496313,
+        "latitudeDeg": 3.356427417241254e-9,
+        "distanceKm": 394014.3719586488
+      },
+      "oracleJdTT": 2461252.9947860045
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461265.914082464,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 149.3980924998324,
+        "latitudeDeg": 3.2238021820836557e-9,
+        "distanceKm": 369423.8418292289
+      },
+      "oracleJdTT": 2461265.9140958902
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461280.28130788,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 329.4508571605958,
+        "latitudeDeg": 2.431187734812595e-9,
+        "distanceKm": 391846.3900285901
+      },
+      "oracleJdTT": 2461280.281296977
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461293.303229045,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 149.43400799798928,
+        "latitudeDeg": -2.234264198352079e-9,
+        "distanceKm": 372172.13026859576
+      },
+      "oracleJdTT": 2461293.3032602496
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461307.610282708,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 329.2184369934021,
+        "latitudeDeg": 1.6887900338201391e-9,
+        "distanceKm": 390735.41846487037
+      },
+      "oracleJdTT": 2461307.610279653
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461320.5546509065,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 148.71922750335386,
+        "latitudeDeg": 1.7238938250587874e-9,
+        "distanceKm": 376043.335777217
+      },
+      "oracleJdTT": 2461320.5546480403
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461334.869001534,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 327.6640171343064,
+        "latitudeDeg": -2.49405903137162e-9,
+        "distanceKm": 392760.52160742396
+      },
+      "oracleJdTT": 2461334.8690196
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461347.6259909384,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 146.53900838616386,
+        "latitudeDeg": -2.5539047329280757e-9,
+        "distanceKm": 376960.0196995889
+      },
+      "oracleJdTT": 2461347.626007981
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461361.990944471,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 324.7462962527523,
+        "latitudeDeg": -1.5968884497910082e-9,
+        "distanceKm": 397524.5954793113
+      },
+      "oracleJdTT": 2461361.9909665557
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461374.6472516917,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 143.4549557757187,
+        "latitudeDeg": 3.3790324728694413e-9,
+        "distanceKm": 372215.98445009073
+      },
+      "oracleJdTT": 2461374.647307589
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461389.0425734557,
+        "frame": "j2000",
+        "kind": "ascending",
+        "longitudeDeg": 321.8126221512721,
+        "latitudeDeg": -1.552568024967926e-9,
+        "distanceKm": 401748.26156833686
+      },
+      "oracleJdTT": 2461389.0426214472
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "j2000"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461401.82920387,
+        "frame": "j2000",
+        "kind": "descending",
+        "longitudeDeg": 141.02029672152412,
+        "latitudeDeg": -3.0423047092232996e-9,
+        "distanceKm": 364797.96154561284
+      },
+      "oracleJdTT": 2461401.8292394276
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461047.975122247,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 160.28260604810885,
+        "latitudeDeg": -1.6165766208333694e-9,
+        "distanceKm": 382430.77259030956
+      },
+      "oracleJdTT": 2461047.975092869
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461062.5025135614,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 339.34324696154493,
+        "latitudeDeg": -2.8855566839838985e-9,
+        "distanceKm": 384876.6367219979
+      },
+      "oracleJdTT": 2461062.502500632
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461075.3053655885,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 159.03175898329255,
+        "latitudeDeg": 2.0794950820654088e-11,
+        "distanceKm": 379758.9300843855
+      },
+      "oracleJdTT": 2461075.305334346
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461089.7638479583,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 338.938502890242,
+        "latitudeDeg": -5.674278332900192e-10,
+        "distanceKm": 381639.6549818039
+      },
+      "oracleJdTT": 2461089.7638253546
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461102.6919282265,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 158.9831163524052,
+        "latitudeDeg": 3.317855190272087e-9,
+        "distanceKm": 381485.3677548741
+      },
+      "oracleJdTT": 2461102.6918843393
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461117.1414720677,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 338.97972667225434,
+        "latitudeDeg": -2.8370979748719386e-9,
+        "distanceKm": 379424.7887976292
+      },
+      "oracleJdTT": 2461117.141445159
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461129.982554678,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 158.79354356907288,
+        "latitudeDeg": -1.308307097437826e-9,
+        "distanceKm": 384743.2935488814
+      },
+      "oracleJdTT": 2461129.9825589648
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461144.4885278307,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 338.12643586227955,
+        "latitudeDeg": 4.213425185183957e-9,
+        "distanceKm": 380951.0588225678
+      },
+      "oracleJdTT": 2461144.4885282516
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461157.108986538,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 157.36361891012518,
+        "latitudeDeg": 1.706295886229622e-9,
+        "distanceKm": 385664.6897153531
+      },
+      "oracleJdTT": 2461157.108995383
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461171.692389425,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 335.85099994219735,
+        "latitudeDeg": -8.57395761377374e-11,
+        "distanceKm": 386114.2785325107
+      },
+      "oracleJdTT": 2461171.6924303905
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461184.1439252906,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 154.69305600787538,
+        "latitudeDeg": 3.3063187932051222e-9,
+        "distanceKm": 381971.34927989764
+      },
+      "oracleJdTT": 2461184.1439249055
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461198.7639578693,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 332.92227291653137,
+        "latitudeDeg": 3.4354953468337997e-9,
+        "distanceKm": 391794.3945109519
+      },
+      "oracleJdTT": 2461198.763994024
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461211.2487208806,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 151.90513917378217,
+        "latitudeDeg": 2.7204387574707208e-9,
+        "distanceKm": 375438.465058595
+      },
+      "oracleJdTT": 2461211.2486889735
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461225.8275849707,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 330.691298916392,
+        "latitudeDeg": 3.860076951386982e-9,
+        "distanceKm": 394609.8092437158
+      },
+      "oracleJdTT": 2461225.8275789064
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461238.5202420615,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 150.20226639377734,
+        "latitudeDeg": 4.970053154313432e-10,
+        "distanceKm": 370390.47197695496
+      },
+      "oracleJdTT": 2461238.520230076
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461252.996094156,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 329.8180632713499,
+        "latitudeDeg": 3.787758292029034e-9,
+        "distanceKm": 394010.17531266203
+      },
+      "oracleJdTT": 2461252.9960793997
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461265.9152169563,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 149.78603417849604,
+        "latitudeDeg": -6.058571850494641e-10,
+        "distanceKm": 369428.4241374084
+      },
+      "oracleJdTT": 2461265.9152303627
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461280.28258026,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 329.8393280850715,
+        "latitudeDeg": -2.9086639357329424e-9,
+        "distanceKm": 391841.7772322664
+      },
+      "oracleJdTT": 2461280.282569378
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461293.304385323,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 149.82307395502818,
+        "latitudeDeg": -4.273460171461872e-9,
+        "distanceKm": 372175.30011197797
+      },
+      "oracleJdTT": 2461293.3044165177
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461307.611582909,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 329.6083537237135,
+        "latitudeDeg": 1.932032196607692e-9,
+        "distanceKm": 390729.6126166276
+      },
+      "oracleJdTT": 2461307.6115798694
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461320.555893611,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 149.11014711456073,
+        "latitudeDeg": 1.72181432630976e-9,
+        "distanceKm": 376046.393097586
+      },
+      "oracleJdTT": 2461320.5558907543
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461334.87043136,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 328.05634845820595,
+        "latitudeDeg": 1.3926104267556916e-9,
+        "distanceKm": 392753.4472380811
+      },
+      "oracleJdTT": 2461334.8704494387
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461347.6273720376,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 146.9326955062878,
+        "latitudeDeg": -2.630122709523291e-9,
+        "distanceKm": 376964.86211376166
+      },
+      "oracleJdTT": 2461347.627389058
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461361.9925788455,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 325.14168119670416,
+        "latitudeDeg": 1.8619771157046612e-9,
+        "distanceKm": 397517.49926790985
+      },
+      "oracleJdTT": 2461361.9926009364
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461374.6487377025,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 143.8515966914738,
+        "latitudeDeg": 3.5046840259052156e-9,
+        "distanceKm": 372223.27676354797
+      },
+      "oracleJdTT": 2461374.648793535
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461389.0443659835,
+        "frame": "mean-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 322.2105712028529,
+        "latitudeDeg": -1.450760616143528e-9,
+        "distanceKm": 401742.8411937513
+      },
+      "oracleJdTT": 2461389.044413967
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "mean-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461401.83069833,
+        "frame": "mean-of-date",
+        "kind": "descending",
+        "longitudeDeg": 141.41900460062402,
+        "latitudeDeg": 3.132596257750946e-9,
+        "distanceKm": 364805.4138593592
+      },
+      "oracleJdTT": 2461401.830733929
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461047.975122247,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 160.28435052136615,
+        "latitudeDeg": -1.6165766208333694e-9,
+        "distanceKm": 382430.77259030956
+      },
+      "oracleJdTT": 2461047.975092869
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461062.5025135614,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 339.345137505405,
+        "latitudeDeg": -2.8855566839838993e-9,
+        "distanceKm": 384876.6367219978
+      },
+      "oracleJdTT": 2461062.502500632
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461075.3053655885,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 159.0337924135332,
+        "latitudeDeg": 2.0794950820654084e-11,
+        "distanceKm": 379758.93008438556
+      },
+      "oracleJdTT": 2461075.305334346
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461089.7638479583,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 338.9405142938974,
+        "latitudeDeg": -5.674278332900192e-10,
+        "distanceKm": 381639.6549818039
+      },
+      "oracleJdTT": 2461089.7638253546
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461102.6919282265,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 158.98511224160154,
+        "latitudeDeg": 3.317855190272087e-9,
+        "distanceKm": 381485.3677548741
+      },
+      "oracleJdTT": 2461102.6918843393
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461117.1414720677,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 338.98157276155393,
+        "latitudeDeg": -2.8370979748719386e-9,
+        "distanceKm": 379424.7887976292
+      },
+      "oracleJdTT": 2461117.141445159
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461129.982554678,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 158.79532372091649,
+        "latitudeDeg": -1.3083070974378255e-9,
+        "distanceKm": 384743.29354888154
+      },
+      "oracleJdTT": 2461129.9825589648
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461144.4885278307,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 338.1280795805017,
+        "latitudeDeg": 4.213425185183957e-9,
+        "distanceKm": 380951.0588225678
+      },
+      "oracleJdTT": 2461144.4885282516
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461157.108986538,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 157.36528500320867,
+        "latitudeDeg": 1.706295886229622e-9,
+        "distanceKm": 385664.6897153531
+      },
+      "oracleJdTT": 2461157.108995383
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461171.692389425,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 335.8526576797615,
+        "latitudeDeg": -8.573957613773742e-11,
+        "distanceKm": 386114.2785325106
+      },
+      "oracleJdTT": 2461171.6924303905
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461184.1439252906,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 154.69487569667274,
+        "latitudeDeg": 3.3063187932051226e-9,
+        "distanceKm": 381971.3492798976
+      },
+      "oracleJdTT": 2461184.1439249055
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461198.7639578693,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 332.9242171462606,
+        "latitudeDeg": 3.4354953468338e-9,
+        "distanceKm": 391794.3945109518
+      },
+      "oracleJdTT": 2461198.763994024
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461211.2487208806,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 151.90732821442873,
+        "latitudeDeg": 2.7204387574707216e-9,
+        "distanceKm": 375438.4650585949
+      },
+      "oracleJdTT": 2461211.2486889735
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461225.8275849707,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 330.6936496008644,
+        "latitudeDeg": 3.860076951386982e-9,
+        "distanceKm": 394609.80924371583
+      },
+      "oracleJdTT": 2461225.8275789064
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461238.5202420615,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 150.20483080060131,
+        "latitudeDeg": 4.970053154313432e-10,
+        "distanceKm": 370390.47197695496
+      },
+      "oracleJdTT": 2461238.520230076
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461252.996094156,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 329.8207046480398,
+        "latitudeDeg": 3.787758292029034e-9,
+        "distanceKm": 394010.1753126621
+      },
+      "oracleJdTT": 2461252.9960793997
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461265.9152169563,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 149.78876274702793,
+        "latitudeDeg": -6.058571850494642e-10,
+        "distanceKm": 369428.4241374083
+      },
+      "oracleJdTT": 2461265.9152303627
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461280.28258026,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 329.8419903140031,
+        "latitudeDeg": -2.9086639357329424e-9,
+        "distanceKm": 391841.7772322664
+      },
+      "oracleJdTT": 2461280.282569378
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461293.304385323,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 149.82569278313827,
+        "latitudeDeg": -4.273460171461872e-9,
+        "distanceKm": 372175.30011197797
+      },
+      "oracleJdTT": 2461293.3044165177
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461307.611582909,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 329.61081450469516,
+        "latitudeDeg": 1.9320321966076916e-9,
+        "distanceKm": 390729.61261662765
+      },
+      "oracleJdTT": 2461307.6115798694
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461320.555893611,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 149.11253717390377,
+        "latitudeDeg": 1.72181432630976e-9,
+        "distanceKm": 376046.393097586
+      },
+      "oracleJdTT": 2461320.5558907543
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461334.87043136,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 328.0586194912704,
+        "latitudeDeg": 1.392610426755692e-9,
+        "distanceKm": 392753.44723808096
+      },
+      "oracleJdTT": 2461334.8704494387
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461347.6273720376,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 146.9350024904578,
+        "latitudeDeg": -2.6301227095232916e-9,
+        "distanceKm": 376964.8621137616
+      },
+      "oracleJdTT": 2461347.627389058
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461361.9925788455,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 325.1440191146246,
+        "latitudeDeg": 1.8619771157046612e-9,
+        "distanceKm": 397517.4992679098
+      },
+      "oracleJdTT": 2461361.9926009364
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461374.6487377025,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 143.85412811076145,
+        "latitudeDeg": 3.5046840259052156e-9,
+        "distanceKm": 372223.27676354797
+      },
+      "oracleJdTT": 2461374.648793535
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461389.0443659835,
+        "frame": "true-of-date",
+        "kind": "ascending",
+        "longitudeDeg": 322.213276471922,
+        "latitudeDeg": -1.4507606161435276e-9,
+        "distanceKm": 401742.84119375143
+      },
+      "oracleJdTT": 2461389.044413967
+    },
+    {
+      "fn": "searchLunarNodes",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "options": {
+        "frame": "true-of-date"
+      },
+      "event": {
+        "body": "moon",
+        "jdTT": 2461401.83069833,
+        "frame": "true-of-date",
+        "kind": "descending",
+        "longitudeDeg": 141.4219814095598,
+        "latitudeDeg": 3.132596257750945e-9,
+        "distanceKm": 364805.41385935934
+      },
+      "oracleJdTT": 2461401.830733929
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461091.2377023287,
+        "frame": "true-of-date",
+        "kind": "eastern",
+        "elongationDeg": 18.122702229648958,
+        "longitudeDeg": 349.1708334956988,
+        "latitudeDeg": 1.1810138903624519
+      },
+      "oracleJdTT": 2461091.2377057225
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461134.4407730587,
+        "frame": "true-of-date",
+        "kind": "western",
+        "elongationDeg": 27.81949255548095,
+        "longitudeDeg": 346.404437103867,
+        "latitudeDeg": -1.723263755563588
+      },
+      "oracleJdTT": 2461134.440785655
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461207.3340275474,
+        "frame": "true-of-date",
+        "kind": "eastern",
+        "elongationDeg": 24.516896645683623,
+        "longitudeDeg": 109.22841908837745,
+        "latitudeDeg": 1.00792621819618
+      },
+      "oracleJdTT": 2461207.3340291753
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461254.83931442,
+        "frame": "true-of-date",
+        "kind": "western",
+        "elongationDeg": 19.467959936303835,
+        "longitudeDeg": 110.68202408638285,
+        "latitudeDeg": -1.805860044794525
+      },
+      "oracleJdTT": 2461254.839324631
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461325.919756774,
+        "frame": "true-of-date",
+        "kind": "eastern",
+        "elongationDeg": 25.160721235098336,
+        "longitudeDeg": 224.10461941608858,
+        "latitudeDeg": -2.9002302151144836
+      },
+      "oracleJdTT": 2461325.919766224
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461365.4808655716,
+        "frame": "true-of-date",
+        "kind": "western",
+        "elongationDeg": 19.621721624430965,
+        "longitudeDeg": 219.175605695623,
+        "latitudeDeg": 2.3673659202867903
+      },
+      "oracleJdTT": 2461365.480869244
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461097.199579943,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 352.0975689873565,
+        "declinationDeg": -0.5193075819699746,
+        "rightAscensionSpeedDegPerDay": 6.821209145213654e-10,
+        "direction": "retrograde"
+      },
+      "oracleJdTT": 2461097.199586247
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461119.3246630915,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 339.7031006345052,
+        "declinationDeg": -7.226505999406745,
+        "rightAscensionSpeedDegPerDay": 3.865351848954405e-9,
+        "direction": "direct"
+      },
+      "oracleJdTT": 2461119.324666826
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461220.582834456,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 117.85100263304349,
+        "declinationDeg": 18.940349279302687,
+        "rightAscensionSpeedDegPerDay": -2.2737363817378848e-10,
+        "direction": "retrograde"
+      },
+      "oracleJdTT": 2461220.5828625
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461245.2190708853,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 107.17701702612067,
+        "declinationDeg": 18.373033362230277,
+        "rightAscensionSpeedDegPerDay": -9.094945526951539e-10,
+        "direction": "direct"
+      },
+      "oracleJdTT": 2461245.219074509
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461337.993061904,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 227.70236203397565,
+        "declinationDeg": -20.88107241238749,
+        "rightAscensionSpeedDegPerDay": -5.229593677997135e-9,
+        "direction": "retrograde"
+      },
+      "oracleJdTT": 2461337.9930627393
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "jdTT": 2461357.886392068,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 213.4435041269328,
+        "declinationDeg": -11.304786444137982,
+        "rightAscensionSpeedDegPerDay": -3.296917753519933e-9,
+        "direction": "direct"
+      },
+      "oracleJdTT": 2461357.8863944896
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461059.1304143853,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 298.99700203656687,
+        "declinationDeg": -22.76486069339681,
+        "declinationDifferenceDeg": 1.600858995405602
+      },
+      "oracleJdTT": 2461059.130414635
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461090.4609211273,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 348.9141453213841,
+        "declinationDeg": -3.6951408293004193,
+        "declinationDifferenceDeg": 0.13464275341891385
+      },
+      "oracleJdTT": 2461090.4609226035
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461117.089180615,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 339.9443485786886,
+        "declinationDeg": -6.530452229486332,
+        "declinationDifferenceDeg": 1.9959026963139879
+      },
+      "oracleJdTT": 2461117.0891851466
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461146.300209876,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 1.8949485962792778,
+        "declinationDeg": -2.0217166514018095,
+        "declinationDifferenceDeg": -5.203865612766644
+      },
+      "oracleJdTT": 2461146.300216728
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461177.6190546267,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 56.964074223614375,
+        "declinationDeg": 20.57395902324048,
+        "declinationDifferenceDeg": -4.509216293608674
+      },
+      "oracleJdTT": 2461177.6190533293
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461208.3147754036,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 111.92605311028274,
+        "declinationDeg": 22.756750459020093,
+        "declinationDifferenceDeg": -2.593812954267552
+      },
+      "oracleJdTT": 2461208.3147787284
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461235.693198841,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 110.86755777312214,
+        "declinationDeg": 17.101630352717585,
+        "declinationDifferenceDeg": -8.416554689599728
+      },
+      "oracleJdTT": 2461235.693204687
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461264.033696886,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 125.40945375932802,
+        "declinationDeg": 19.84812793289583,
+        "declinationDifferenceDeg": -2.0982777928635485
+      },
+      "oracleJdTT": 2461264.033697889
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461295.8124357425,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 182.72882971024603,
+        "declinationDeg": -0.5774374268440827,
+        "declinationDifferenceDeg": 3.846860556845394
+      },
+      "oracleJdTT": 2461295.812435868
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461326.339988593,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 221.13638476255272,
+        "declinationDeg": -18.989666306297334,
+        "declinationDifferenceDeg": 2.1277520061080146
+      },
+      "oracleJdTT": 2461326.339988445
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461353.190494988,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 215.369806355492,
+        "declinationDeg": -13.062831662824012,
+        "declinationDifferenceDeg": 6.0801115531851355
+      },
+      "oracleJdTT": 2461353.1904959884
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "mercury",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "mercury",
+        "other": "moon",
+        "jdTT": 2461382.419721108,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 240.4443657462424,
+        "declinationDeg": -19.921906143416773,
+        "declinationDifferenceDeg": 5.782981026391543
+      },
+      "oracleJdTT": 2461382.4197202306
+    },
+    {
+      "fn": "searchGreatestElongations",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "jdTT": 2461267.772738043,
+        "frame": "true-of-date",
+        "kind": "eastern",
+        "elongationDeg": 45.89226597608203,
+        "longitudeDeg": 188.34670107476927,
+        "latitudeDeg": -1.4055374680244255
+      },
+      "oracleJdTT": 2461267.7727173427
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "jdTT": 2461316.0704111196,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 213.6312311792573,
+        "declinationDeg": -21.12624551028992,
+        "rightAscensionSpeedDegPerDay": -9.094945526951539e-10,
+        "direction": "retrograde"
+      },
+      "oracleJdTT": 2461316.0704278694
+    },
+    {
+      "fn": "searchRightAscensionStations",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "jdTT": 2461356.1335557103,
+        "frame": "true-of-date",
+        "rightAscensionDeg": 200.41985031461442,
+        "declinationDeg": -10.996233781193384,
+        "rightAscensionSpeedDegPerDay": 0,
+        "direction": "direct"
+      },
+      "oracleJdTT": 2461356.133469777
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461059.5431614853,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 304.4161282154153,
+        "declinationDeg": -20.799910007827297,
+        "declinationDifferenceDeg": 2.1437995802488814
+      },
+      "oracleJdTT": 2461059.543161832
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461089.8897412904,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 342.05762575110776,
+        "declinationDeg": -9.183961927127736,
+        "declinationDifferenceDeg": -1.744737311991904
+      },
+      "oracleJdTT": 2461089.889743007
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461120.026932683,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 16.446366283898897,
+        "declinationDeg": 6.051925283432779,
+        "declinationDifferenceDeg": -4.619031513702811
+      },
+      "oracleJdTT": 2461120.02693336
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461149.8669771887,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 51.681736240538896,
+        "declinationDeg": 19.168857497885643,
+        "declinationDifferenceDeg": -4.758431334853736
+      },
+      "oracleJdTT": 2461149.8669760516
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461179.5768508427,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 90.04051999010102,
+        "declinationDeg": 25.03779531632118,
+        "declinationDifferenceDeg": -2.9414784962163942
+      },
+      "oracleJdTT": 2461179.576850202
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461209.34843472,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 127.98658812668668,
+        "declinationDeg": 20.948157230934388,
+        "declinationDifferenceDeg": -0.28529638972004534
+      },
+      "oracleJdTT": 2461209.348438874
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461239.1892978735,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 160.79134573586623,
+        "declinationDeg": 9.226052041098182,
+        "declinationDifferenceDeg": 2.021010129801155
+      },
+      "oracleJdTT": 2461239.189303004
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461268.8668925427,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 188.0265407430359,
+        "declinationDeg": -5.1229599704582505,
+        "declinationDifferenceDeg": 2.0712540116128517
+      },
+      "oracleJdTT": 2461268.866897553
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461297.966736015,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 208.50468748343746,
+        "declinationDeg": -17.177448367333994,
+        "declinationDifferenceDeg": -0.5196885948319014
+      },
+      "oracleJdTT": 2461297.966739675
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461325.6060918607,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 211.97569904428326,
+        "declinationDeg": -20.980003003070113,
+        "declinationDifferenceDeg": -3.0498876162913007
+      },
+      "oracleJdTT": 2461325.6060935073
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461351.9823808856,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 200.7444972213294,
+        "declinationDeg": -12.231166888950677,
+        "declinationDifferenceDeg": 1.055113534706308
+      },
+      "oracleJdTT": 2461351.9823779967
+    },
+    {
+      "fn": "searchRelativeRightAscension",
+      "body": "venus",
+      "start": 2461041.5,
+      "end": 2461406.5,
+      "event": {
+        "body": "venus",
+        "other": "moon",
+        "jdTT": 2461379.9485200904,
+        "frame": "true-of-date",
+        "angleDeg": 0,
+        "rightAscensionDeg": 209.30104575576235,
+        "declinationDeg": -9.856879322046032,
+        "declinationDifferenceDeg": 7.153005221200006
+      },
+      "oracleJdTT": 2461379.948518915
+    }
+  ]
+}
