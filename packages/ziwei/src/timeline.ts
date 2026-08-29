@@ -163,8 +163,8 @@ function findLiChun(chart: ZiweiChart, targetYear: number): number {
   let cursor = julianDay({ year: targetYear - 1, month: 11, day: 1, hour: 12 });
   for (let guard = 0; guard < 40; guard += 1) {
     const next = getNextJie(cursor, chart.options.toCalendarOptions());
-    if (next.indexFromWinterSolstice === 3) return next.jdUT1;
-    cursor = next.jdUT1 + 2;
+    if (next.indexFromWinterSolstice === 3) return next.time.jdUT1;
+    cursor = next.time.jdUT1 + 2;
   }
   throw new Error(`Li Chun not found for ${targetYear}`);
 }
@@ -304,7 +304,7 @@ export class ZiweiTimelineProvider {
   private getSolarTermMonths(targetYear: number): readonly MonthNode[] {
     const starts = [findLiChun(this.chart, targetYear)];
     for (let index = 0; index < 12; index += 1) {
-      starts.push(getNextJie(starts.at(-1)! + 2, this.chart.options.toCalendarOptions()).jdUT1);
+      starts.push(getNextJie(starts.at(-1)! + 2, this.chart.options.toCalendarOptions()).time.jdUT1);
     }
     return Object.freeze(Array.from({ length: 12 }, (_, offset) => {
       const month = offset + 1;

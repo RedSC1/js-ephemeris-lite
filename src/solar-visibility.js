@@ -192,19 +192,17 @@ function analyticSeed(localNoonUT1, observer, options, eventKind) {
   return localNoonUT1 + (eventHour - 12) / 24;
 }
 
-function newtonEvent(localNoonUT1, searchStart, searchEnd, observer, options, eventKind, counters) {
+function newtonEvent(localNoonUT1, searchStart, searchEnd, observer, options, eventKind) {
   let value = analyticSeed(localNoonUT1, observer, options, eventKind);
   if (value === null) return null;
   const iterations = options.refraction ? 3 : 2;
   for (let iteration = 0; iteration < iterations; iteration += 1) {
     const sample = rawSolarSample(value, observer, options);
-    counters.samples += 1;
     const directionOkay = eventKind === 'rise'
       ? sample.slopeRadPerDay > 0.2
       : sample.slopeRadPerDay < -0.2;
     if (!directionOkay) return null;
     const next = value - sample.residualRad / sample.slopeRadPerDay;
-    counters.refinements += 1;
     if (!Number.isFinite(next) || Math.abs(next - value) > 0.25
       || next < searchStart - 0.05 || next > searchEnd + 0.05) return null;
     value = next;
@@ -212,15 +210,13 @@ function newtonEvent(localNoonUT1, searchStart, searchEnd, observer, options, ev
   return value >= searchStart && value <= searchEnd ? value : null;
 }
 
-function bisectResidual(lo, hi, flo, observer, options, counters) {
+function bisectResidual(lo, hi, flo, observer, options) {
   let lower = lo;
   let upper = hi;
   let lowerValue = flo;
   for (let iteration = 0; iteration < 60 && upper - lower > ROOT_TOLERANCE_DAYS; iteration += 1) {
     const middle = (lower + upper) / 2;
     const middleValue = rawSolarSample(middle, observer, options).residualRad;
-    counters.samples += 1;
-    counters.refinements += 1;
     if ((lowerValue <= 0 && middleValue >= 0) || (lowerValue >= 0 && middleValue <= 0)) {
       upper = middle;
     } else {
@@ -231,25 +227,23 @@ function bisectResidual(lo, hi, flo, observer, options, counters) {
   return (lower + upper) / 2;
 }
 
-function fallbackWindow(searchStart, searchEnd, observer, options, counters) {
+function fallbackWindow(searchStart, searchEnd, observer, options) {
   let rise = null;
   let set = null;
   let previousJd = searchStart;
   let previous = rawSolarSample(previousJd, observer, options).residualRad;
-  counters.samples += 1;
   let minimum = previous;
   let maximum = previous;
   for (let jd = searchStart + WINDOW_STEP_DAYS; ; jd += WINDOW_STEP_DAYS) {
     const currentJd = Math.min(searchEnd, jd);
     const current = rawSolarSample(currentJd, observer, options).residualRad;
-    counters.samples += 1;
     minimum = Math.min(minimum, current);
     maximum = Math.max(maximum, current);
     if (rise === null && previous < 0 && current > 0) {
-      rise = bisectResidual(previousJd, currentJd, previous, observer, options, counters);
+      rise = bisectResidual(previousJd, currentJd, previous, observer, options);
     }
     if (set === null && previous > 0 && current < 0) {
-      set = bisectResidual(previousJd, currentJd, previous, observer, options, counters);
+      set = bisectResidual(previousJd, currentJd, previous, observer, options);
     }
     previousJd = currentJd;
     previous = current;
@@ -267,7 +261,8 @@ export function solarAltitude(time, rawObserver, rawOptions = {}) {
   const jdUT1 = asUt1JulianDay(time);
   const observer = resolveObserver(rawObserver);
   const options = resolveOptions(rawOptions);
-  return rawSolarSample(jdUT1, observer, options);
+  const { centerAltitudeRad, apparentAltitudeRad, azimuthRad, slopeRadPerDay } = rawSolarSample(jdUT1, observer, options);
+  return { centerAltitudeRad, apparentAltitudeRad, azimuthRad, slopeRadPerDay };
 }
 
 /**
@@ -283,18 +278,15 @@ export function computeSolarRiseSetFast(center, rawObserver, rawOptions = {}) {
   const searchEnd = centerUT1 + 0.5;
   const localNoon = Math.round(centerUT1 + observer.longitudeDeg / 360)
     - observer.longitudeDeg / 360;
-  const counters = { samples: 0, refinements: 0 };
   let rise = null;
   let set = null;
-  let path = 'analytic-newton';
   if (Math.abs(observer.latitudeDeg) <= HIGH_LATITUDE_DEG) {
-    rise = newtonEvent(localNoon, searchStart, searchEnd, observer, options, 'rise', counters);
-    set = newtonEvent(localNoon, searchStart, searchEnd, observer, options, 'set', counters);
+    rise = newtonEvent(localNoon, searchStart, searchEnd, observer, options, 'rise');
+    set = newtonEvent(localNoon, searchStart, searchEnd, observer, options, 'set');
   }
   let altitudeState = SOLAR_ALTITUDE_STATE.CROSSES;
   if (rise === null || set === null) {
-    path = 'fallback-window';
-    const fallback = fallbackWindow(searchStart, searchEnd, observer, options, counters);
+    const fallback = fallbackWindow(searchStart, searchEnd, observer, options);
     rise ??= fallback.rise;
     set ??= fallback.set;
     altitudeState = fallback.altitudeState;
@@ -304,16 +296,13 @@ export function computeSolarRiseSetFast(center, rawObserver, rawOptions = {}) {
     altitudeState,
     rise: rise === null ? null : JulianTime.fromUT1(rise),
     set: set === null ? null : JulianTime.fromUT1(set),
-    sampleCount: counters.samples,
-    refineCount: counters.refinements,
-    path,
     limb: options.limb,
     refraction: options.refraction,
   };
 }
 
 /**
- * Same-type rise/set wrapper.
+ * Sunrise/sunset as timezone-free JulianTime instants.
  * A ZonedTime selects its local civil date; a scalar JD or JulianTime selects
  * the 24-hour window centred on that instant.
  */
@@ -333,23 +322,10 @@ export function solarRiseSetForDate(
       second: 0,
       offsetMinutes,
     }).toJulianTime();
-    const result = computeSolarRiseSetFast(center, observer, options);
-    return {
-      ...result,
-      rise: result.rise?.toZonedTime(offsetMinutes) ?? null,
-      set: result.set?.toZonedTime(offsetMinutes) ?? null,
-    };
+    return computeSolarRiseSetFast(center, observer, options);
   }
-  if (dateOrCenter instanceof JulianTime) {
+  if (dateOrCenter instanceof JulianTime || Number.isFinite(dateOrCenter)) {
     return computeSolarRiseSetFast(dateOrCenter, observer, options);
-  }
-  if (Number.isFinite(dateOrCenter)) {
-    const result = computeSolarRiseSetFast(dateOrCenter, observer, options);
-    return {
-      ...result,
-      rise: result.rise?.jdUT1 ?? null,
-      set: result.set?.jdUT1 ?? null,
-    };
   }
   throw new TypeError('dateOrCenter must be a UT1 Julian Day, JulianTime or ZonedTime');
 }

@@ -5,7 +5,6 @@ import {
   solveNewMoon,
 } from './calendar-events.js';
 import {
-  JulianTime,
   asUt1JulianDay,
   calendarDateFromJulianDay,
   julianDay,
@@ -192,10 +191,7 @@ function solarTermEvent(index, estimateJdTT, options) {
   return {
     indexFromWinterSolstice: index,
     targetLongitude,
-    time: JulianTime.fromUT1(solved.jdUT1),
-    jdTT: solved.jdTT,
-    jdUT1: solved.jdUT1,
-    deltaTSeconds: solved.deltaTSeconds,
+    time: solved,
     civilDayNumber: assignedEventDay('solarTerm', solved.jdUT1, solved.jdUT1, options),
   };
 }
@@ -203,10 +199,7 @@ function solarTermEvent(index, estimateJdTT, options) {
 function newMoonEvent(estimateJdTT, options) {
   const solved = solveNewMoon(estimateJdTT);
   return {
-    time: JulianTime.fromUT1(solved.jdUT1),
-    jdTT: solved.jdTT,
-    jdUT1: solved.jdUT1,
-    deltaTSeconds: solved.deltaTSeconds,
+    time: solved,
     civilDayNumber: assignedEventDay('newMoon', solved.jdUT1, solved.jdUT1, options),
   };
 }
@@ -214,9 +207,9 @@ function newMoonEvent(estimateJdTT, options) {
 function findWinterSolstice(jdUT1, options) {
   const targetDay = civilDayNumber(jdUT1, options.structureOffset);
   let event = solarTermEvent(0, ut1ToTt(jdUT1), options);
-  while (event.civilDayNumber > targetDay) event = solarTermEvent(0, event.jdTT - DAYS_PER_TROPICAL_YEAR, options);
+  while (event.civilDayNumber > targetDay) event = solarTermEvent(0, event.time.jdTT - DAYS_PER_TROPICAL_YEAR, options);
   for (;;) {
-    const next = solarTermEvent(0, event.jdTT + DAYS_PER_TROPICAL_YEAR, options);
+    const next = solarTermEvent(0, event.time.jdTT + DAYS_PER_TROPICAL_YEAR, options);
     if (next.civilDayNumber > targetDay) break;
     event = next;
   }
@@ -226,23 +219,23 @@ function findWinterSolstice(jdUT1, options) {
 function fillSolarTerms(winter, options) {
   const terms = [winter];
   for (let index = 1; index < 25; index += 1) {
-    terms.push(solarTermEvent(index, terms[index - 1].jdTT + DAYS_PER_SOLAR_TERM, options));
+    terms.push(solarTermEvent(index, terms[index - 1].time.jdTT + DAYS_PER_SOLAR_TERM, options));
   }
   return terms;
 }
 
 function fillNewMoons(winter, options) {
-  let event = newMoonEvent(winter.jdTT, options);
+  let event = newMoonEvent(winter.time.jdTT, options);
   while (event.civilDayNumber > winter.civilDayNumber) {
-    event = newMoonEvent(event.jdTT - DAYS_PER_SYNODIC_MONTH, options);
+    event = newMoonEvent(event.time.jdTT - DAYS_PER_SYNODIC_MONTH, options);
   }
   for (;;) {
-    const next = newMoonEvent(event.jdTT + DAYS_PER_SYNODIC_MONTH, options);
+    const next = newMoonEvent(event.time.jdTT + DAYS_PER_SYNODIC_MONTH, options);
     if (next.civilDayNumber > winter.civilDayNumber) break;
     event = next;
   }
   const moons = [event];
-  while (moons.length < 15) moons.push(newMoonEvent(moons.at(-1).jdTT + DAYS_PER_SYNODIC_MONTH, options));
+  while (moons.length < 15) moons.push(newMoonEvent(moons.at(-1).time.jdTT + DAYS_PER_SYNODIC_MONTH, options));
   return moons;
 }
 
@@ -362,7 +355,7 @@ function assignMonths(year, options) {
       monthName: MONTH_NAME.NORMAL,
       monthBuildingBranch: 0,
       firstCivilDayNumber: firstDay,
-      astronomicalNewMoonJdUT1: year.newMoons[index].jdUT1,
+      newMoon: year.newMoons[index].time,
     });
   }
 
@@ -458,15 +451,12 @@ export function findSolarTerm(jdUT1, { direction = 'previous', filter = 'any', .
     const candidate = {
       indexFromWinterSolstice: positiveMod(termId + 1, 24),
       targetLongitude: target,
-      time: JulianTime.fromUT1(solved.jdUT1),
-      jdTT: solved.jdTT,
-      jdUT1: solved.jdUT1,
-      deltaTSeconds: solved.deltaTSeconds,
+      time: solved,
       civilDayNumber: assignedEventDay('solarTerm', solved.jdUT1, solved.jdUT1, options),
     };
-    const difference = candidate.jdUT1 - value;
+    const difference = candidate.time.jdUT1 - value;
     const valid = direction === 'next' ? difference > ROOT_EQUALITY_DAYS : difference <= ROOT_EQUALITY_DAYS;
-    if (!valid || (best && (direction === 'next' ? candidate.jdUT1 >= best.jdUT1 : candidate.jdUT1 <= best.jdUT1))) continue;
+    if (!valid || (best && (direction === 'next' ? candidate.time.jdUT1 >= best.time.jdUT1 : candidate.time.jdUT1 <= best.time.jdUT1))) continue;
     best = candidate;
   }
   if (!best) throw new RangeError('solar term not found');
@@ -484,7 +474,7 @@ export function getSpecificSolarTerm(civilYear, termIndexFromVernalEquinox, rawO
   const index = termIndexFromVernalEquinox >= 19
     ? termIndexFromVernalEquinox - 18
     : termIndexFromVernalEquinox + 6;
-  return solarTermEvent(index, winter.jdTT + index * DAYS_PER_SOLAR_TERM, options);
+  return solarTermEvent(index, winter.time.jdTT + index * DAYS_PER_SOLAR_TERM, options);
 }
 
 export function solarToLunar(solarDate, rawOptions = {}) {

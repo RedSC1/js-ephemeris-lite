@@ -2,36 +2,31 @@
 
 [返回首页](../README.md) · [天体位置](./positions.md) · [精度说明](./accuracy.md)
 
-## 开关与含义
+## 轨道校准
 
-默认几何星历启用 DE441 残差拟合。位置和状态函数接受
-`{ corrections: false }`，可取得原始截断模型结果；这是模型修正开关，
-与视位置的光行时、光行差和光线偏折开关分别控制。
+当前几何星历的 DE441 校准包含在模型系数中。八大行星和月球各使用一套全局系数；
+冥王星使用近代与后备模型，适用范围见[冥王星警告](./accuracy.md#冥王星)。
+级数格式和参考系变换见[架构](./architecture.md#模型数据)。
+
+校准是模型本身的一部分，没有独立修正量查询接口或运行时开关。
 
 ```js
-import { PLANET, planetHeliocentricState, PLANET_CORRECTION_INFO } from 'js-ephemeris-lite';
+import { PLANET, planetHeliocentricState } from 'js-ephemeris-lite';
 
-const corrected = planetHeliocentricState(PLANET.JUPITER, 2451545.0);
-const raw = planetHeliocentricState(PLANET.JUPITER, 2451545.0, { corrections: false });
-console.log(corrected.position, raw.position, PLANET_CORRECTION_INFO);
+const state = planetHeliocentricState(PLANET.VENUS, 2451545);
+console.log(state.position, state.velocity);
 ```
 
-## 时间分层与行星修正
+## 坐标与视位置修正
 
-月球、地球与行星采用相同的时间分层，以距 J2000 的年数选择修正层：
+参考系变换和光传播修正独立于轨道校准：
 
-| 距 J2000 | 修正层 |
-| --- | --- |
-| 不超过 800 年 | 现代拟合 |
-| 800～1000 年 | 使用 smoothstep 在现代与长期层之间过渡 |
-| 超过 1000 年 | 长期修正 |
+- 几何位置接口输出 J2000 平黄道坐标。
+- 视位置的 `frame` 选择固定、当日平或当日真参考面。
+- `lightTime`、`aberration`、`solarDeflection` 分别控制光行时、光行差和太阳光线偏折。
 
-现代层的拟合区间为公元 1000～3000 年，长期层面向天文年 `-6000..10000`。
+这些物理选项不改变底层模型系数。选项及示例见[视位置与天象搜索](./sky-events.md)。
 
-水星、金星、火星、天王星和海王星使用慢漂移与主周期相位项。
-木星和土星使用 25 年分段的 Chebyshev 残差级数，各段以独立缩放的 Int16
-系数存储，并在段界平滑拼接。木土修正的参考位置分别为 DE441 木星系统质心（5）
-和土星系统质心（6）相对太阳（10）的位置。
-
-经度、纬度和距离分别修正，速度由同一表达式解析求导。
-`PLANET_CORRECTION_INFO` 提供分层边界和误差统计，单位见[精度说明](./accuracy.md)。
+`moonElpLongitudeState()` 返回校准后的原生 ELP 框架黄经与解析变化率，
+不是日期参考系的视黄经。定朔中的 `moonLatitudeTerms` 控制黄纬取项数，
+其含义见[定朔设置](./accuracy.md#定朔设置)。

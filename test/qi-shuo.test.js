@@ -7,7 +7,9 @@ import {
   solveLunarPhase,
   solveNewMoon,
   solveSolarLongitude,
+  elongationState,
   ZonedTime,
+  JulianTime,
 } from '../src/index.js';
 
 function phaseResidual(value, target) {
@@ -21,20 +23,23 @@ test('lunar phase solver preserves new moon behavior and solves quarters', () =>
 
   const firstQuarter = solveLunarPhase(Math.PI / 2, 2451558);
   assert.ok(Number.isFinite(firstQuarter.jdUT1));
-  assert.ok(Math.abs(phaseResidual(firstQuarter.residualRadians, 0)) < 1e-8);
+  assert.ok(Math.abs(phaseResidual(elongationState(firstQuarter.jdTT).value, Math.PI / 2)) < 1e-8);
+  assert.equal('residualRadians' in firstQuarter, false);
 });
 
 test('annual qishuo table contains one civil year of terms and new moons', () => {
   const result = getQiShuoYear(2000);
+  assert.ok(result.events.every(event => event.time instanceof JulianTime && !('jdTT' in event)));
   const terms = result.events.filter(event => event.kind === 'solar-term');
   const moons = result.events.filter(event => event.kind === 'lunar-phase');
   assert.equal(terms.length, 24);
   assert.ok(moons.length === 12 || moons.length === 13);
   assert.equal(terms[0].name, '小寒');
   assert.equal(terms.at(-1).name, '冬至');
-  assert.ok(result.events.every((event, index, all) => index === 0 || event.jdUT1 >= all[index - 1].jdUT1));
+  assert.ok(result.events.every((event, index, all) => index === 0 || event.time.jdUT1 >= all[index - 1].time.jdUT1));
   assert.ok(result.events.every(event => event.localTime.year === 2000));
-  assert.ok(result.events.every(event => event.jdUT1 >= result.startJdUT1 && event.jdUT1 < result.endJdUT1));
+  assert.ok(result.events.every(event => event.time.jdUT1 >= result.startJdUT1 && event.time.jdUT1 < result.endJdUT1));
+  assert.ok(result.events.every(event => !('residualRadians' in event) && !('iterations' in event)));
 });
 
 test('annual qishuo table can combine four phases and 72 pentads without duplicate term roots', () => {
@@ -66,9 +71,9 @@ test('a civil year retains both occurrences of a pentad spanning consecutive sol
       { year: 2024, month: 12, day: 31 },
     ]);
     assert.equal(thirds[0].index, thirds[1].index); // An angle index is not a unique occurrence ID.
-    assert.ok(thirds[1].jdUT1 - thirds[0].jdUT1 > 365);
-    assert.ok(result.events.every((event, index, all) => index === 0 || event.jdUT1 > all[index - 1].jdUT1));
-    assert.ok(result.events.every(event => event.jdUT1 >= result.startJdUT1 && event.jdUT1 < result.endJdUT1));
+    assert.ok(thirds[1].time.jdUT1 - thirds[0].time.jdUT1 > 365);
+    assert.ok(result.events.every((event, index, all) => index === 0 || event.time.jdUT1 > all[index - 1].time.jdUT1));
+    assert.ok(result.events.every(event => event.time.jdUT1 >= result.startJdUT1 && event.time.jdUT1 < result.endJdUT1));
   }
 });
 
@@ -88,7 +93,7 @@ test('winter third-pentad roots are assigned to the correct civil year at differ
       const expected = roots.filter(root => root.jdUT1 >= result.startJdUT1 && root.jdUT1 < result.endJdUT1);
       const actual = result.events.filter(event => event.name === '冬至·三候');
       assert.equal(actual.length, expected.length, `${year}, UTC offset ${utcOffsetMinutes}`);
-      actual.forEach((event, index) => assert.ok(Math.abs(event.jdUT1 - expected[index].jdUT1) < 1e-7));
+      actual.forEach((event, index) => assert.ok(Math.abs(event.time.jdUT1 - expected[index].jdUT1) < 1e-7));
       assert.ok(result.events.every(event => event.localTime.year === year));
     }
   }
@@ -124,7 +129,7 @@ test('annual qishuo distinguishes display timezone from its calendar day boundar
   assert.equal(clock.dayBoundaryMode, CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET);
   assert.equal(meridian.dayBoundaryMode, CALENDAR_DAY_BOUNDARY_MODE.MEAN_SOLAR_MERIDIAN);
   assert.deepEqual(
-    clock.events.map(event => [event.jdUT1, event.assignedCivilDayNumber]),
-    meridian.events.map(event => [event.jdUT1, event.assignedCivilDayNumber]),
+    clock.events.map(event => [event.time.jdUT1, event.assignedCivilDayNumber]),
+    meridian.events.map(event => [event.time.jdUT1, event.assignedCivilDayNumber]),
   );
 });

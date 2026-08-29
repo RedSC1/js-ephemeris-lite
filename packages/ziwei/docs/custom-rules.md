@@ -120,7 +120,7 @@ const customChart = ZiweiChart.fromZonedTime(
   options.with({ rules: { ruleset } }),
 );
 const id = customChart.findStarId('custom_star');
-customChart.getStarInfo(id);
+if (id !== undefined) console.log(customChart.getStarInfo(id));
 ```
 
 新星会进入当前命盘的 `starCatalog`、`starPositions`、宫位 `starIds` 和任意长度的 `BigInt`

@@ -67,13 +67,13 @@ const chart = BaziChart.fromZonedTime(birth);
 
 此时内部仍会创建并持有一个采用默认值的 `BaziOptions`。
 
-需要基于旧配置调整少数选项时使用 `with()`，原对象不会改变：
+需要基于现有配置调整少数选项时使用 `with()`，原对象不会改变：
 
 ```ts
 const tenSteps = options.with({ daYunCount: 10 });
 ```
 
-兼容用的 `baziForZonedTime(birth, options)` 和底层纯函数仍然保留。
+也可通过函数入口 `baziForZonedTime(birth, options)` 创建命盘。
 
 ### 真太阳时排盘
 
@@ -95,7 +95,7 @@ const chart = BaziChart.fromZonedTime(birth, new BaziOptions({
 
 地方平太阳时使用 `BAZI_CLOCK_MODE.MEAN_SOLAR`，默认钟表模式为 `CIVIL`；传入经度后仍需显式选择太阳时模式。
 
-高级用法仍可自行构造虚拟钟表，再调用底层入口：
+需要自行构造排盘钟表时，可调用底层入口：
 
 ```ts
 import { trueSolarTime } from 'js-ephemeris-lite';
@@ -109,15 +109,15 @@ const chart = calculateBazi(birth.toJulianTime(), solarClock, options);
 
 ### 四柱反查
 
-反查必须提供有限的起止日期，因为同一组四柱会在不同年代重复出现。三个入口分别用于搜日期、展开某个日期候选的时辰，以及一次完成四柱反查：
+反查必须提供有限的起止日期，因为同一组四柱会在不同年代重复出现。`searchBaziDates()` 用于搜日期，`searchBaziTimesForDate()` 展开某个日期候选的时辰，`reverseLookupBazi()` 一次完成四柱反查：
 
 ```ts
 import {
-  BaziReverseLookup,
+  reverseLookupBazi,
   packPillar,
 } from 'bazi-lite';
 
-const matches = BaziReverseLookup.searchFullBazi({
+const matches = reverseLookupBazi({
   year: packPillar(2, 6),  // 丙午
   month: packPillar(6, 2), // 庚寅
   day: packPillar(5, 9),   // 己酉
@@ -128,7 +128,7 @@ const matches = BaziReverseLookup.searchFullBazi({
 });
 ```
 
-也可以直接调用树摇友好的独立函数 `searchBaziDates()`、`searchBaziTimesForDate()` 和 `reverseLookupBazi()`。反查会复用正向 `BaziChart` 逐项复核，并遵循同一套固定时区、真/平太阳时、历史节气分配日及三种子时设置。节令当天会保留节前、节后候选；时辰结果包含钟表时间段及“晚子时”标记。
+反查会复用正向 `BaziChart` 逐项复核，并遵循同一套固定时区、真/平太阳时、历史节气分配日及三种子时设置。节令当天会保留节前、节后候选；时辰结果包含钟表时间段及“晚子时”标记。
 
 ## 读取命盘
 
@@ -236,8 +236,8 @@ const json = JSON.stringify(chart, null, 2); // 自动调用 toJSON()
 - 低层 `fromInstant()` 未接收原始钟表，`clockTime` 为 `null`；`birthCivilTime` 表示计算用的虚拟钟表。
   可用导出的 `jdUT1`、`virtualTime`、`options` 重算。
 
-神煞 bitset 已转为普通数组，无 BigInt 序列化问题。起运/大运的民用日期沿用现有
-virtual-time 基准，导出内以 `fortune.clockBasis` 标明。本 schema 为本命盘快照，
+导出中的神煞以普通数组表示。起运/大运的民用日期采用排盘钟表（virtual-time）
+基准，导出内以 `fortune.clockBasis` 标明。本 schema 为本命盘快照，
 不含应用当前选中的流运、姓名或地点名称；这些信息可由应用另加 `profile` 保存。
 
 ## 起运与大运
@@ -251,7 +251,7 @@ const qiYun = chart.getQiYun();
 
 console.log({
   direction: qiYun.direction, // 1 顺排，-1 逆排
-  referenceJie: qiYun.referenceJie,
+  referenceJie: qiYun.referenceJie, // referenceJie.time 是 JulianTime，可调用 toZonedTime(480)
   jieIntervalDays: qiYun.jieIntervalDays,
   startAgeYears: qiYun.startAgeYears,
   traditionalOffset: qiYun.traditionalOffset,
@@ -275,7 +275,7 @@ for (const item of daYun) {
 }
 ```
 
-`getQiYun()` 缺少 `options.gender` 时会抛错。底层 `calculateQiYun()` 和 `generateDaYun()` 仍然公开，供批处理或特殊算法直接调用。
+`getQiYun()` 缺少 `options.gender` 时会抛错。批处理或自定义计算可直接调用 `calculateQiYun()` 和 `generateDaYun()`。
 
 ### 三种起运时刻模型
 
@@ -299,7 +299,7 @@ for (const item of daYun) {
 
 这两个模型相互独立，因此理论上有 `3 × 3` 种组合。通常使用默认组合：`TRADITIONAL_CALENDAR + CIVIL_YEARS`。
 
-当前顺逆规则固定为：阳年男、阴年女顺排；阴年男、阳年女逆排。性别是起运必填参数，没有默认值。
+顺逆规则为：阳年男、阴年女顺排；阴年男、阳年女逆排。性别是起运必填参数，没有默认值。
 
 只想取得大运干支、不计算节令交运时刻时，可使用 `generateDaYunPillars()`。
 

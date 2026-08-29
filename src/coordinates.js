@@ -1,4 +1,4 @@
-import { MODEL_DATA } from './generated/model-data.js';
+import { IAU2000B_TERMS } from './nutation-series.js';
 
 export const J2000 = 2451545.0;
 export const ARCSEC_TO_RAD = Math.PI / 648000;
@@ -51,8 +51,19 @@ function polynomialDerivative(coefficients, x) {
 }
 
 function multiply(a, b) {
-  return a.map(row => b[0].map((_, column) => row.reduce(
-    (sum, value, index) => sum + value * b[index][column], 0)));
+  const x = a[0], y = a[1], z = a[2], p = b[0], q = b[1], r = b[2];
+  // Fixed 3×3 products; preserve the original reduction order and initial +0.
+  return [
+    [((0 + x[0] * p[0]) + x[1] * q[0]) + x[2] * r[0],
+      ((0 + x[0] * p[1]) + x[1] * q[1]) + x[2] * r[1],
+      ((0 + x[0] * p[2]) + x[1] * q[2]) + x[2] * r[2]],
+    [((0 + y[0] * p[0]) + y[1] * q[0]) + y[2] * r[0],
+      ((0 + y[0] * p[1]) + y[1] * q[1]) + y[2] * r[1],
+      ((0 + y[0] * p[2]) + y[1] * q[2]) + y[2] * r[2]],
+    [((0 + z[0] * p[0]) + z[1] * q[0]) + z[2] * r[0],
+      ((0 + z[0] * p[1]) + z[1] * q[1]) + z[2] * r[1],
+      ((0 + z[0] * p[2]) + z[1] * q[2]) + z[2] * r[2]],
+  ];
 }
 
 function addMatrices(a, b) {
@@ -90,12 +101,6 @@ function cross(a, b) {
 function addVectors(a, b) {
   return a.map((value, index) => value + b[index]);
 }
-
-function normalize(vector) {
-  const length = Math.hypot(...vector);
-  return vector.map(value => value / length);
-}
-
 
 function normalizeState(vector, rate) {
   const length = Math.hypot(...vector);
@@ -140,7 +145,7 @@ export function iau2000bNutation(jdTT) {
 }
 
 /** IAU 2000B angles and analytic rates per TT day. */
-export function iau2000bNutationState(jdTT, termCount = MODEL_DATA.iau2000b.length) {
+export function iau2000bNutationState(jdTT, termCount = IAU2000B_TERMS.length) {
   const t = (jdTT - J2000) / DAYS_PER_CENTURY;
   const arcsecArgument = value => (value % 1296000) * ARCSEC_TO_RAD;
   const definitions = [
@@ -153,9 +158,9 @@ export function iau2000bNutationState(jdTT, termCount = MODEL_DATA.iau2000b.leng
   const fa = definitions.map(([offset, speed]) => arcsecArgument(offset + t * speed));
   const faRate = definitions.map(([, speed]) => speed * ARCSEC_TO_RAD / DAYS_PER_CENTURY);
   let dp = 0, de = 0, dpRate = 0, deRate = 0;
-  const count = Math.max(0, Math.min(termCount, MODEL_DATA.iau2000b.length));
+  const count = Math.max(0, Math.min(termCount, IAU2000B_TERMS.length));
   for (let i = count - 1; i >= 0; i -= 1) {
-    const [l, lp, f, d, om, ps, pst, pc, ec, ect, es] = MODEL_DATA.iau2000b[i];
+    const [l, lp, f, d, om, ps, pst, pc, ec, ect, es] = IAU2000B_TERMS[i];
     const argument = l * fa[0] + lp * fa[1] + f * fa[2] + d * fa[3] + om * fa[4];
     const argumentRate = l * faRate[0] + lp * faRate[1] + f * faRate[2] + d * faRate[3] + om * faRate[4];
     const s = Math.sin(argument), c = Math.cos(argument);
@@ -263,4 +268,54 @@ export function meanEclipticOfDateMatrixState(jdTT) {
     matrix: multiply(multiply(rx, precession.matrix), fixedInverse),
     rate: multiply(addMatrices(multiply(rxRate, precession.matrix), multiply(rx, precession.rate)), fixedInverse),
   };
+}
+
+const VALUE_FRAME_BIAS = multiply(
+  multiply(rotationX(0.0068192 * ARCSEC_TO_RAD), rotationY(-0.016617 * ARCSEC_TO_RAD)),
+  rotationZ(-0.0146 * ARCSEC_TO_RAD),
+);
+const J2000_ECLIPTIC_INVERSE = transpose(J2000_ECLIPTIC_STATE);
+
+/** Same date frame as the state evaluator, without matrix derivatives. */
+export function meanEclipticOfDateMatrix(jdTT) {
+  const t = (jdTT - J2000) / DAYS_PER_CENTURY;
+  let p = 0, q = 0, x = 0, y = 0;
+  for (const [period, c0, c1, s0, s1] of ECLIPTIC_PERIODIC) {
+    const a = TWO_PI * t / period;
+    p += Math.cos(a) * c0 + Math.sin(a) * s0;
+    q += Math.cos(a) * c1 + Math.sin(a) * s1;
+  }
+  p = (p + polynomial(PA, t)) * ARCSEC_TO_RAD;
+  q = (q + polynomial(QA, t)) * ARCSEC_TO_RAD;
+  const z = Math.sqrt(Math.max(1 - p * p - q * q, 0));
+  const ecliptic = [p, -q * Math.cos(EPS0) - z * Math.sin(EPS0), -q * Math.sin(EPS0) + z * Math.cos(EPS0)];
+  for (const [period, c0, c1, s0, s1] of EQUATOR_PERIODIC) {
+    const a = TWO_PI * t / period;
+    x += Math.cos(a) * c0 + Math.sin(a) * s0;
+    y += Math.cos(a) * c1 + Math.sin(a) * s1;
+  }
+  x = (x + polynomial(XA, t)) * ARCSEC_TO_RAD;
+  y = (y + polynomial(YA, t)) * ARCSEC_TO_RAD;
+  const pole = [x, y, Math.sqrt(Math.max(1 - x * x - y * y, 0))];
+  const equinox = cross(pole, ecliptic), length = Math.hypot(...equinox);
+  const unit = equinox.map(value => value / length);
+  const precession = multiply([unit, cross(pole, unit), pole], VALUE_FRAME_BIAS);
+  return multiply(multiply(rotationX(meanObliquityIau2006(jdTT)), precession), J2000_ECLIPTIC_INVERSE);
+}
+
+/** IAU 2000B longitude only; no obliquity or angular derivatives. */
+export function iau2000bNutationLongitude(jdTT, termCount = IAU2000B_TERMS.length) {
+  const t = (jdTT - J2000) / DAYS_PER_CENTURY;
+  const fa = [
+    [485868.249036, 1717915923.2178], [1287104.79305, 129596581.0481],
+    [335779.526232, 1739527262.8478], [1072260.70369, 1602961601.2090],
+    [450160.398036, -6962890.5431],
+  ].map(([a, b]) => ((a + t * b) % 1296000) * ARCSEC_TO_RAD);
+  let dp = 0;
+  for (let i = Math.max(0, Math.min(termCount, IAU2000B_TERMS.length)) - 1; i >= 0; i--) {
+    const [l, lp, f, d, om, ps, pst, pc] = IAU2000B_TERMS[i];
+    const a = l * fa[0] + lp * fa[1] + f * fa[2] + d * fa[3] + om * fa[4];
+    dp += (ps + pst * t) * Math.sin(a) + pc * Math.cos(a);
+  }
+  return (-0.000135 + dp * 1e-7) * ARCSEC_TO_RAD;
 }

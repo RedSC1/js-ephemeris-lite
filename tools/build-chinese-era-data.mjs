@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import {
   CHINESE_ERA_RULER_NAMES,
   CHINESE_ERA_RULER_SEGMENTS,
-} from '../src/chinese-era-ruler-names.js';
+} from './chinese-era-ruler-names.js';
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
 const sxwnlPath = process.argv[2]

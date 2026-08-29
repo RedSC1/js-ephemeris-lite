@@ -117,17 +117,17 @@ function decorateEvent(event, {
   meridianDeg,
   historicalKind,
 }) {
-  const localTime = ZonedTime.fromJulianTime(event.jdUT1, utcOffsetMinutes).toJSON();
-  const localCivilDayNumber = civilDayNumber(event.jdUT1, utcOffsetMinutes / 1440);
+  const localTime = ZonedTime.fromJulianTime(event.time.jdUT1, utcOffsetMinutes).toJSON();
+  const localCivilDayNumber = civilDayNumber(event.time.jdUT1, utcOffsetMinutes / 1440);
   let assignedCivilDayNumber = civilDayNumber(
-    event.jdUT1,
+    event.time.jdUT1,
     structureOffset(mode, dayBoundaryMode, utcOffsetMinutes, meridianDeg),
   );
   let assignmentSource = mode === CALENDAR_MODE.LOCAL_ASTRONOMICAL
     ? 'local-astronomical'
     : 'china-astronomical';
   if (mode === CALENDAR_MODE.HISTORICAL && historicalKind) {
-    const historicalDay = historicalEventCivilDay(historicalKind, event.jdUT1);
+    const historicalDay = historicalEventCivilDay(historicalKind, event.time.jdUT1);
     if (historicalDay !== null) {
       assignedCivilDayNumber = historicalDay;
       assignmentSource = 'historical-profile';
@@ -176,7 +176,7 @@ function solarEvents(startJdUT1, endJdUT1, stepCount, options) {
         pentadIndex,
         targetLongitude,
         targetLongitudeDeg: degree,
-        ...solved,
+        time: solved,
       }, {
         ...options,
         historicalKind: stepCount === 24 || pentadIndex === 0 ? 'solarTerm' : null,
@@ -209,7 +209,7 @@ function lunarPhaseEvents(startJdUT1, endJdUT1, anglesDeg, options) {
         index: serial,
         phaseAngle: targetElongation,
         phaseAngleDeg: angleDeg,
-        ...solved,
+        time: solved,
       }, {
         ...options,
         historicalKind: Math.abs(angleDeg) < 1e-10 ? 'newMoon' : null,
@@ -275,7 +275,7 @@ export function getQiShuoYear(civilYear, rawOptions = {}) {
     events.push(...pentads.filter(event => !includeSolarTerms || event.pentadIndex !== 0));
   }
   events.push(...lunarPhaseEvents(start, end, lunarPhaseAnglesDeg, options));
-  events.sort((left, right) => left.jdUT1 - right.jdUT1
+  events.sort((left, right) => left.time.jdUT1 - right.time.jdUT1
     || left.kind.localeCompare(right.kind)
     || left.index - right.index);
   return {

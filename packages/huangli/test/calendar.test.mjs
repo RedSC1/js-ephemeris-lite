@@ -2,13 +2,34 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { HuangliCalendar, getHuangliDay, createFlyingStarBoard, getThreeCyclesNinePeriods, ALMANAC_GODS } from '../src/index.js';
-import { getQiShuoYear, ZonedTime, calendarDateFromJulianDay, julianDay, ganzhiIndex, lunarToSolar } from 'js-ephemeris-lite';
+import { getQiShuoYear, JulianTime, ZonedTime, calendarDateFromJulianDay, julianDay, ganzhiIndex, lunarToSolar, setEventAccuracy, getEventAccuracy } from 'js-ephemeris-lite';
 import { getFestivalDetails } from '../src/festivals.js';
 
 const cal=new HuangliCalendar();
 const allFestivals=new HuangliCalendar({festivalMode:'all'});
 const fixture=JSON.parse(readFileSync(new URL('./fixtures/calendar-dart.json',import.meta.url)));
 const additions=JSON.parse(readFileSync(new URL('./fixtures/additions-dart.json',import.meta.url)));
+test('existing almanac instances do not reuse event caches across accuracy modes', () => {
+  const saved=getEventAccuracy(), instance=new HuangliCalendar(), dates=[];
+  try {
+    for(const accuracy of ['mid','fast','accurate','mid']) {
+      setEventAccuracy(accuracy);
+      const actual=instance.getDay(2026,6,21).solarTerm;
+      assert.ok(actual.time instanceof JulianTime);
+      assert.equal(actual.time.toZonedTime(480).offsetMinutes,480);
+      assert.equal('jdTT' in actual,false);
+      const fresh=new HuangliCalendar().getDay(2026,6,21).solarTerm;
+      assert.equal(actual.time.jdTT,fresh.time.jdTT);
+      const event=getQiShuoYear(2026,{lunarPhaseAnglesDeg:[]}).events.find(e=>e.kind==='solar-term' && e.termIndex===6);
+      assert.equal(actual.time.jdTT,event.time.jdTT);
+      assert.equal('residualRadians' in event,false);
+      dates.push(actual.time.jdTT);
+    }
+    assert.notEqual(dates[0],dates[1]);
+    assert.notEqual(dates[1],dates[2]);
+    assert.equal(dates[0],dates[3]);
+  } finally { setEventAccuracy(saved); }
+});
 test('368 clock-time calendar cases match Dart outside documented source bugs', () => {
   const instances=new Map();
   assert.equal(fixture.samples.length,368);
@@ -245,7 +266,7 @@ test('nine-palace ordering, boundaries and solstice switching', () => {
   assert.equal(new HuangliCalendar({exactJieQiTime:true}).getDay(2026,6,5).flyingStars.month[4],5);
   const event=getQiShuoYear(2026).events.find(e=>e.kind==='solar-term'&&e.termIndex===6);
   const exact=new HuangliCalendar({exactJieQiTime:true});
-  const at=delta=>{const t=ZonedTime.fromJulianTime(event.jdUT1+delta,480);return exact.getDay(t.year,t.month,t.day,{hour:t.hour,minute:t.minute,second:t.second});};
+  const at=delta=>{const t=ZonedTime.fromJulianTime(event.time.jdUT1+delta,480);return exact.getDay(t.year,t.month,t.day,{hour:t.hour,minute:t.minute,second:t.second});};
   assert.equal(at(-1/86400).flyingStars.forward,true);
   assert.equal(at(1/86400).flyingStars.forward,false);
   assert.equal(new HuangliCalendar({flyingStarMethod:'discontinuous'}).getDay(2026,6,21).flyingStars.day[4],9);

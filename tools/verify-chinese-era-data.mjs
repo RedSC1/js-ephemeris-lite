@@ -8,7 +8,7 @@ import {
 import {
   CHINESE_ERA_RULER_NAMES,
   CHINESE_ERA_RULER_SEGMENTS,
-} from '../src/chinese-era-ruler-names.js';
+} from './chinese-era-ruler-names.js';
 
 const sxwnlPath = process.argv[2]
   ?? '/Users/rzliu/Developer/OpenDestiny/sxwnl/src/lunar.js';

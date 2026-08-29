@@ -67,6 +67,26 @@ test('TT and UT1 helpers round trip', () => {
   }
 });
 
+test('JulianTime preserves TT event roots and restores JSON without a timezone', () => {
+  for (const jdTT of [-450135.9998242189, 2086302.5, 2451545, 2461212.85, 5373484.5]) {
+    const time = JulianTime.fromTT(jdTT);
+    assert.equal(time.jdTT, jdTT);
+    assert.equal(time.deltaTSeconds, deltaTSecondsFromTt(jdTT));
+    assert.equal('offsetMinutes' in time, false);
+    assert.ok(Object.isFrozen(time));
+    assert.deepEqual(new JulianTime(JSON.parse(JSON.stringify(time))), time);
+    for (const offset of [-720, 0, 345, 480, 840]) {
+      const clock = time.toZonedTime(offset);
+      assert.equal(clock.offsetMinutes, offset);
+      near(clock.toJulianTime().jdUT1, time.jdUT1, 1e-9);
+    }
+  }
+  for (const invalid of [null, {}, { jdTT: NaN, jdUT1: 0, deltaTSeconds: 0 }]) {
+    assert.throws(() => new JulianTime(invalid), TypeError);
+  }
+  assert.throws(() => new JulianTime({ jdTT: 2451546, jdUT1: 2451545, deltaTSeconds: 0 }), RangeError);
+});
+
 test('JulianTime converts JavaScript Date through its Unix timestamp', () => {
   const epoch = JulianTime.fromDate(new Date(0));
   near(epoch.jdUT1, 2440587.5, 0);

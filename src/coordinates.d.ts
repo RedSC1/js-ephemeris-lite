@@ -34,3 +34,5 @@ export function iau2000bNutationState(jdTT: number, termCount?: number): Nutatio
 export function vondrak2011PrecessionMatrix(jdTT: number): Matrix3;
 export function vondrak2011PrecessionMatrixState(jdTT: number): MatrixState;
 export function meanEclipticOfDateMatrixState(jdTT: number): MatrixState;
+export function meanEclipticOfDateMatrix(jdTT: number): Matrix3;
+export function iau2000bNutationLongitude(jdTT: number, termCount?: number): number;

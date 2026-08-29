@@ -1,4 +1,4 @@
-import type { CalendarMode, CalendarInput, CivilDate, CivilDateTime, ResolvedLunarDate, FourPillars, RatHourMode } from 'js-ephemeris-lite';
+import type { JulianTime, CalendarMode, CalendarInput, CivilDate, CivilDateTime, ResolvedLunarDate, FourPillars, RatHourMode } from 'js-ephemeris-lite';
 import type { AlmanacRuleInput, AlmanacRulesResult } from './rules.js';
 export * from './rules.js';
 export * from './feng-shui.js';
@@ -75,8 +75,8 @@ export interface HuangliDay extends AlmanacRulesResult {
   /** Exact inputs passed to the pure evaluator, including a copied display mask. */
   ruleInput: AlmanacRuleInput;
   pillars: FourPillars; pillarNames: Record<'year'|'month'|'day'|'hour', string>;
-  solarTerm: null | {name: string; jdTT: number; jdUT1: number; localTime: CivilDateTime & {offsetMinutes: number}; assignedDate: CivilDate};
-  moonPhases: Array<{name: string; jdTT: number; jdUT1: number}>;
+  solarTerm: null | {name: string; time: JulianTime; localTime: CivilDateTime & {offsetMinutes: number}; assignedDate: CivilDate};
+  moonPhases: Array<{name: string; time: JulianTime}>;
   mansion: {name: string; fullName: string; direction: string; isGood: boolean};
   /** Normalized names in the same order as festivalDetails. */
   festivals: string[];

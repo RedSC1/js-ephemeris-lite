@@ -10,7 +10,7 @@ import {
 } from './sky-math.js';
 
 export const SKY_BODIES = Object.freeze([
-  'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune',
+  'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
 ]);
 export const LIGHT_TIME_DAYS_PER_AU = AU_KM / 299792.458 / 86400;
 const RATE_STEP_DAYS = 0.0005;
@@ -24,17 +24,17 @@ export function validateSkyBody(body) {
 
 // All states here are heliocentric J2000 ecliptic, AU and AU/day. Never feed
 // the native km-valued geocentric lunar state into a planetary correction.
-function heliocentricState(body, jdTT, options) {
+function heliocentricState(body, jdTT) {
   if (body === 'sun') return { position: [0, 0, 0], velocity: [0, 0, 0] };
   if (body === 'moon') {
-    const earth = earthHeliocentricState(jdTT, options);
-    const moon = moonGeocentricState(jdTT, options);
+    const earth = earthHeliocentricState(jdTT);
+    const moon = moonGeocentricState(jdTT);
     return {
       position: add(earth.position, scale(moon.position, 1 / AU_KM)),
       velocity: add(earth.velocity, scale(moon.velocity, 1 / AU_KM)),
     };
   }
-  return planetHeliocentricState(body, jdTT, options);
+  return planetHeliocentricState(body, jdTT);
 }
 
 function aberrate(position, observerVelocity) {
@@ -64,8 +64,8 @@ export function apparentGeometry(body, jdTT, options = {}) {
   finite(jdTT, 'jdTT');
   const frame = options.frame ?? SKY_FRAME.TRUE_OF_DATE;
   if (!Object.values(SKY_FRAME).includes(frame)) throw new RangeError(`unsupported sky frame: ${frame}`);
-  const earth = earthHeliocentricState(jdTT, options);
-  let target = heliocentricState(body, jdTT, options);
+  const earth = earthHeliocentricState(jdTT);
+  let target = heliocentricState(body, jdTT);
   let position = sub(target.position, earth.position);
   let lightTimeDays = 0;
   if (options.lightTime !== false) {
@@ -75,7 +75,7 @@ export function apparentGeometry(body, jdTT, options = {}) {
       const change = Math.abs(next - lightTimeDays);
       lightTimeDays = next;
       const emissionTime = jdTT - lightTimeDays;
-      target = heliocentricState(body, emissionTime, options);
+      target = heliocentricState(body, emissionTime);
       // JD loses ~40 microseconds when a tiny light-time is subtracted from
       // a modern epoch. Restore the rounded-away fraction with the analytic
       // velocity. Otherwise lunar rates amplify Earth's quantized motion.

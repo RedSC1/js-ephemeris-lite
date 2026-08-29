@@ -235,9 +235,8 @@ function makeFlowMonthWithOffset(
   const doujun = advanceBranch(yearBranch(effectiveYear), -(birthMonth - 1) + birthHour);
   const branch = advanceBranch(doujun, palaceMonthIndex - 1);
   const startTiger = yearStem(effectiveYear) % 5 * 2 + 2;
-  // The caller owns the stem-offset convention. Calendar-backed construction
-  // may inherit an effective month, while the legacy/Dart entry point always
-  // advances Wu-Hu-Dun by the physical sequence.
+  // The caller supplies the stem offset: lunar flow may inherit an effective
+  // month, while solar-term flow advances Wu-Hu-Dun by its month sequence.
   const coordinate = Object.freeze({ stem: mod(startTiger + monthStemOffset, 10), branch });
   return Object.freeze({
     year,
@@ -327,7 +326,12 @@ export function makeFlowMonthFromBuildingBranch(
   );
 }
 
-/** Legacy/Dart-compatible form. Prefer makeFlowMonthFromBuildingBranch. */
+/**
+ * Sequence-based flow month, used by solar-term flow with month = sequence and
+ * no leap month. The caller supplies the year resolved at the solar-term boundary.
+ * Wu-Hu-Dun and the Life Palace both advance by sequence; isLeap is metadata only.
+ * Lunar leap-month and palace strategies require makeFlowMonthFromBuildingBranch.
+ */
 export function makeFlowMonth(
   chart: ZiweiChart,
   year: number,

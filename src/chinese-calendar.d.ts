@@ -41,17 +41,11 @@ export interface SolarTermEvent {
   indexFromWinterSolstice: number;
   targetLongitude: number;
   time: JulianTime;
-  jdTT: number;
-  jdUT1: number;
-  deltaTSeconds: number;
   civilDayNumber: number;
 }
 
 export interface NewMoonEvent {
   time: JulianTime;
-  jdTT: number;
-  jdUT1: number;
-  deltaTSeconds: number;
   civilDayNumber: number;
 }
 
@@ -65,7 +59,7 @@ export interface LunarMonth {
   monthName: LunarMonthName;
   monthBuildingBranch: number;
   firstCivilDayNumber: number;
-  astronomicalNewMoonJdUT1: number;
+  newMoon: JulianTime;
 }
 
 export interface ChineseCalendarYear {

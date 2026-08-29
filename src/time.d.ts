@@ -22,6 +22,13 @@ export interface ZonedTimeInput extends CalendarInput {
 
 export type Ut1Input = number | JulianTime;
 
+/** A physical instant expressed in TT and UT1, with TT − UT1 in seconds. */
+export interface AstroTime {
+  readonly jdTT: number;
+  readonly jdUT1: number;
+  readonly deltaTSeconds: number;
+}
+
 export function deltaTSeconds(decimalYear: number): number;
 export function julianDay(fields: CalendarInput): number;
 export function calendarDateFromJulianDay(jd: number): CivilDateTime;
@@ -31,8 +38,9 @@ export function deltaTSecondsFromTt(jdTT: number): number;
 export function ttToUt1(jdTT: number, deltaT?: number): number;
 export function ut1ToTt(jdUT1: number, deltaT?: number): number;
 
-export class JulianTime {
-  constructor(jdUT1: number);
+export class JulianTime implements AstroTime {
+  /** Numeric inputs are UT1 JD; AstroTime inputs restore an existing instant. */
+  constructor(time: number | AstroTime);
   readonly jdUT1: number;
   readonly jdTT: number;
   readonly deltaTSeconds: number;
@@ -43,11 +51,7 @@ export class JulianTime {
   toUnixMilliseconds(): number;
   toDate(): Date;
   toZonedTime(offsetMinutes: number): ZonedTime;
-  toJSON(): {
-    jdUT1: number;
-    jdTT: number;
-    deltaTSeconds: number;
-  };
+  toJSON(): AstroTime;
 }
 
 export class ZonedTime implements CivilDateTime {

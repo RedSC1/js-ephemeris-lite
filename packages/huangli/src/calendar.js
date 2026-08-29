@@ -1,7 +1,7 @@
 import {
   ZonedTime, julianDay, calendarDateFromJulianDay, CALENDAR_MODE,
   solarToLunar, fourPillarsForZonedTime, ganzhiIndex, ganzhiName, makeGanzhi, getMonthGanzhi,
-  RAT_HOUR_MODE, getQiShuoYear, getHourGanzhi, ganzhiStem, getNayinId, getNayinElement,
+  RAT_HOUR_MODE, getQiShuoYear, getHourGanzhi, ganzhiStem, getNayinId, getNayinElement, getEventAccuracy,
 } from 'js-ephemeris-lite';
 import { DATA } from './data.js';
 import { evaluateAlmanacRules } from './rules.js';
@@ -52,14 +52,15 @@ export class HuangliCalendar {
     Object.freeze(this); // Configuration cannot change underneath the event cache.
   }
   #events(year) {
-    if(!this.#cache.has(year)) {
+    const key=`${getEventAccuracy()}:${year}`;
+    if(!this.#cache.has(key)) {
       const result=getQiShuoYear(year,{mode:this.options.mode,utcOffsetMinutes:this.options.utcOffsetMinutes,
         lunarPhaseAnglesDeg:[0,90,180,270]});
       const events=result.events.map(e=>({...e,dayNumber:this.options.mode==='historical' && e.kind==='solar-term'?e.assignedCivilDayNumber:e.localCivilDayNumber}));
-      this.#cache.set(year,events);
+      this.#cache.set(key,events);
       if(this.#cache.size>6) this.#cache.delete(this.#cache.keys().next().value);
     }
-    return this.#cache.get(year);
+    return this.#cache.get(key);
   }
   getDay(year,month,day,options={}) {
     integer(year,-5999,9999,'year');
@@ -71,18 +72,18 @@ export class HuangliCalendar {
     const localDay=Math.floor(julianDay({year,month,day,hour:12})+0.5);
     const nextDay=cfg.ratHourMode===RAT_HOUR_MODE.NEXT_DAY && hour>=23;
     const metaDay=localDay+(nextDay?1:0), metaDate=dateAt(metaDay);
-    const all=[...this.#events(year-1),...this.#events(year),...this.#events(year+1)].sort((a,b)=>a.jdTT-b.jdTT);
+    const all=[...this.#events(year-1),...this.#events(year),...this.#events(year+1)].sort((a,b)=>a.time.jdTT-b.time.jdTT);
     const terms=all.filter(e=>e.kind==='solar-term');
     const nextSeason=terms.find(e=>SEASON_STARTS.includes(e.termIndex) && e.dayNumber>metaDay);
     const automaticTuWang=nextSeason.dayNumber-metaDay<=18;
     const tuWangYongShi={...tuWangPeriod(nextSeason),
       active:isTuWangYongShi ?? (cfg.tuWangMethod==='four-seasons-18-days' && automaticTuWang),
       source:isTuWangYongShi!==undefined?'override':cfg.tuWangMethod==='manual'?'manual':'calendar'};
-    const passed=e=>cfg.exactJieQiTime && cfg.mode!=='historical'?e.jdUT1<=jdUT1:e.dayNumber<=localDay;
+    const passed=e=>cfg.exactJieQiTime && cfg.mode!=='historical'?e.time.jdUT1<=jdUT1:e.dayNumber<=localDay;
     const previous=terms.filter(passed).at(-1);
     // Historical terms are day assignments, not physical instants. In that
     // mode the seasonal Yi/Ji input must advance on the assigned day too.
-    const upcoming=terms.find(e=>cfg.mode==='historical'?e.dayNumber>localDay:e.jdUT1>jdUT1);
+    const upcoming=terms.find(e=>cfg.mode==='historical'?e.dayNumber>localDay:e.time.jdUT1>jdUT1);
     const todayTerm=terms.find(e=>e.dayNumber===localDay) ?? null;
     const tomorrowTerm=terms.find(e=>e.dayNumber===localDay+1);
     const lichun=terms.filter(e=>e.termIndex===21 && passed(e)).at(-1);
@@ -107,7 +108,7 @@ export class HuangliCalendar {
     // the source's epsilon subtraction assigning exact midnight to yesterday.
     const metaTermDay=e=>e.dayNumber+(cfg.mode!=='historical' && cfg.ratHourMode===RAT_HOUR_MODE.NEXT_DAY && e.localTime.hour>=23?1:0);
     const solstice=terms.filter(e=>[6,18].includes(e.termIndex) &&
-      (cfg.exactJieQiTime && cfg.mode!=='historical'?e.jdUT1<=jdUT1:metaTermDay(e)<=metaDay)).at(-1);
+      (cfg.exactJieQiTime && cfg.mode!=='historical'?e.time.jdUT1<=jdUT1:metaTermDay(e)<=metaDay)).at(-1);
     const forward=solstice.termIndex===18;
     let anchor=metaTermDay(solstice), n=mod(anchor-2451551,60);
     if(cfg.flyingStarMethod==='consecutive') anchor+=n>29?60-n:-n;
@@ -122,8 +123,8 @@ export class HuangliCalendar {
       solarDate:date.toJSON(), lunarDate:lunar, jdUT1, weekday, pillars,
       ruleDate:metaDate, ruleLunarDate:{...metaLunar}, ruleInput,
       pillarNames:Object.fromEntries(Object.entries(pillars).map(([k,v])=>[k,ganzhiName(v)])),
-      solarTerm:todayTerm?{name:todayTerm.name,jdTT:todayTerm.jdTT,jdUT1:todayTerm.jdUT1,localTime:{...todayTerm.localTime},assignedDate:{...todayTerm.assignedDate}}:null,
-      moonPhases:all.filter(e=>e.kind==='lunar-phase' && e.localCivilDayNumber===localDay).map(e=>({name:e.name,jdTT:e.jdTT,jdUT1:e.jdUT1})),
+      solarTerm:todayTerm?{name:todayTerm.name,time:todayTerm.time,localTime:{...todayTerm.localTime},assignedDate:{...todayTerm.assignedDate}}:null,
+      moonPhases:all.filter(e=>e.kind==='lunar-phase' && e.localCivilDayNumber===localDay).map(e=>({name:e.name,time:e.time})),
       mansion:{...mansion}, festivals:festivalDetails.map(f=>f.name), festivalDetails,
       flags, tuWangYongShi, ...rules, dutyGod:duty(dayIndex%12,monthBranch),
       pengZu:`${DATA.pengzuStem[dayIndex%10]}，${DATA.pengzuBranch[dayIndex%12]}`,
@@ -135,7 +136,7 @@ export class HuangliCalendar {
         day:createFlyingStarBoard(dayCenter,forward),hour:createFlyingStarBoard(hourCenter,forward),forward},
       ...getThreeCyclesNinePeriods(year),
     };
-    // Plain data: JSON.stringify(result) includes birth/clock time and settings.
+    // JulianTime serializes its three time fields; settings and civil labels remain explicit.
     return {...result,settings:{...cfg}};
   }
   getMonth(year,month,options={}) {

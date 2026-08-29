@@ -172,17 +172,17 @@ test('calendar-backed flow keeps written month, sequence and physical month-buil
   );
   assert.notEqual(effectiveEarly.limit.coordinate.branch, effectiveLate.limit.coordinate.branch);
 
-  // Legacy/Dart construction always advances by physical sequence, even if
-  // the calendar-backed strategy is configured to follow effectiveMonth.
-  const legacyThirteenNormal = makeFlowMonth(effectivePalaceChart, 2025, 12, 13, false);
-  const legacyThirteenLeap = makeFlowMonth(effectivePalaceChart, 2025, 12, 13, true);
-  assert.equal(legacyThirteenLeap.palaceMonthIndex, 13);
+  // The sequence-based constructor does not apply lunar month strategies;
+  // isLeap records a label without changing the supplied sequence.
+  const sequenceThirteenNormal = makeFlowMonth(effectivePalaceChart, 2025, 12, 13, false);
+  const sequenceThirteenLeap = makeFlowMonth(effectivePalaceChart, 2025, 12, 13, true);
+  assert.equal(sequenceThirteenLeap.palaceMonthIndex, 13);
   assert.equal(
-    legacyThirteenLeap.limit.coordinate.branch,
-    (legacyThirteenLeap.doujun + 12) % 12,
+    sequenceThirteenLeap.limit.coordinate.branch,
+    (sequenceThirteenLeap.doujun + 12) % 12,
   );
   assert.deepEqual(
-    [legacyThirteenNormal.limit.coordinate.stem, legacyThirteenLeap.limit.coordinate.stem],
+    [sequenceThirteenNormal.limit.coordinate.stem, sequenceThirteenLeap.limit.coordinate.stem],
     [6, 6],
   );
 });

@@ -46,13 +46,12 @@ test('Denver fast sunrise/set tracks the C++ fast regression oracles', () => {
       options,
     );
     assert.equal(result.altitudeState, SOLAR_ALTITUDE_STATE.CROSSES);
-    assert.equal(result.path, 'analytic-newton');
-    assert.ok(result.rise instanceof ZonedTime);
-    assert.ok(result.set instanceof ZonedTime);
-    assert.ok(Math.abs(result.rise.toJulianTime().jdUT1 - expectedRise) * 86400 <= riseTolerance);
-    assert.ok(Math.abs(result.set.toJulianTime().jdUT1 - expectedSet) * 86400 <= setTolerance);
-    assert.equal(result.rise.day, 8);
-    assert.equal(result.set.day, 8);
+    assert.ok(result.rise instanceof JulianTime);
+    assert.ok(result.set instanceof JulianTime);
+    assert.ok(Math.abs(result.rise.jdUT1 - expectedRise) * 86400 <= riseTolerance);
+    assert.ok(Math.abs(result.set.jdUT1 - expectedSet) * 86400 <= setTolerance);
+    assert.equal(result.rise.toZonedTime(-360).day, 8);
+    assert.equal(result.set.toZonedTime(-360).day, 8);
   }
 });
 
@@ -62,7 +61,6 @@ test('high-latitude fast window classifies crossings, polar day and polar night'
     zonedDate(2024, 4, 15, 120),
     location,
   );
-  assert.equal(spring.path, 'fallback-window');
   assert.equal(spring.altitudeState, SOLAR_ALTITUDE_STATE.CROSSES);
   assert.ok(spring.rise && spring.set);
 
@@ -92,15 +90,17 @@ test('typed center and standalone altitude APIs remain finite', () => {
   assert.ok(Number.isFinite(altitude.centerAltitudeRad));
   assert.ok(Number.isFinite(altitude.apparentAltitudeRad));
   assert.ok(Number.isFinite(altitude.azimuthRad));
+  assert.equal("residualRad" in altitude, false);
+  assert.deepEqual(Object.keys(result).sort(), ["altitudeState", "limb", "refraction", "rise", "set"]);
 
   const numeric = solarRiseSetForDate(center.jdUT1, observer);
-  assert.equal(typeof numeric.rise, 'number');
-  assert.equal(typeof numeric.set, 'number');
+  assert.ok(numeric.rise instanceof JulianTime);
+  assert.ok(numeric.set instanceof JulianTime);
   const typed = solarRiseSetForDate(center, observer);
   assert.ok(typed.rise instanceof JulianTime);
   assert.ok(typed.set instanceof JulianTime);
-  assert.ok(Math.abs(numeric.rise - typed.rise.jdUT1) < 1e-15);
-  assert.ok(Math.abs(numeric.set - typed.set.jdUT1) < 1e-15);
+  assert.ok(Math.abs(numeric.rise.jdUT1 - typed.rise.jdUT1) < 1e-15);
+  assert.ok(Math.abs(numeric.set.jdUT1 - typed.set.jdUT1) < 1e-15);
 });
 
 test('fast rise/set remains finite across the lite long interval', () => {
@@ -110,7 +110,7 @@ test('fast rise/set remains finite across the lite long interval', () => {
       { longitudeDeg: 116.4, latitudeDeg: 39.9, heightMeters: 50 },
     );
     assert.equal(result.altitudeState, SOLAR_ALTITUDE_STATE.CROSSES);
-    assert.ok(Number.isFinite(result.rise.toJulianTime().jdUT1));
-    assert.ok(Number.isFinite(result.set.toJulianTime().jdUT1));
+    assert.ok(Number.isFinite(result.rise.jdUT1));
+    assert.ok(Number.isFinite(result.set.jdUT1));
   }
 });

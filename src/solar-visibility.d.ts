@@ -35,20 +35,16 @@ export interface SolarVisibilityOptions {
 }
 
 export interface SolarAltitudeSample {
-  residualRad: number;
   slopeRadPerDay: number;
   centerAltitudeRad: number;
   apparentAltitudeRad: number;
   azimuthRad: number;
 }
 
-export interface SolarRiseSetResult<T = JulianTime> {
+export interface SolarRiseSetResult {
   altitudeState: SolarAltitudeState;
-  rise: T | null;
-  set: T | null;
-  sampleCount: number;
-  refineCount: number;
-  path: 'analytic-newton' | 'fallback-window';
+  rise: JulianTime | null;
+  set: JulianTime | null;
   limb: SolarLimb;
   refraction: boolean;
 }
@@ -67,21 +63,12 @@ export function computeSolarRiseSetFast(
   observer: SolarObserver,
   options?: SolarVisibilityOptions,
 ): SolarRiseSetResult;
+/** ZonedTime selects a local civil day; number/JulianTime selects a centered UT1 window. */
 export function solarRiseSetForDate(
-  dateOrCenter: number,
+  dateOrCenter: number | JulianTime | ZonedTime,
   observer: SolarObserver,
   options?: SolarVisibilityOptions,
-): SolarRiseSetResult<number>;
-export function solarRiseSetForDate(
-  dateOrCenter: JulianTime,
-  observer: SolarObserver,
-  options?: SolarVisibilityOptions,
-): SolarRiseSetResult<JulianTime>;
-export function solarRiseSetForDate(
-  dateOrCenter: ZonedTime,
-  observer: SolarObserver,
-  options?: SolarVisibilityOptions,
-): SolarRiseSetResult<ZonedTime>;
+): SolarRiseSetResult;
 
 export const SOLAR_VISIBILITY_INFO: Readonly<{
   ordinaryLatitudeLimitDeg: number;

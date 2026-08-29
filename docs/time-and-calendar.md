@@ -1,12 +1,12 @@
 # 时间、太阳时、干支与农历
 
-[返回首页](../README.md)。本页示例对应当前源码。
+[返回首页](../README.md) · [精度与适用范围](./accuracy.md)
 
 ## 时间约定
 
-星历与事件求根输入都是 TT 的 Julian Day；事件结果同时给出 `jdTT`、估算的 `jdUT1` 和 `deltaTSeconds`。
+星历与事件求根输入使用 TT 的 Julian Day；历法查询和地平观测使用 UT1。事件时间由 `JulianTime` 表示，包含 `jdTT`、估算的 `jdUT1` 和 `deltaTSeconds`。
 
-lite 时间层约定 `UTC ≈ UT1`，不携带闰秒、TAI 或 EOP 表；TT 仍通过 `TT = UT1 + ΔT` 单独计算。`JulianTime` 保存 `jdUT1`、`jdTT` 和 `deltaTSeconds`，`ZonedTime` 表示强制带 `offsetMinutes` 的民用时间。`JulianTime.fromDate()` 只读取原生 `Date.getTime()`，不会拆分或重新解释原生 Date 的年月日。历法查询可直接接收 `JulianTime`，事件结果也附带 `event.time`，原有数值 JD 字段继续保留。
+lite 时间层约定 `UTC ≈ UT1`，不携带闰秒、TAI 或 EOP 表；TT 仍通过 `TT = UT1 + ΔT` 单独计算。`JulianTime` 保存 `jdUT1`、`jdTT` 和 `deltaTSeconds`，`ZonedTime` 表示强制带 `offsetMinutes` 的民用时间。`JulianTime.fromDate()` 只读取原生 `Date.getTime()`，不会拆分或重新解释原生 Date 的年月日。历法查询可直接接收 `JulianTime`。事件的 `time` 是不带时区的 `JulianTime`；需要民用钟表时调用 `event.time.toZonedTime(offsetMinutes)`。
 
 民用日期从 1582-10-15 起用格里历，之前用儒略历；1582-10-05 至 14 为缺日。
 天文年号 0 表示公元前 1 年。固定时区不会自动处理夏令时。
@@ -22,6 +22,36 @@ console.log(now.jdTT, clock.toJulianTime().jdUT1);
 console.log(now.toZonedTime(480));
 ```
 
+### 事件时间与时区
+
+`JulianTime` 表示物理瞬间，不保存时区；`ZonedTime` 表示该瞬间在某个固定偏移下的钟表读数。
+改变显示时区不会改变事件发生的时刻，也不自动改变历法规定的归日。
+
+| 接口 | 时间返回 |
+| --- | --- |
+| `solarLongitudeTimeFast/Accurate`、`lunarPhaseTimeFast/Accurate` | TT JD 数值 |
+| `solveSolarLongitude`、`solveLunarPhase`、`solveNewMoon` | `JulianTime` |
+| 节气、新月、气朔年表和天象搜索事件 | `event.time: JulianTime` |
+| 农历月份的天文新月 | `month.newMoon: JulianTime` |
+| 太阳专用日出日落 | `rise/set: JulianTime \| null` |
+| 通用天体升落和中天 | `rises/sets/upperTransits/lowerTransits: JulianTime[]` |
+
+```js
+import { getSpecificSolarTerm, JulianTime } from 'js-ephemeris-lite';
+
+const summer = getSpecificSolarTerm(2026, 6);
+console.log(summer.time.jdTT);
+console.log(summer.time.toZonedTime(480));
+console.log(summer.time.toZonedTime(0));
+
+// JSON 保留 TT、UT1、ΔT；恢复后可继续调用时间转换方法。
+const restored = new JulianTime(JSON.parse(JSON.stringify(summer.time)));
+console.log(restored.toZonedTime(480));
+```
+
+`solve…` 直接返回时间对象，可读取 `.jdTT/.jdUT1` 或调用时间转换方法。
+底层通用数学搜索 `searchCrossings/searchAngleCrossings` 不绑定天文时标，返回 `{ time: number }` 数组。
+
 ## 农历转换
 
 默认 `mode: 'historical'`、`utcOffsetMinutes: 480`。
@@ -36,7 +66,7 @@ const solar = lunarToSolar({ year: 2033, month: 11, day: 1, isLeap: true }, opti
 console.log(lunar, solar, instantToLunar(JulianTime.fromDate(new Date()), options));
 ```
 
-`src/chinese-calendar.js` 提供：
+`js-ephemeris-lite/chinese-calendar` 提供以下接口，主入口也导出这些函数：
 
 - `calculateChineseCalendarYear(jdUT1)`：生成从前一冬至开始的 25 个节气、15 个朔和 14 个月；
 - `findSolarTerm(jdUT1, { direction, filter })`：搜索前后节气，`filter` 可取 `any`、`jie` 或 `qi`；同时提供 `getPreviousJie()` 等便捷函数；
@@ -72,7 +102,19 @@ const customMeridian = {
 
 ## 全年节气与月相
 
-`src/qi-shuo.js` 的 `getQiShuoYear(civilYear, options)` 按固定时区的民用年汇总二十四节气、七十二候和任意月相角。默认返回节气与朔；可用 `lunarPhaseAnglesDeg: [0, 90, 180, 270]` 加入朔、上弦、望和下弦，或用 `includePentads: true` 加入七十二候。每个事件同时返回精确 `jdTT` / `jdUT1`、当地钟表时间、ΔT、求根诊断和历法归日；历史模式会保留历书归日与真实天象日的差异。
+`getQiShuoYear(civilYear, options)` 按固定时区的民用年汇总节气、七十二候和指定月相角的事件。
+默认返回节气与朔；`lunarPhaseAnglesDeg: [0, 90, 180, 270]` 加入四个主要月相，
+`includePentads: true` 加入七十二候。事件按发生时刻落入民用年来收集；事件数量并非固定值。
+
+| 事件字段 | 含义 |
+| --- | --- |
+| `kind`、`name`、`index` | 事件类型、名称与目标角度编号；`index` 不是唯一事件 ID |
+| `time` | `JulianTime`，提供 TT、UT1 和 ΔT |
+| `localTime`、`localDate` | 指定固定时区的钟表读数和日期 |
+| `assignedDate` | 所选历法模式规定的归日 |
+| `assignmentDiffersFromLocalDate` | 归日是否与当地天象日期不同 |
+
+主入口及 `js-ephemeris-lite/qi-shuo` 均导出此接口。
 
 ```js
 import { getQiShuoYear, CALENDAR_MODE, CALENDAR_DAY_BOUNDARY_MODE } from 'js-ephemeris-lite';
@@ -99,8 +141,83 @@ const newMoon = solveNewMoon(2451550.0);
 console.log(equinox.jdTT, newMoon.jdUT1);
 ```
 
-目标太阳黄经使用弧度，初值使用 JD(TT)。新视位置搜索接口使用 degree，
-不要混用角度单位。求解器选择和采样精度见[精度说明](./accuracy.md)。
+目标太阳黄经使用弧度，邻近时刻 `nearJdTT` 使用 JD(TT)，用于选择目标事件所在周期。
+`solveLunarPhase(targetElongation, nearJdTT)` 可求任意月相角，0、π/2、π、3π/2
+分别表示朔、上弦、望、下弦。视位置搜索接口使用 degree，两组接口的角度单位不同。
+求根容差与天文精度的区别见[精度说明](./accuracy.md)。
+
+### 定朔定气档位：fast / mid / accurate
+
+`solveSolarLongitude / solveLunarPhase / solveNewMoon` 按档位路由，库初始默认是 `mid`。
+八字交节、起运、农历排月和黄历等调用这些接口的功能，会随全局默认一起切换。
+
+| 档位 | 算法 |
+| --- | --- |
+| `fast` | 截断级数与固定次数修正，追求速度，不承诺求根容差 |
+| `mid` | 专用定气定朔模型，按数值容差迭代；默认档位 |
+| `accurate` | 完整库内视位置模型，按数值容差迭代 |
+
+```js
+import { setEventAccuracy, getEventAccuracy, solveNewMoon } from 'js-ephemeris-lite';
+
+setEventAccuracy('fast'); // 应用初始化时选择；不调用则保持 mid
+console.log(getEventAccuracy()); // fast
+const normal = solveNewMoon(2461212);
+const precise = solveNewMoon(2461212, { accuracy: 'accurate', toleranceSeconds: 0.01 });
+// 单次 accuracy 覆盖不改变全局；后续默认仍是 fast。
+setEventAccuracy('mid');
+```
+
+全局设置作用于同一模块实例的后续同步计算；Worker 或另一份库实例有各自的设置。
+服务端不要在交错的异步请求中反复切全局档位：直接调用 `solve…` 时用单次 `accuracy` 覆盖。
+已有命盘或历法结果不会自动重算；黄历内部年度缓存按档位区分。
+此设置不切换通用星体坐标、视位置、真太阳时等其他算法。
+
+三档的 `solve…` 都直接返回 `JulianTime`，它实现共享结构类型 `AstroTime`：
+`{ jdTT, jdUT1, deltaTSeconds }`。
+可直接调用 `solveNewMoon(jdTT).toZonedTime(480)`。
+Fast 不接受显式 `toleranceSeconds` 或
+`solver: 'safeguarded'`，否则抛错。Mid/Accurate 支持这两个选项，但数值容差不等于绝对星历误差。
+自定义 `moonLatitudeTerms` 仅限 Mid；Fast 固定为 10，Accurate 固定为 `'full'`。
+
+Mid/Accurate 的 `solver` 默认 `auto`，也可选择带区间保护的 `safeguarded`。
+求解失败或选项组合不受支持时抛出异常。
+
+### 按累计角度求时刻：固定 Fast 与 Accurate
+
+需要通过累计角度指定事件时，可使用以下四个函数。
+它们接收未取模的角度（弧度），返回 **TT 儒略日数值**：
+
+| 接口 | 计算路线 |
+| --- | --- |
+| `solarLongitudeTimeFast` | 固定阶段定气：截断级数与简化光行差 |
+| `lunarPhaseTimeFast` | 固定阶段定相：截断级数与简化月球光行时修正 |
+| `solarLongitudeTimeAccurate` | 对完整库内太阳视黄经迭代求根 |
+| `lunarPhaseTimeAccurate` | 月、日分别走完整库内视位置链，再求视黄经差的根 |
+
+```js
+import {
+  solarLongitudeTimeFast, lunarPhaseTimeFast,
+  solarLongitudeTimeAccurate, lunarPhaseTimeAccurate,
+} from 'js-ephemeris-lite';
+
+const longitude = 27 * 2 * Math.PI + Math.PI / 2; // 2026 夏至
+console.log(solarLongitudeTimeFast(longitude));
+console.log(solarLongitudeTimeAccurate(longitude, { toleranceSeconds: 0.01 }));
+console.log(lunarPhaseTimeFast(0), lunarPhaseTimeAccurate(0)); // J2000 后第一个朔
+```
+
+累计角度的整圈数指定哪一年的节气或哪一次月相，不能先取模后再表达任意年份。
+月日黄经差 `2πk` 表示朔，加上 `π/2`、`π`、`3π/2` 可指定其他月相。
+如需 UT1 或固定时区钟表，可将结果传给 `JulianTime.fromTT(jdTT)`。
+非有限角度或计算过程超出 `J2000 ± 2922000` 日会抛错。
+
+Fast 不接受数值容差，也不保证所有日期取整到分钟后与 Accurate 相同。
+需要更严格的事件模型时，显式调用 Accurate；Fast 不会自动切换档位。
+Accurate 使用完整库内视位置，`toleranceSeconds` 默认 `0.01` 秒。
+该容差仅控制数值求根，无法达到时会抛错；模型限制见[精度说明](./accuracy.md)。
+
+带 `Fast`、`Accurate` 后缀的标量接口不受全局档位设置影响。
 
 ## 地方平太阳时与真太阳时
 

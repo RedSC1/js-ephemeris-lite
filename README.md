@@ -42,9 +42,16 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
 需要单独求某次事件时，可用 `solveSolarLongitude(targetRadians, nearJdTT)`
 或 `solveNewMoon(nearJdTT)`。完整示例见[历法与时间指南](./docs/time-and-calendar.md)。
 
+## 模型系数
+
+行星系数集中在 [`src/planet-series.js`](./src/planet-series.js)，按水、金、地、火、木、土、天、海、冥排列；
+月球单独在 [`src/moon-series.js`](./src/moon-series.js)，按 `L0/L1/…`、`B0/…`、`R0/…` 分阶。
+月球使用全局分阶级数，三坐标共享相位多项式。公共参考系旋转在 [`src/planet-frame.js`](./src/planet-frame.js)。
+基底和单位见文件头；完整说明见[架构](./docs/architecture.md#模型数据)。
+
 ## 功能
 
-- 太阳、月球及水星至海王星的位置与速度，提供日心、地心及地月质心接口。
+- 太阳、月球、八大行星及冥王星的位置与速度，提供日心、地心及地月质心接口。
 - 二十四节气、七十二候、朔与指定月相求解。
 - 阴阳历互转、闰月，以及中国历史历法和历史纪年查询。
 - 年月日时干支、三种晚子时规则、地方平太阳时与真太阳时。
@@ -52,12 +59,18 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
 
 开发中的[视位置与天象搜索](./docs/sky-events.md)还提供三种参考面、
 行星留与黄经穿越、月球照明、天体出没、近远点、交点、大距和赤经事件。
-暂不支持冥王星、小行星及日月食。
+暂不支持小行星及日月食。
+
+> **冥王星精度警告：推荐范围为 1600～2200 年。范围外仍可计算，但使用低精度后备模型，
+> 位置、速度及天象时刻均不可视作高精度结果。**
+> 计算对象是冥王星系统质心，不是本体中心或光心。
+> 详见[精度说明](./docs/accuracy.md#冥王星)及 `PLUTO_MODEL_INFO`。
 
 ## 时间、单位与精度
 
 - 位置和定气定朔求解使用 **JD(TT)**；历法、民用时间和地平观测使用 **JD(UT1)**。
-  `JulianTime` 与 `ZonedTime` 可用于转换。
+  事件的 `time` 是不带时区的 `JulianTime`，用 `.toZonedTime(480)` 显示东八区时间。
+  `solve…` 直接返回 `JulianTime`；数学层 `…TimeFast/Accurate` 仍返回 TT JD 数值。
 - 几何位置采用 J2000 黄道坐标；行星距离为 AU，地心月球距离为 km。
   其他接口的单位见对应指南。
 - 民用日期在 1582-10-15 起采用格里历，之前采用儒略历；天文年号 `0` 表示公元前 1 年。
@@ -65,11 +78,14 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
   精度随天体、年代和计算模式变化，求根容差不等于天文绝对精度。
 - 时间层使用 `UTC ≈ UT1`，不包含闰秒或 EOP 数据；固定时区不自动处理夏令时。
 
-精度指标、适用范围及限制见[精度说明](./docs/accuracy.md)。
+适用范围、档位选择及限制见[精度说明](./docs/accuracy.md)。
 
 ## 相关包
 
 各包可单独使用，八字、紫微和黄历包均依赖本天文核心。
+定朔定气初始默认 `mid`；应用初始化时可调用 `setEventAccuracy('fast')` 或
+`setEventAccuracy('accurate')`，设置后续历法与八字事件计算的默认档位。
+直接调用 `solve…` 时可用 `{ accuracy: 'accurate' }` 单次覆盖，详见[档位说明](docs/time-and-calendar.md#定朔定气档位fast--mid--accurate)。
 
 | 包 | 用途 |
 | --- | --- |

@@ -9,23 +9,32 @@ import {
   calculateChineseCalendarYear,
   describeFourPillars,
   earthHeliocentricState,
+  PLANET,
+  PLUTO_MODEL_INFO,
+  plutoHeliocentricState,
   fourPillarsForZonedTime,
   moonGeocentricPosition,
   solarAltitude,
   solarRiseSetForDate,
   solveNewMoon,
+  setEventAccuracy, getEventAccuracy, type EventAccuracy,
+  solarLongitudeTimeFast, lunarPhaseTimeFast, solarLongitudeTimeAccurate, lunarPhaseTimeAccurate,
   sunGeocentricPosition,
   trueSolarTime,
   type CartesianState,
+  type AstroTime,
   type ChineseCalendarYear,
   type EphemerisVector3,
   type SolarRiseSetResult,
   type SolarClock,
 } from 'js-ephemeris-lite';
 import { moonHeliocentricState } from 'js-ephemeris-lite/ephemeris';
+const plutoState: CartesianState = plutoHeliocentricState(2451545);
+const plutoYears: readonly [1600, 2200] = PLUTO_MODEL_INFO.recommendedIntervalYears;
+void [plutoState, plutoYears, PLANET.PLUTO];
 import { getPreviousJie } from 'js-ephemeris-lite/chinese-calendar';
 import { iau2000bNutation } from 'js-ephemeris-lite/coordinates';
-import { solarLongitudeState } from 'js-ephemeris-lite/calendar-events';
+import { solarLongitudeState, solveSolarLongitude } from 'js-ephemeris-lite/calendar-events';
 import { calculateDayPillar } from 'js-ephemeris-lite/ganzhi';
 import { computeSolarRiseSetFast } from 'js-ephemeris-lite/solar-visibility';
 import { deltaTSeconds } from 'js-ephemeris-lite/time';
@@ -63,6 +72,36 @@ const earth: CartesianState = earthHeliocentricState(instant.jdTT);
 const moon: CartesianState = moonHeliocentricState(instant.jdTT);
 const calendar: ChineseCalendarYear = calculateChineseCalendarYear(instant);
 const root: number = solveNewMoon(instant.jdTT, { moonLatitudeTerms: 10 }).jdUT1;
+const eventTime: AstroTime = solveNewMoon(instant.jdTT);
+const instantTime: AstroTime = instant;
+const serializedTime: AstroTime = instant.toJSON();
+const termTime: AstroTime = getPreviousJie(instant).time;
+const eventInstant: JulianTime = solveNewMoon(instant.jdTT);
+const localEvent: ZonedTime = getPreviousJie(instant).time.toZonedTime(480);
+const restoredInstant: JulianTime = new JulianTime(eventTime);
+void [eventInstant, localEvent, restoredInstant];
+// @ts-expect-error event records contain time rather than duplicate flat epochs
+getPreviousJie(instant).jdTT;
+void [eventTime, instantTime, serializedTime, termTime];
+// @ts-expect-error folded calibration has no runtime switch
+earthHeliocentricState(instant.jdTT, { corrections: false });
+const angleEventDates: number[] = [solarLongitudeTimeFast(2 * Math.PI), lunarPhaseTimeFast(0), solarLongitudeTimeAccurate(2 * Math.PI, { toleranceSeconds: 0.001 }), lunarPhaseTimeAccurate(0)];
+void angleEventDates;
+solveSolarLongitude(0, instant.jdTT, { solver: 'auto', toleranceSeconds: 0.01 });
+solveSolarLongitude(0, instant.jdTT, { solver: 'safeguarded' });
+const accuracy: EventAccuracy = getEventAccuracy();
+setEventAccuracy('fast');
+// @ts-expect-error default event results do not carry diagnostics
+solveNewMoon(instant.jdTT).residualRadians;
+// @ts-expect-error latitude budgets belong to options, not event times
+solveNewMoon(instant.jdTT).moonLatitudeTerms;
+solveSolarLongitude(0, instant.jdTT, { accuracy: 'accurate', toleranceSeconds: 0.01 });
+solveNewMoon(instant.jdTT, { accuracy: 'mid', moonLatitudeTerms: 'full' });
+setEventAccuracy(accuracy);
+// @ts-expect-error only the three named accuracy modes exist
+setEventAccuracy('high');
+// @ts-expect-error unknown per-call accuracy
+solveNewMoon(instant.jdTT, { accuracy: 'low' });
 const pillars = fourPillarsForZonedTime(clock, {
   mode: CALENDAR_MODE.CHINA_ASTRONOMICAL,
   ratHourMode: RAT_HOUR_MODE.CURRENT_DAY_TOMORROW_STEM,
@@ -75,7 +114,7 @@ const sourceOffset: number = sourcedSolarClock.sourceClock.offsetMinutes;
 const solarPillars = calculateFourPillars(instant, solarClock, {
   ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
 });
-const riseSet: SolarRiseSetResult<ZonedTime> = solarRiseSetForDate(
+const riseSet: SolarRiseSetResult = solarRiseSetForDate(
   clock,
   {
     longitudeDeg: 116.4,
@@ -85,7 +124,7 @@ const riseSet: SolarRiseSetResult<ZonedTime> = solarRiseSetForDate(
     limb: SOLAR_LIMB.UPPER,
   },
 );
-const numericRiseSet: SolarRiseSetResult<number> = solarRiseSetForDate(
+const numericRiseSet: SolarRiseSetResult = solarRiseSetForDate(
   instant.jdUT1,
   { longitudeDeg: 116.4, latitudeDeg: 39.9 },
 );
@@ -132,6 +171,12 @@ bodyHorizontalPosition('moon', instant.jdUT1, { longitudeDeg: 0, latitudeDeg: 0 
 searchLunarApsides(instant.jdTT, instant.jdTT + 30);
 searchEarthApsides(instant.jdTT, instant.jdTT + 365);
 const nodeEvents: LunarNodeEvent[] = searchLunarNodes(instant.jdTT, instant.jdTT + 30, { frame: 'j2000' });
+const nodeInstant: JulianTime | undefined = nodeEvents[0]?.time;
+const moonRise: JulianTime | undefined = bodyRiseSet.rises[0];
+const solarRise: JulianTime | null = riseSet.rise;
+void [nodeInstant, moonRise, solarRise];
+// @ts-expect-error sky event records do not expose a second flat TT value
+nodeEvents[0].jdTT;
 searchGreatestElongations('venus', instant.jdTT, instant.jdTT + 365, { apparent: { frame: 'true-of-date' } });
 searchRelativeRightAscension('venus', 'moon', 0, instant.jdTT, instant.jdTT + 365);
 searchRightAscensionStations('mercury', instant.jdTT, instant.jdTT + 365);

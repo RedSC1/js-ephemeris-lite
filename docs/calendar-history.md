@@ -49,14 +49,9 @@ console.log(getChineseEraNames(time));
 历史月份处理覆盖早期岁首、秦汉至武周的月份命名、同名月份区分，
 以及 237 年景初历交接中的 28 日月。
 
-## 历史日期表的存储
+## 数据来源
 
-历史归日表参考寿星天文历的古历数据与规则，采用线性基准加稀疏日差的压缩表示。
-每个事件先由线性段得到基准民用日，再根据 `residualMask` 与 `residualSigns`
-应用 `+1` 或 `-1` 日修正。每 256 个事件保存一次 rank 前缀，用于定位符号位。
-
-位图以 `Uint32Array` 存储，运行时使用 32 位位运算，四组位图共 3648 bytes。
-生成文件 `src/generated/historical-calendar-data.js` 随包提供。
-
+历史归日与月份制度参考寿星天文历的古历数据和规则。
 纪年数据综合寿星天文历、DDBC 时间规范数据库及 manakai/data-locale 的资料。
+历史历表和纪年数据随包提供，查询时不需要联网。
 各来源的处理方式与许可见[第三方声明](../THIRD_PARTY_NOTICES.md)。

@@ -107,7 +107,7 @@ export function solarDayFromPreviousJie(
   if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && virtualTime.hour >= 23) {
     currentLogical += 1 / 24;
   }
-  const jieVirtual = previousJie.jdUT1 + clockOffset;
+  const jieVirtual = previousJie.time.jdUT1 + clockOffset;
   const jieClock = calendarDateFromJulianDay(jieVirtual);
   let jieLogical = jieVirtual;
   if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && jieClock.hour >= 23) {

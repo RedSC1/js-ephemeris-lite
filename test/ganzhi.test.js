@@ -161,8 +161,8 @@ test('mean and apparent solar clocks share the exact 11:00 chart boundary', () =
 
 test('Li-Chun and monthly Jie switch pillars at the solved instant', () => {
   const term = getSpecificSolarTerm(2024, 21, ASTRONOMICAL_CHINA);
-  const beforeInstant = JulianTime.fromUT1(term.jdUT1 - 0.5 / 86400);
-  const afterInstant = JulianTime.fromUT1(term.jdUT1 + 0.5 / 86400);
+  const beforeInstant = JulianTime.fromUT1(term.time.jdUT1 - 0.5 / 86400);
+  const afterInstant = JulianTime.fromUT1(term.time.jdUT1 + 0.5 / 86400);
   const beforeClock = beforeInstant.toZonedTime(480);
   const afterClock = afterInstant.toZonedTime(480);
   const before = calculateFourPillars(beforeInstant, beforeClock, ASTRONOMICAL_CHINA);

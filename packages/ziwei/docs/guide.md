@@ -35,7 +35,7 @@ const options = new ZiweiOptions({
 const chart = ZiweiChart.fromZonedTime(birth, options);
 ```
 
-紫微的性别编码：`MALE = 0`、`FEMALE = 1`。它与八字包历史编码的顺序不同，跨包传递时应使用对应包的性别常量。
+紫微的性别编码：`MALE = 0`、`FEMALE = 1`。它与八字包的编码顺序不同，跨包传递时应使用对应包的性别常量。
 
 `ZiweiChart` 必须从真实出生瞬间创建，因此始终持有：
 
@@ -104,7 +104,7 @@ console.log({
 });
 
 console.log(chart.getStarsInPalace(PALACE.LIFE));
-console.log(STAR_CATALOG.length); // 本命星和预留流曜共 159 个稳定 ID
+console.log(STAR_CATALOG.length); // 本命星和流曜共 159 个稳定 ID
 ```
 
 `starBitset` 是 `bigint`，bit `n` 表示 StarId `n`。需要 JSON 时使用 `starIds`，不要直接 `JSON.stringify(bigint)`。
@@ -218,7 +218,8 @@ console.log(flow.decade, flow.smallLimit, flow.year, flow.month, flow.day, flow.
 const dynamic = chart.dynamicForTime(target);
 console.log(dynamic.flowStack.length); // 5: 大限→流时
 console.log(dynamic.smallLimitLayer);  // 小限是并行年度参考，不是第六层
-console.log(dynamic.getFlowStar(findStarId('flow_lucun')));
+const flowLucunId = findStarId('flow_lucun');
+if (flowLucunId !== undefined) console.log(dynamic.getFlowStar(flowLucunId));
 ```
 
 农历流月同时保留四个不能混用的量：书面月份 `month`、含闰月的真实时序位置 `sequence`、用于月干/四化/流曜的 `effectiveMonth`、冬至月起建的 `monthBuildingBranch`。默认流月命宫按 `sequence` 从流年斗君推进；如需让闰月分段的命宫也跟随上月/下月，可单独设置 `flowMonthPalaceStrategy: FLOW_MONTH_PALACE_STRATEGY.EFFECTIVE_MONTH`。`MonthNode.branch` 是实际流月命宫，月份卡片的显示地支则在 `MonthNode.displayBranch`。
@@ -255,11 +256,15 @@ console.log(manager.dynamicChart);
 console.log(manager.manifest);
 ```
 
-`flowLimitBoundary` 可选 `PILLAR_BOUNDARY.LUNAR` 或 `PILLAR_BOUNDARY.SOLAR_TERM`。农历模式按真实阴历年月；节气模式按精确交节时刻。历史历法计算仍服从核心包的历史中国历法模式和 UTC+8 口径。
+`flowLimitBoundary` 默认 `PILLAR_BOUNDARY.LUNAR`，按农历年月划分流运；
+`PILLAR_BOUNDARY.SOLAR_TERM` 按立春和十二节划分年月，历史节界遵循 `pillarHistoricalMode`。
+节气流月没有闰月，`month = sequence = effectiveMonth`，月干和流月命宫按月序推进；
+农历的闰月分段策略不影响这条路径。
 
 ## 反查时辰
 
-Tier-1 反查接受任意组合的钥匙星约束，在有限时间范围逐个枚举逻辑时辰，并把候选重新送进正常正向排盘验证：
+`reverseLookupZiweiTier1()` 接受钥匙星位置约束和有限时间范围，返回符合条件的出生时辰候选。
+结果通过正向排盘核对：
 
 ```ts
 import { reverseLookupZiweiTier1 } from 'ziwei-lite';

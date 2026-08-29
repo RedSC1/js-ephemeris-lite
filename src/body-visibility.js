@@ -3,7 +3,7 @@ import { apparentBodyPosition, greenwichSiderealTime, validateSkyBody } from './
 import { BODY_DISC_RADIUS_KM } from './phenomena.js';
 import { hybridAtmosphericRefraction } from './solar-visibility.js';
 import { searchCrossings } from './event-search.js';
-import { ut1ToTt } from './time.js';
+import { JulianTime, ut1ToTt } from './time.js';
 import { DEG, RAD, clamp, finite, normDeg, signedDeg, spherical, sub } from './sky-math.js';
 
 function observerSettings(observer) {
@@ -106,7 +106,7 @@ export function bodyRiseSetForDay(body, dayStartUT1, observer, options = {}) {
     const roots = searchCrossings(altitude, grid[i].time, grid[i + 1].time, { stepDays: 1 / 144 });
     for (const root of roots) {
       // Reject discontinuities (e.g. the refraction model's low-altitude cutoff).
-      if (Math.abs(root.residual) > 1e-4) continue;
+      if (Math.abs(altitude(root.time)) > 1e-4) continue;
       const list = altitude(root.time + 1e-5) > altitude(root.time - 1e-5) ? rises : sets;
       if (!list.length || root.time - list.at(-1) > 1e-7) list.push(root.time);
     }
@@ -117,9 +117,10 @@ export function bodyRiseSetForDay(body, dayStartUT1, observer, options = {}) {
     : extrema.some(p => Math.abs(p.value) < 1e-5) ? 'tangent'
     : min > 0 ? 'always-above' : max < 0 ? 'always-below' : 'not-found';
   return {
-    body, dayStartUT1, dayEndUT1: end, altitudeState, rises, sets,
-    upperTransits: transits.filter(p => Math.cos(at(p.time).hourAngleDeg * DEG) > 0).map(p => p.time),
-    lowerTransits: transits.filter(p => Math.cos(at(p.time).hourAngleDeg * DEG) < 0).map(p => p.time),
+    body, dayStartUT1, dayEndUT1: end, altitudeState,
+    rises: rises.map(t => JulianTime.fromUT1(t)), sets: sets.map(t => JulianTime.fromUT1(t)),
+    upperTransits: transits.filter(p => Math.cos(at(p.time).hourAngleDeg * DEG) > 0).map(p => JulianTime.fromUT1(p.time)),
+    lowerTransits: transits.filter(p => Math.cos(at(p.time).hourAngleDeg * DEG) < 0).map(p => JulianTime.fromUT1(p.time)),
     limb, refraction: options.refraction !== false,
   };
 }

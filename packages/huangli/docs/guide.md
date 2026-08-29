@@ -94,7 +94,8 @@ console.log(custom.tuWangYongShi.source); // override
 年柱以立春、月柱以节为界，遵循 `exactJieQiTime`；
 晚子时选项单独控制日柱、时干和规则日期。
 现代模式的 `nextSolarTermIndex` 按下个物理交节时刻取值，历史模式按下个标注日取值。
-`solarTerm` 同时给出天文时刻、当地钟表与归日，历史归日不一定等于天象日。
+`solarTerm.time` 和 `moonPhases[].time` 是不带时区的 `JulianTime`，可调用 `.toZonedTime(480)`。
+`solarTerm` 另给当地钟表与归日，历史归日不一定等于天象日。序列化为 JSON 后，时间为三个数值字段。
 早期历法十三月保留为 13，不折算为正月；只匹配明确支持该输入的规则。
 
 ## 读取结果与 JSON
@@ -114,7 +115,8 @@ console.log(custom.tuWangYongShi.source); // override
 | `tuWangYongShi` | 土王用事的区间、判定值与来源 |
 | `flyingStars`, `cycle`, `period`, `settings` | 飞星盘、三元九运及解析后的设置 |
 
-结果都是普通数据，可直接 `JSON.stringify(day)`。节日标签不是官方放假安排。
+日结果可直接 `JSON.stringify(day)`；其中的 `JulianTime` 自动序列化为时间数值字段。
+节日标签不是官方放假安排。
 查询某一时刻的时柱与时飞星可传 `hour`；完整时辰表见下文。
 
 ## 节日名称与分类
@@ -172,15 +174,15 @@ console.log(day.festivalDetails[0]);
 名称使用“元旦”“劳动节”“妇女节”“青年节”“儿童节”等规范写法；
 “中国人民解放军建军纪念日”保留“建军节”作为别名。
 二月二使用“龙抬头”，“春龙节”为别名。
-按名称匹配旧结果的调用方需更新名称，或同时检查 `aliases`。
+按名称检索时，可同时匹配 `name` 和 `aliases`。
 
 农历节日不在闰月重复；除夕按腊月实际末日匹配，清明节按所选历法模式的清明归日匹配。
 母亲节、父亲节、感恩节按各自的星期规则计算。
 小年沿用农历腊月二十三的标注，尚未提供南北习俗切换。
-世界图书和版权日为 4 月 23 日，“世界读书日”为其别名，不在 5 月 23 日重复列出。
+世界图书和版权日为 4 月 23 日，“世界读书日”为其别名。
 
-分类仅用于内容筛选，不表示法定放假资格，也不表示每条旧数据均已独立核实。
-表中仍包含沿用的民俗名称及纪念日；没有设立年份和历年名称版本，
+分类仅用于内容筛选，不表示法定放假资格。
+节日表包含民俗名称及纪念日，没有设立年份和历年名称版本，
 查询历史日期时不保证当时已有该节日或名称。接口不提供年度放假、补班安排。
 来源与名称依据见[第三方声明](../THIRD_PARTY_NOTICES.md)。
 
@@ -188,7 +190,7 @@ console.log(day.festivalDetails[0]);
 
 `day.hours` 按子、丑至亥排列，共十二项，以当前 `ruleDate` 的日干支起五鼠遁。
 每项包含 `branch/branchName`、`dayPillar`、`pillar/pillarName`、`nayinId/nayin/nayinElement`、
-`startHour/endHour/timeRange`。原有 `index/name/isHuangDao` 仍表示值神及黄黑道。
+`startHour/endHour/timeRange`。`index/name/isHuangDao` 表示值神及黄黑道。
 子时的钟表范围为 `23:00 - 01:00`；该十二项表用于展示同一日干支下的时辰规则。
 
 需要按民用日期显示从 00:00 到 24:00 的实际时段时，使用 `getHours()`：

@@ -31,12 +31,21 @@ test('fixed J2000, mean date and true date are distinct explicit frames', () => 
   }
 });
 
+test('Pluto light-time and apparent rates remain computable across near/fallback joins and remote dates', () => {
+  for (const year of [-6000, 1590, 1600, 2200, 2210, 10000]) {
+    const state = apparentBodyState('pluto', 2451545 + (year - 2000) * 365.25);
+    assert.ok(state.lightTimeDays > 0 && state.distanceAu > 20);
+    assert.ok([...state.eclipticPositionAu, ...state.eclipticVelocityAuPerDay,
+      state.longitudeSpeedDegPerDay, state.rightAscensionSpeedDegPerDay].every(Number.isFinite));
+  }
+});
+
 test('turning physical corrections off recovers native J2000 geometry, with Moon km converted to AU', () => {
-  for (const corrections of [true, false]) for (const body of SKY_BODIES) {
-    const p = apparentBodyPosition(body, 2451545, { ...geometric, frame: 'j2000', corrections });
-    const raw = body === 'moon' ? moonGeocentricPosition(2451545, { corrections }).map(x => x / AU_KM)
-      : body === 'sun' ? sunGeocentricPosition(2451545, { corrections })
-      : planetGeocentricPosition(body, 2451545, { corrections });
+  for (const body of SKY_BODIES) {
+    const p = apparentBodyPosition(body, 2451545, { ...geometric, frame: 'j2000' });
+    const raw = body === 'moon' ? moonGeocentricPosition(2451545).map(x => x / AU_KM)
+      : body === 'sun' ? sunGeocentricPosition(2451545)
+      : planetGeocentricPosition(body, 2451545);
     raw.forEach((x, i) => near(p.eclipticPositionAu[i], x, 2e-14, body));
     near(Math.hypot(...p.equatorialPositionAu), Math.hypot(...raw), 2e-13);
     assert.equal(p.lightTimeDays, 0);
@@ -88,7 +97,7 @@ test('81 C++/DE441 reference states: nine bodies, three epochs, three reference 
 
 test('bad body, nonfinite time, invalid frame and sidereal input fail explicitly', () => {
   assert.throws(() => apparentBodyPosition('earth', 2451545), /unsupported/);
-  assert.throws(() => apparentBodyPosition('pluto', 2451545), /unsupported/);
+  assert.throws(() => apparentBodyPosition('ceres', 2451545), /unsupported/);
   assert.throws(() => apparentBodyPosition('mars', NaN), /finite/);
   assert.throws(() => apparentBodyPosition('mars', 2451545, { frame: 'ICRS' }), /frame/);
   assert.throws(() => greenwichSiderealTime(Infinity), /finite/);

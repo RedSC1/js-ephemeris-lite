@@ -1,6 +1,5 @@
 import type { CalendarDayBoundaryMode, CalendarMode } from './chinese-calendar.js';
-import type { CivilDate, CivilDateTime } from './time.js';
-import type { EventRoot, NewMoonRoot } from './calendar-events.js';
+import type { JulianTime, CivilDate, CivilDateTime } from './time.js';
 
 export const SOLAR_TERM_NAMES: readonly string[];
 export const LUNAR_PHASE_NAMES: Readonly<Record<number, string>>;
@@ -19,6 +18,7 @@ export interface QiShuoEventBase {
   kind: 'solar-term' | 'pentad' | 'lunar-phase';
   name: string;
   index: number;
+  time: JulianTime;
   localTime: CivilDateTime & { offsetMinutes: number };
   localCivilDayNumber: number;
   localDate: CivilDate;
@@ -28,7 +28,7 @@ export interface QiShuoEventBase {
   assignmentDiffersFromLocalDate: boolean;
 }
 
-export interface QiShuoSolarEvent extends QiShuoEventBase, EventRoot {
+export interface QiShuoSolarEvent extends QiShuoEventBase {
   kind: 'solar-term' | 'pentad';
   /** Target-angle index, not a unique occurrence ID; may repeat within a civil year. */
   index: number;
@@ -38,7 +38,7 @@ export interface QiShuoSolarEvent extends QiShuoEventBase, EventRoot {
   targetLongitudeDeg: number;
 }
 
-export interface QiShuoLunarPhaseEvent extends QiShuoEventBase, NewMoonRoot {
+export interface QiShuoLunarPhaseEvent extends QiShuoEventBase {
   kind: 'lunar-phase';
   phaseAngle: number;
   phaseAngleDeg: number;

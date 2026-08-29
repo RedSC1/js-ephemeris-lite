@@ -15,8 +15,8 @@ test('24 terms switch year/month at the selected local day or physical instant',
     const exact=new HuangliCalendar({utcOffsetMinutes:offset,exactJieQiTime:true});
     const daily=new HuangliCalendar({utcOffsetMinutes:offset});
     for(const term of terms){
-      const before=query(exact,ZonedTime.fromJulianTime(term.jdUT1-2/86400,offset));
-      const after=query(exact,ZonedTime.fromJulianTime(term.jdUT1+2/86400,offset));
+      const before=query(exact,ZonedTime.fromJulianTime(term.time.jdUT1-2/86400,offset));
+      const after=query(exact,ZonedTime.fromJulianTime(term.time.jdUT1+2/86400,offset));
       const monthBranch=mod(Math.floor(mod(term.termIndex+5,24)/2)+1,12);
       assert.equal(after.ruleInput.monthBranch,monthBranch);
       assert.equal(before.ruleInput.monthBranch,mod(monthBranch-(term.termIndex%2),12));
@@ -45,7 +45,7 @@ test('solstice day/hour stars obey integer days at midnight and late Zi across o
           for(const [hour,minute,second] of [[0,0,0],[0,0,1],[22,59,59],[23,0,0],[23,0,1]]){
             const x=c.getDay(date.year,date.month,date.day,{hour,minute,second});
             const day=civilDay(date)+(ratHourMode==='next-day'&&hour===23?1:0);
-            const solstice=terms.filter(e=>exactJieQiTime?e.jdUT1<=x.jdUT1:metaEvent(e)<=day).at(-1);
+            const solstice=terms.filter(e=>exactJieQiTime?e.time.jdUT1<=x.jdUT1:metaEvent(e)<=day).at(-1);
             const forward=solstice.termIndex===18;
             let anchor=metaEvent(solstice);
             if(flyingStarMethod==='consecutive'){

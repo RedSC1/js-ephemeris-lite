@@ -276,11 +276,25 @@ export function ut1ToTt(jdUT1, deltaT = deltaTSecondsFromUt1(jdUT1)) {
  * derived with the bundled Delta-T model.
  */
 export class JulianTime {
-  constructor(jdUT1) {
-    if (!Number.isFinite(jdUT1)) throw new TypeError('jdUT1 must be finite');
-    this.jdUT1 = jdUT1;
-    this.deltaTSeconds = deltaTSecondsFromUt1(jdUT1);
-    this.jdTT = ut1ToTt(jdUT1, this.deltaTSeconds);
+  constructor(value) {
+    if (typeof value === 'number') {
+      if (!Number.isFinite(value)) throw new TypeError('jdUT1 must be finite');
+      this.jdUT1 = value;
+      this.deltaTSeconds = deltaTSecondsFromUt1(value);
+      this.jdTT = ut1ToTt(value, this.deltaTSeconds);
+    } else {
+      if (!value || ![value.jdUT1, value.jdTT, value.deltaTSeconds].every(Number.isFinite)) {
+        throw new TypeError('time must contain finite jdTT, jdUT1 and deltaTSeconds');
+      }
+      const { jdTT, jdUT1, deltaTSeconds } = value;
+      const roundoff = 2 * Number.EPSILON * Math.max(1, Math.abs(jdTT), Math.abs(jdUT1));
+      if (Math.abs(jdTT - ut1ToTt(jdUT1, deltaTSeconds)) > roundoff) {
+        throw new RangeError('TT, UT1 and deltaTSeconds must describe the same instant');
+      }
+      this.jdTT = jdTT;
+      this.jdUT1 = jdUT1;
+      this.deltaTSeconds = deltaTSeconds;
+    }
     Object.freeze(this);
   }
 
@@ -290,7 +304,9 @@ export class JulianTime {
 
   static fromTT(jdTT) {
     if (!Number.isFinite(jdTT)) throw new TypeError('jdTT must be finite');
-    return new JulianTime(ttToUt1(jdTT));
+    const deltaTSeconds = deltaTSecondsFromTt(jdTT);
+    // Keep the supplied TT root exactly; do not round-trip through UT1.
+    return new JulianTime({ jdTT, jdUT1: ttToUt1(jdTT, deltaTSeconds), deltaTSeconds });
   }
 
   static fromUnixMilliseconds(unixMilliseconds) {

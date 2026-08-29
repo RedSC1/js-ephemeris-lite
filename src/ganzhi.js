@@ -227,9 +227,9 @@ function calendarOptions(options) {
 }
 
 function historicalBoundary(term, historical) {
-  if (!historical) return { jdUT1: term.jdUT1, assignedDay: null };
-  const assignedDay = historicalEventCivilDay('solarTerm', term.jdUT1);
-  if (assignedDay === null) return { jdUT1: term.jdUT1, assignedDay: null };
+  if (!historical) return { jdUT1: term.time.jdUT1, assignedDay: null };
+  const assignedDay = historicalEventCivilDay('solarTerm', term.time.jdUT1);
+  if (assignedDay === null) return { jdUT1: term.time.jdUT1, assignedDay: null };
   return {
     jdUT1: assignedDay - 0.5 - CHINA_DAY_OFFSET,
     assignedDay,
@@ -254,9 +254,9 @@ function calculateMonthPillar(jdUT1, yearPillar, options, historical) {
   let boundary = historicalBoundary(previousJie, historical);
   const candidateInFuture = boundary.assignedDay !== null
     ? boundary.assignedDay > civilDayNumber(jdUT1, CHINA_DAY_OFFSET)
-    : previousJie.jdUT1 - jdUT1 > ROOT_EQUALITY_DAYS;
+    : previousJie.time.jdUT1 - jdUT1 > ROOT_EQUALITY_DAYS;
   if (candidateInFuture) {
-    previousJie = getPreviousJie(previousJie.jdUT1 - 10, calendarOptions(options));
+    previousJie = getPreviousJie(previousJie.time.jdUT1 - 10, calendarOptions(options));
     boundary = historicalBoundary(previousJie, historical);
   }
   const index = previousJie.indexFromWinterSolstice;

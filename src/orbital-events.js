@@ -1,3 +1,4 @@
+import { JulianTime } from './time.js';
 import { AU_KM, earthHeliocentricState, moonGeocentricState } from './ephemeris.js';
 import { iau2000bNutation, meanEclipticOfDateMatrixState } from './coordinates.js';
 import { apparentBodyPosition, apparentBodyState, validateSkyBody } from './apparent.js';
@@ -9,14 +10,14 @@ import { add, clamp, dot, finite, RAD, rotateZ, signedDeg, spherical, transform 
 function apsides(body, startTT, endTT, options) {
   const getState = body === 'moon' ? moonGeocentricState : earthHeliocentricState;
   const radiusRate = t => {
-    const s = getState(t, options);
+    const s = getState(t);
     return dot(s.position, s.velocity) / Math.hypot(...s.position);
   };
   return searchCrossings(radiusRate, startTT, endTT, { stepDays: body === 'moon' ? 1 : 2, ...options })
     .map(({ time }) => {
-      const distance = Math.hypot(...getState(time, options).position);
+      const distance = Math.hypot(...getState(time).position);
       return {
-        body, jdTT: time, center: body === 'moon' ? 'earth' : 'sun',
+        body, time: JulianTime.fromTT(time), center: body === 'moon' ? 'earth' : 'sun',
         kind: radiusRate(time + 0.05) > 0 ? 'periapsis' : 'apoapsis',
         distanceKm: body === 'moon' ? distance : distance * AU_KM,
         distanceAu: body === 'moon' ? distance / AU_KM : distance,
@@ -36,7 +37,7 @@ export function searchLunarNodes(startTT, endTT, options = {}) {
   const frame = options.frame ?? 'mean-of-date';
   if (!['j2000', 'mean-of-date', 'true-of-date'].includes(frame)) throw new RangeError('unsupported node frame');
   function state(t) {
-    const s = moonGeocentricState(t, options);
+    const s = moonGeocentricState(t);
     if (frame === 'j2000') return s;
     const m = meanEclipticOfDateMatrixState(t);
     let position = transform(m.matrix, s.position);
@@ -53,7 +54,7 @@ export function searchLunarNodes(startTT, endTT, options = {}) {
     .map(({ time }) => {
       const s = state(time), p = spherical(s.position);
       return {
-        body: 'moon', jdTT: time, frame,
+        body: 'moon', time: JulianTime.fromTT(time), frame,
         kind: s.velocity[2] > 0 ? 'ascending' : 'descending',
         longitudeDeg: p.longitudeDeg, latitudeDeg: p.latitudeDeg,
         distanceKm: Math.hypot(...s.position),
@@ -86,7 +87,7 @@ export function searchGreatestElongations(body, startTT, endTT, options = {}) {
       const delta = signedDeg(apparentBodyPosition(body, time, opts).longitudeDeg
         - apparentBodyPosition('sun', time, opts).longitudeDeg);
       return {
-        body, jdTT: time, frame: s.a.frame, kind: delta > 0 ? 'eastern' : 'western',
+        body, time: JulianTime.fromTT(time), frame: s.a.frame, kind: delta > 0 ? 'eastern' : 'western',
         elongationDeg: Math.acos(clamp(s.cosine)) * RAD,
         longitudeDeg: s.a.longitudeDeg, latitudeDeg: s.a.latitudeDeg,
       };
@@ -103,7 +104,7 @@ export function searchRelativeRightAscension(body, other, angleDeg, startTT, end
     angleDeg, startTT, endTT, options).map(({ time }) => {
     const a = position(body, time), b = position(other, time);
     return {
-      body, other, jdTT: time, frame: a.frame, angleDeg: ((angleDeg % 360) + 360) % 360,
+      body, other, time: JulianTime.fromTT(time), frame: a.frame, angleDeg: ((angleDeg % 360) + 360) % 360,
       rightAscensionDeg: a.rightAscensionDeg, declinationDeg: a.declinationDeg,
       declinationDifferenceDeg: a.declinationDeg - b.declinationDeg,
     };
@@ -117,7 +118,7 @@ export function searchRightAscensionStations(body, startTT, endTT, options = {})
   return searchCrossings(speed, startTT, endTT, options).map(({ time }) => {
     const s = position(time);
     return {
-      body, jdTT: time, frame: s.frame, rightAscensionDeg: s.rightAscensionDeg,
+      body, time: JulianTime.fromTT(time), frame: s.frame, rightAscensionDeg: s.rightAscensionDeg,
       declinationDeg: s.declinationDeg, rightAscensionSpeedDegPerDay: s.rightAscensionSpeedDegPerDay,
       direction: speed(time + 0.01) < 0 ? 'retrograde' : 'direct',
     };

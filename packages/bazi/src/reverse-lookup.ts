@@ -253,9 +253,9 @@ function usesHistoricalPillarBoundary(options: BaziOptions): boolean {
 }
 
 function jieBoundaryFromEvent(event: SolarTermEvent, options: BaziOptions): JieBoundary {
-  let boundaryJd = event.jdUT1;
+  let boundaryJd = event.time.jdUT1;
   if (usesHistoricalPillarBoundary(options)) {
-    const assignedDay = historicalEventCivilDay('solarTerm', event.jdUT1);
+    const assignedDay = historicalEventCivilDay('solarTerm', event.time.jdUT1);
     if (assignedDay !== null) boundaryJd = assignedDay - 0.5 - CHINA_OFFSET_DAYS;
   }
   return Object.freeze({
@@ -328,7 +328,7 @@ function findJieOnDate(date: CivilDate, options: BaziOptions): JieBoundary | nul
     const boundary = jieBoundaryFromEvent(event, options);
     if (sameDate(boundary.time, date)) return boundary;
     if (compareTimes(boundary.time, dayEnd) >= 0) break;
-    event = getNextJie(event.jdUT1 + 2 / SECONDS_PER_DAY, calendarOptions(options));
+    event = getNextJie(event.time.jdUT1 + 2 / SECONDS_PER_DAY, calendarOptions(options));
   }
   return null;
 }
@@ -559,19 +559,4 @@ export function reverseLookupBazi(query: BaziFullSearchQuery): readonly BaziFull
     second.timeCandidate?.startTime ?? second.dateCandidate.sampleTime,
   ));
   return Object.freeze(results);
-}
-
-/** Dart-compatible names, plus standalone functions for ordinary JavaScript use. */
-export class BaziReverseLookup {
-  static searchDates(query: BaziDateSearchQuery): readonly BaziDateCandidate[] {
-    return searchBaziDates(query);
-  }
-
-  static searchTimesForDate(query: BaziTimeSearchQuery): readonly BaziTimeCandidate[] {
-    return searchBaziTimesForDate(query);
-  }
-
-  static searchFullBazi(query: BaziFullSearchQuery): readonly BaziFullCandidate[] {
-    return reverseLookupBazi(query);
-  }
 }

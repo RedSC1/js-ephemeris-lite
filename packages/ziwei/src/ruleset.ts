@@ -676,6 +676,3 @@ export class ZiweiConfigLoader {
     return base.with(this.compileJson(input));
   }
 }
-
-/** Short compatibility name used by the former Dart package. */
-export { ZiweiConfigLoader as ConfigLoader };

@@ -3,7 +3,6 @@ import test from 'node:test';
 import {
   BAZI_DATE_PHASE,
   BaziChart,
-  BaziReverseLookup,
   packPillar,
   reverseLookupBazi,
   searchBaziDates,
@@ -37,7 +36,7 @@ test('date reverse lookup returns a normal matching candidate', () => {
 });
 
 test('date reverse lookup splits a Jie boundary day', () => {
-  const results = BaziReverseLookup.searchDates({
+  const results = searchBaziDates({
     startDate: DATE_2026_02_04,
     endDate: DATE_2026_02_04,
   });
@@ -51,12 +50,12 @@ test('date reverse lookup splits a Jie boundary day', () => {
 
 test('historical reverse lookup uses the same assigned Jie day as forward charts', () => {
   const historicalOptions = { mode: CALENDAR_MODE.HISTORICAL };
-  const astronomicalDate = BaziReverseLookup.searchDates({
+  const astronomicalDate = searchBaziDates({
     startDate: { year: 500, month: 2, day: 2 },
     endDate: { year: 500, month: 2, day: 2 },
     options: historicalOptions,
   });
-  const assignedDate = BaziReverseLookup.searchDates({
+  const assignedDate = searchBaziDates({
     startDate: { year: 500, month: 2, day: 3 },
     endDate: { year: 500, month: 2, day: 3 },
     options: historicalOptions,
@@ -66,7 +65,7 @@ test('historical reverse lookup uses the same assigned Jie day as forward charts
   // representable "before" segment; the previous date remains normal.
   assert.deepEqual(assignedDate.map((item) => item.phase), [BAZI_DATE_PHASE.AFTER_JIE]);
 
-  const preciseDate = BaziReverseLookup.searchDates({
+  const preciseDate = searchBaziDates({
     startDate: { year: 500, month: 2, day: 2 },
     endDate: { year: 500, month: 2, day: 2 },
     options: {
@@ -162,7 +161,7 @@ test('full reverse lookup resolves an ordinary four-pillar chart', () => {
 });
 
 test('full reverse lookup preserves Li-Chun and late-Zi boundaries', () => {
-  const todayGan = BaziReverseLookup.searchFullBazi({
+  const todayGan = reverseLookupBazi({
     year: packPillar(2, 6),
     month: packPillar(6, 2),
     day: packPillar(5, 9),

@@ -1,3 +1,4 @@
+import type { JulianTime } from './time.js';
 import type { ApparentOptions, SkyBody } from './apparent.js';
 import type { SolarObserver, SolarAltitudeState, SolarLimb } from './solar-visibility.js';
 export type SkyObserver = SolarObserver;
@@ -15,8 +16,8 @@ export interface BodyHorizontalPosition {
 export interface BodyRiseSetResult {
   body: SkyBody; dayStartUT1: number; dayEndUT1: number;
   altitudeState: SolarAltitudeState;
-  /** All event times are JD(UT1), in the half-open requested day. */
-  rises: number[]; sets: number[]; upperTransits: number[]; lowerTransits: number[];
+  /** All event times are physical instants in the half-open requested UT1 day. */
+  rises: JulianTime[]; sets: JulianTime[]; upperTransits: JulianTime[]; lowerTransits: JulianTime[];
   limb: SolarLimb; refraction: boolean;
 }
 export function bodyHorizontalPosition(body: SkyBody, jdUT1: number, observer: SkyObserver, options?: BodyVisibilityOptions): BodyHorizontalPosition;

@@ -6,6 +6,9 @@ import { RAD, clamp, dot, normDeg, unit } from './sky-math.js';
 export const BODY_DISC_RADIUS_KM = Object.freeze({
   sun: 696000, moon: 1737.5, mercury: 2439.4, venus: 6051.8, mars: 3389.5,
   jupiter: 69911, saturn: 58232, uranus: 25362, neptune: 24622,
+  // JPL mean radius: https://ssd.jpl.nasa.gov/planets/phys_par.html
+  // Approximate disc only: the ephemeris follows the Pluto-system barycenter.
+  pluto: 1188.3,
 });
 
 /** Geocentric physical geometry. No empirical magnitude model is implied. */

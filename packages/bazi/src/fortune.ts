@@ -227,12 +227,12 @@ export function calculateQiYun(
   const jdUT1 = asUt1JulianDay(instant);
   const direction = calculateLuckDirection(chart.pillars.year, gender);
   let referenceJie = getPreviousJie(jdUT1, calendarOptions);
-  let intervalDays = jdUT1 - referenceJie.jdUT1;
+  let intervalDays = jdUT1 - referenceJie.time.jdUT1;
   if (Math.abs(intervalDays) <= ROOT_EQUALITY_DAYS) {
     intervalDays = 0;
   } else if (direction > 0) {
     referenceJie = getNextJie(jdUT1, calendarOptions);
-    intervalDays = referenceJie.jdUT1 - jdUT1;
+    intervalDays = referenceJie.time.jdUT1 - jdUT1;
   }
   if (!Number.isFinite(intervalDays) || intervalDays < -ROOT_EQUALITY_DAYS) {
     throw new Error('solar-term search returned an invalid Qi-Yun interval');

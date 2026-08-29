@@ -252,7 +252,7 @@ test('C++ calendar integration covers all Qi-Yun and decade boundary models', ()
     assert.equal(q.referenceJie.indexFromWinterSolstice, expected[1][1]);
     near(q.jieIntervalDays, expected[1][2], 1, `C++ fortune ${i} Jie interval`);
     near(q.startAgeYears * 3, expected[1][3] * 3, 1, `C++ fortune ${i} age ratio`);
-    near(q.referenceJie.jdUT1, expected[1][4], 1, `C++ fortune ${i} Jie time`);
+    near(q.referenceJie.time.jdUT1, expected[1][4], 1, `C++ fortune ${i} Jie time`);
     // Traditional 3 days -> 1 year scaling amplifies the astronomical error.
     near(q.startJdUT1, expected[1][5], 125, `C++ fortune ${i} start`);
     const decades = generateDaYun(birth, chart, q, { count: 8, boundaryModel });

@@ -5,6 +5,7 @@ import { bodyPhenomena, moonIllumination } from '../src/phenomena.js';
 import { bodyHorizontalPosition, bodyRiseSetForDay } from '../src/body-visibility.js';
 import { SKY_BODIES } from '../src/apparent.js';
 import { solveNewMoon, solveLunarPhase } from '../src/calendar-events.js';
+import { JulianTime } from '../src/time.js';
 
 const nativeRows = JSON.parse(readFileSync(process.env.TAIYIN_SKY_ORACLE_JSON
   ?? new URL('./fixtures/observation-de441.json', import.meta.url))).rows;
@@ -48,7 +49,7 @@ test('independent native interval searches match every rise, set and transit, in
     for (const [i, key] of fields.entries()) {
       const label = `${r.body} ${r.jd} ${r.observer.latitudeDeg} ${JSON.stringify(r.options)} ${key}`;
       assert.equal(p[key].length, r.expected[i].length, `${label} count`);
-      for (const [j, t] of p[key].entries()) near((t - r.expected[i][j]) * 86400, 0, 0.5, `${label} seconds`);
+      for (const [j, t] of p[key].entries()) near((t.jdUT1 - r.expected[i][j]) * 86400, 0, 0.5, `${label} seconds`);
     }
   }
 });
@@ -101,15 +102,16 @@ test('rise/set and meridian transits lie inside the requested UT1 day', () => {
     assert.equal(result.rises.length, 1); assert.equal(result.sets.length, 1);
     assert.equal(result.upperTransits.length, 1); assert.equal(result.lowerTransits.length, 1);
     for (const t of [...result.rises, ...result.sets, ...result.upperTransits, ...result.lowerTransits]) {
-      assert.ok(t >= start && t < start + 1);
+      assert.ok(t instanceof JulianTime);
+      assert.ok(t.jdUT1 >= start && t.jdUT1 < start + 1);
     }
     for (const t of [...result.rises, ...result.sets]) {
-      assert.ok(Math.abs(bodyHorizontalPosition(body, t, observer, { refraction: false }).geometricAltitudeDeg) < 1e-4);
+      assert.ok(Math.abs(bodyHorizontalPosition(body, t.jdUT1, observer, { refraction: false }).geometricAltitudeDeg) < 1e-4);
     }
     const rising = result.rises[0], setting = result.sets[0];
-    assert.ok(bodyHorizontalPosition(body, rising + 1e-3, observer, { refraction: false }).geometricAltitudeDeg > 0);
-    assert.ok(bodyHorizontalPosition(body, setting + 1e-3, observer, { refraction: false }).geometricAltitudeDeg < 0);
-    const transit = bodyHorizontalPosition(body, result.upperTransits[0], observer);
+    assert.ok(bodyHorizontalPosition(body, rising.jdUT1 + 1e-3, observer, { refraction: false }).geometricAltitudeDeg > 0);
+    assert.ok(bodyHorizontalPosition(body, setting.jdUT1 + 1e-3, observer, { refraction: false }).geometricAltitudeDeg < 0);
+    const transit = bodyHorizontalPosition(body, result.upperTransits[0].jdUT1, observer);
     assert.ok(Math.abs(transit.hourAngleDeg) < 1e-4);
   }
 });
@@ -121,4 +123,17 @@ test('polar summer/winter report continuous visibility rather than inventing cro
   assert.equal(summer.altitudeState, 'always-above');
   assert.equal(winter.altitudeState, 'always-below');
   assert.deepEqual(summer.rises, []); assert.deepEqual(winter.sets, []);
+});
+
+test('rise/set rejects refraction cutoff jumps without relying on public residual fields', () => {
+  const result = bodyRiseSetForDay('sun', 2460409.5, observer, {
+    limb: 'center', refraction: true, horizonDegrees: -0.8,
+  });
+  // At geometric -1 degree the refraction cutoff jumps over -0.8 degree;
+  // neither jump is an actual solution of the apparent-altitude equation.
+  assert.deepEqual(result.rises, []);
+  assert.deepEqual(result.sets, []);
+  assert.equal(result.altitudeState, 'not-found');
+  assert.equal(result.upperTransits.length, 1);
+  assert.equal(result.lowerTransits.length, 1);
 });

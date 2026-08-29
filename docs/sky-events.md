@@ -1,7 +1,13 @@
 # 视位置与天象搜索
 
+[返回首页](../README.md) · [几何位置](./positions.md) · [精度与适用范围](./accuracy.md)
+
 视位置、通用天体观测及轨道事件接口目前为开发中功能，尚未发布到 npm。
 日出日落的专用接口见本文后半部分。
+
+冥王星也可用于通用视位置、黄经／赤经事件与出没接口。
+**1600..2200 之外仍可求解，但后备星历精度较低；求根收敛不代表天象时刻准确。**
+范围、质心约定及限制见[冥王星警告](./accuracy.md#冥王星)。
 
 ```js
 import {
@@ -23,11 +29,11 @@ const moon = moonIllumination(jdTT);
 
 const site = { longitudeDeg: 116.4, latitudeDeg: 39.9, heightMeters: 40 };
 const horizontal = bodyHorizontalPosition('moon', 2460409.25, site); // 此处 JD 是 UT1
-// 北京某个民用日的起点可先用 ZonedTime(..., offsetMinutes: 480) 转成 jdUT1。
+// 指定民用日时，先构造当地午夜的 ZonedTime，再读取 toJulianTime().jdUT1。
 const riseSet = bodyRiseSetForDay('moon', 2460409.5, site);
 ```
 
-支持 `sun`、`moon`、`mercury`、`venus`、`mars`、`jupiter`、`saturn`、`uranus`、`neptune`。天体接口的输入是 **JD(TT)**，角度为 **degree**，距离与向量为 **AU**，速度为对应单位每天。与旧几何接口不同，新视位置接口把月球距离统一成 AU。
+支持 `sun`、`moon`、`mercury`、`venus`、`mars`、`jupiter`、`saturn`、`uranus`、`neptune`、`pluto`。视位置接口的输入是 **JD(TT)**，角度为 **degree**，距离与向量为 **AU**，速度为对应单位每天。几何接口的地心月球距离使用 km；视位置接口统一使用 AU。
 
 | `frame` | 黄道输出 | 对应赤道输出 |
 | --- | --- | --- |
@@ -37,11 +43,13 @@ const riseSet = bodyRiseSetForDay('moon', 2460409.5, site);
 
 返回对象带 `frame`、`longitudeDeg`、`latitudeDeg`、`rightAscensionDeg`、`declinationDeg`、`distanceAu`、`lightTimeDays` 及黄道/赤道直角向量。`apparentBodyState()` 另外返回各坐标速度；日期参考面的速度包含参考面随时间变化，不能当作固定 J2000 速度直接旋转。
 
-参考面与物理修正独立：`lightTime`、`aberration`、`solarDeflection` 默认开启，`corrections` 控制底层星历拟合修正。要复现原始几何位置，可设 `{ frame: 'j2000', lightTime: false, aberration: false, solarDeflection: false }`。参考面由 `frame` 单独选择。
+参考面与物理修正独立：`lightTime`、`aberration`、`solarDeflection` 默认开启，不改变底层星历系数中的校准。要复现几何位置，可设 `{ frame: 'j2000', lightTime: false, aberration: false, solarDeflection: false }`。参考面由 `frame` 单独选择。
 
 模型包含项与限制见[精度说明](./accuracy.md)。
 
-事件搜索统一使用半开区间 **`[startTT, endTT)`**：
+天文事件记录用 `time: JulianTime` 保存时刻；
+用 `event.time.jdTT` 读取 TT，用 `event.time.toZonedTime(480)` 转为东八区钟表。
+区间输入仍是数值，搜索使用半开区间 **`[startTT, endTT)`**：
 
 - `searchLongitudeCrossings(body, targetDeg, startTT, endTT, options)`：穿越指定黄经。
 - `searchRelativeLongitude(body, other, angleDeg, ...)`：`body - other` 的黄经差；0° 合、180° 冲。这不是赤经合，也不是球面最近接近。
@@ -51,7 +59,7 @@ const riseSet = bodyRiseSetForDay('moon', 2460409.5, site);
 
 `bodyPhenomena()` 返回真实球面距日角、相位角、照明比例、视直径（角秒）和地平视差；太阳的相位/照明比例返回 `null`。`moonIllumination()` 增加 `phaseCycle`（0 朔、0.25 上弦、0.5 望、0.75 下弦）及 `waxing`。`phaseCycle` 是归一化黄经差，**不是月龄天数**。目前不提供星等计算。
 
-`bodyHorizontalPosition()` 和 `bodyRiseSetForDay()` 使用 **JD(UT1)** 控制地球自转，内部转换 TT 计算天体；仅接受 `true-of-date`。方位角从北向东计，返回几何/折射后高度。出没区间精确为 `[dayStartUT1, dayStartUT1 + 1)`，不会按经度猜时区；`rises`、`sets`、`upperTransits`、`lowerTransits` 均为该区间内的 JD(UT1) 数组。支持 `limb`、`horizonDegrees`、`refraction`，默认上边缘和折射；没有地形、地平俯角、极移或周日光行差。极昼/极夜以 `altitudeState` 返回。晨昏蒙影可用太阳、`limb: 'center'`、`refraction: false`，再设 `horizonDegrees: -6/-12/-18`。
+`bodyHorizontalPosition()` 和 `bodyRiseSetForDay()` 使用 **JD(UT1)** 控制地球自转，内部转换 TT 计算天体；仅接受 `true-of-date`。方位角从北向东计，返回几何/折射后高度。出没区间精确为 `[dayStartUT1, dayStartUT1 + 1)`，不会按经度猜时区；`rises`、`sets`、`upperTransits`、`lowerTransits` 均为该区间内的 `JulianTime` 数组，读取 `.jdUT1` 得 UT1 数值。支持 `limb`、`horizonDegrees`、`refraction`，默认上边缘和折射；没有地形、地平俯角、极移或周日光行差。极昼/极夜以 `altitudeState` 返回。晨昏蒙影可用太阳、`limb: 'center'`、`refraction: false`，再设 `horizonDegrees: -6/-12/-18`。
 
 子路径：`/apparent`、`/event-search`、`/phenomena`、`/body-visibility`。
 
@@ -86,14 +94,14 @@ const riseSet = solarRiseSetForDate(
   },
 );
 
-console.log(riseSet.rise, riseSet.set); // ZonedTime | null
-console.log(riseSet.altitudeState);     // crosses / always-above / always-below / tangent
+console.log(riseSet.rise?.toZonedTime(480), riseSet.set?.toZonedTime(480));
+console.log(riseSet.altitudeState); // crosses / always-above / always-below / tangent / not-found
 
 const jdRiseSet = solarRiseSetForDate(
   2460676.0, // 作为搜索窗口中心的 UT1 Julian Day
   { longitudeDeg: 116.4, latitudeDeg: 39.9 },
 );
-console.log(jdRiseSet.rise, jdRiseSet.set); // number | null
+console.log(jdRiseSet.rise?.jdUT1, jdRiseSet.set?.jdUT1); // number | undefined
 
 const altitude = solarAltitude(
   JulianTime.fromDate(new Date()),
@@ -103,13 +111,13 @@ const altitude = solarAltitude(
 console.log(altitude.apparentAltitudeRad, altitude.azimuthRad);
 ```
 
-`solarRiseSetForDate(dateOrCenter, observer, options)` 保持输入输出类型一致：传数值 UT1 Julian Day，`rise`/`set` 返回数值 JD；传 `JulianTime`，返回 `JulianTime`；传 `ZonedTime`，则取它所属的当地民用日期并返回同一 offset 的 `ZonedTime`。数值 JD 和 `JulianTime` 被解释为待搜索 24 小时窗口的中心，不带民用时区语义。
+`solarRiseSetForDate(dateOrCenter, observer, options)` 的 `rise/set` 始终是 `JulianTime | null`。传 `ZonedTime` 时取它所属的当地民用日期；传数值 JD 或 `JulianTime` 时，搜索以该瞬间为中心的 24 小时窗口。输入时区只决定搜索哪一天，不绑定输出时刻；显示时显式调用 `.toZonedTime(offsetMinutes)`。
 
-经纬度单位为 degree，东经/北纬为正；高度单位为 metre。返回的 `path` 是 `analytic-newton` 或 `fallback-window`，`sampleCount`/`refineCount` 可用于检查是否走了高纬退化路径。极昼极夜时 `rise`/`set` 为 `null`，原因由 `altitudeState` 给出。底层的 `computeSolarRiseSetFast(center, observer, options)` 始终返回 `JulianTime`。
+经纬度单位为 degree，东经/北纬为正；高度单位为 metre。返回结果包含 `rise`、`set`、`altitudeState`、`limb`、`refraction`。极昼极夜时 `rise`/`set` 为 `null`，状态由 `altitudeState` 给出。`computeSolarRiseSetFast(center, observer, options)` 返回相同结构，其中 `rise/set` 也是 `JulianTime | null`。
 
 默认大气为 `1013.25 mbar`、`15°C`，默认太阳上边缘和 hybrid 折射。`hybridAtmosphericRefraction()` 使用 `≤14°` Bennett、`≥16°` Smart、其间线性混合，真高度低于 `-1°` 时关闭折射。还可传 `fixedDiscSize: true` 固定太阳视半径，或用 `horizonDegrees` 表示地平遮挡高度。
 
-`solarAltitude()` 返回 `centerAltitudeRad`、`apparentAltitudeRad`、`azimuthRad`、相对目标地平的 `residualRad` 和解析斜率 `slopeRadPerDay`。它和日出日落求解器使用同一套地心太阳、太阳光行差、章动、地球自转、观测者视差、太阳视半径和折射链路。
+`solarAltitude()` 返回 `centerAltitudeRad`、`apparentAltitudeRad`、`azimuthRad`和高度变化率 `slopeRadPerDay`（rad/day）。它和日出日落求解器使用同一套地心太阳、太阳光行差、章动、地球自转、观测者视差、太阳视半径和折射链路。
 
 ## 轨道与赤经事件
 
@@ -129,7 +137,8 @@ const conjunctions = searchRelativeRightAscension('venus', 'moon', 0, startTT, e
 const raStations = searchRightAscensionStations('mercury', startTT, endTT);
 ```
 
-这些搜索使用半开区间 `[startTT, endTT)`，输入输出均为 JD(TT)：
+这些搜索的区间输入是 JD(TT)，使用半开区间 `[startTT, endTT)`。
+返回事件的 `time` 是 `JulianTime`，通过 `.time.jdTT` 读取 TT 数值：
 
 - 近远点是同时刻几何距离的极值，月球相对于地心、地球相对于太阳，
   采用同时刻的几何位置；
@@ -138,6 +147,6 @@ const raStations = searchRightAscensionStations('mercury', startTT, endTT);
   黄经不同；固定 `j2000` 黄道面可得到不同穿越时刻；
 - 大距是水星/金星与太阳的三维视角距极大值，不是黄经差极大值；
 - 赤经合用 `angleDeg: 0`（第三个参数）表示，不等于最小角距。
-  赤经留与原有黄经留独立，均支持视位置的参考面选项。
+  赤经留与黄经留独立，均支持视位置的参考面选项。
 
 精度与适用范围见[精度说明](./accuracy.md)。

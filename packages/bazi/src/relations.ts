@@ -4,7 +4,6 @@ import {
   PILLAR_MASK,
   RELATION_KIND,
   RELATION_KIND_MASK_ALL,
-  STEM_RELATION_FLAG,
   type RelationKind,
   type WuxingId,
 } from './constants.js';

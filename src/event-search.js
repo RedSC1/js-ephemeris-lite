@@ -1,3 +1,4 @@
+import { JulianTime } from './time.js';
 import { apparentBodyPosition, apparentBodyState, validateSkyBody } from './apparent.js';
 import { DEG, finite, normDeg, signedDeg } from './sky-math.js';
 
@@ -22,18 +23,18 @@ export function searchCrossings(evaluate, start, end, options = {}) {
   if (count === 0) return [];
   const sample = t => finite(evaluate(t), 'search sample');
   const roots = [];
-  function push(t, residual) {
+  function push(t) {
     if (t < start || t >= end || (roots.length && t - roots.at(-1).time <= toleranceDays * 2)) return;
-    roots.push({ time: t, residual });
+    roots.push({ time: t });
   }
   let left = start, fLeft = sample(left);
-  if (fLeft === 0) push(left, 0);
+  if (fLeft === 0) push(left);
   for (let i = 1; i <= count; i++) {
     const right = Math.min(end, start + i * stepDays), fRight = sample(right);
     if (fLeft === 0 && fRight === 0) {
       throw new RangeError('adjacent samples are both zero; roots are not isolated at this step');
     }
-    if (fRight === 0) push(right, 0);
+    if (fRight === 0) push(right);
     else if (fLeft !== 0 && Math.sign(fLeft) !== Math.sign(fRight)) {
       let a = left, b = right, fa = fLeft;
       for (let iteration = 0; iteration < 80 && b - a > toleranceDays; iteration++) {
@@ -44,7 +45,9 @@ export function searchCrossings(evaluate, start, end, options = {}) {
         if (Math.sign(fm) === Math.sign(fa)) { a = mid; fa = fm; } else b = mid;
       }
       const root = a + (b - a) / 2;
-      push(root, sample(root));
+      // Keep finite-value validation at the returned point, without exposing it.
+      sample(root);
+      push(root);
     }
     left = right; fLeft = fRight;
   }
@@ -57,15 +60,14 @@ export function searchAngleCrossings(evaluateDegrees, targetDeg, start, end, opt
   const target = normDeg(targetDeg);
   const delta = t => signedDeg(finite(evaluateDegrees(t), 'angle sample') - target);
   return searchCrossings(t => Math.sin(delta(t) * DEG), start, end, options)
-    .filter(root => Math.abs(delta(root.time)) < 90)
-    .map(root => ({ time: root.time, residualDeg: delta(root.time) }));
+    .filter(root => Math.abs(delta(root.time)) < 90);
 }
 
 function bodyOptions(options) { return options.apparent ?? {}; }
 function event(body, jdTT, options) {
   const position = apparentBodyState(body, jdTT, bodyOptions(options));
   return {
-    body, jdTT, frame: position.frame, longitudeDeg: position.longitudeDeg,
+    body, time: JulianTime.fromTT(jdTT), frame: position.frame, longitudeDeg: position.longitudeDeg,
     longitudeSpeedDegPerDay: position.longitudeSpeedDegPerDay,
     direction: position.longitudeSpeedDegPerDay < 0 ? 'retrograde' : 'direct',
   };

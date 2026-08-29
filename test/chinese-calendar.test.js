@@ -21,6 +21,32 @@ import {
 } from '../src/chinese-calendar.js';
 import { JulianTime, ZonedTime, julianDay } from '../src/time.js';
 import { HISTORICAL_CALENDAR_DATA as HISTORY } from '../src/generated/historical-calendar-data.js';
+import { setEventAccuracy, getEventAccuracy, solveSolarLongitude } from '../src/calendar-events.js';
+import { fourPillarsForZonedTime, ganzhiName } from '../src/ganzhi.js';
+
+test('global accuracy reaches calendar events and BaZi year/month boundaries', () => {
+  const saved = getEventAccuracy(), options = { mode: CALENDAR_MODE.CHINA_ASTRONOMICAL };
+  const dates = [];
+  try {
+    for (const accuracy of ['fast', 'mid', 'accurate']) {
+      setEventAccuracy(accuracy);
+      const lichun = getSpecificSolarTerm(2026, 21, options);
+      const explicit = solveSolarLongitude(315 * Math.PI / 180, lichun.time.jdTT, { accuracy });
+      assert.ok(Math.abs(lichun.time.jdTT - explicit.jdTT) * 86400 < 0.02);
+      dates.push(lichun.time.jdTT);
+      const before = fourPillarsForZonedTime(ZonedTime.fromJulianTime(lichun.time.jdUT1 - 1 / 86400, 480), options);
+      const after = fourPillarsForZonedTime(ZonedTime.fromJulianTime(lichun.time.jdUT1 + 1 / 86400, 480), options);
+      assert.equal(ganzhiName(before.year), '乙巳');
+      assert.equal(ganzhiName(after.year), '丙午');
+      assert.notEqual(before.month, after.month);
+      const lunar = solarToLunar({ year: 2033, month: 12, day: 22 }, options);
+      assert.equal(lunar.month, 11);
+      assert.equal(lunar.isLeap, true);
+    }
+    assert.notEqual(dates[0], dates[1], 'Fast setting must reach the calendar event solver');
+    assert.notEqual(dates[1], dates[2], 'Accurate setting must reach the calendar event solver');
+  } finally { setEventAccuracy(saved); }
+});
 
 function phaseEstimate(kind, phaseIndex) {
   if (kind === 'newMoon') return 2451551 - 14 + (phaseIndex + 0.5) * 29.5306;
@@ -69,6 +95,16 @@ test('calendar queries accept JulianTime and return typed event instants', () =>
   const layout = calculateChineseCalendarYear(probe);
   assert.ok(layout.solarTerms[0].time instanceof JulianTime);
   assert.ok(layout.newMoons[0].time instanceof JulianTime);
+  for (const event of [...layout.solarTerms, ...layout.newMoons]) {
+    assert.equal('jdTT' in event, false);
+    assert.equal('jdUT1' in event, false);
+    assert.equal('deltaTSeconds' in event, false);
+    assert.ok(event.time instanceof JulianTime);
+  }
+  layout.months.forEach((month, index) => {
+    assert.equal(month.newMoon, layout.newMoons[index].time);
+    assert.equal('astronomicalNewMoonJdUT1' in month, false);
+  });
   assert.equal(findSolarTerm(probe, { direction: 'next' }).indexFromWinterSolstice, 5);
 });
 
@@ -126,7 +162,7 @@ test('local astronomical calendar makes clock and meridian day boundaries explic
     clock.newMoons.map(event => event.civilDayNumber),
     meridian.newMoons.map(event => event.civilDayNumber),
   );
-  assert.ok(clock.newMoons.every((event, index) => event.jdUT1 === meridian.newMoons[index].jdUT1));
+  assert.ok(clock.newMoons.every((event, index) => event.time.jdUT1 === meridian.newMoons[index].time.jdUT1));
 
   assert.throws(() => calculateChineseCalendarYear(probe, {
     ...clockOptions,
@@ -170,8 +206,8 @@ test('previous/next solar-term searches preserve filters and exact-boundary sema
   assert.equal(getNextQi(probe).indexFromWinterSolstice, 6);
 
   const lichun = getPreviousJie(probe);
-  assert.equal(findSolarTerm(lichun.jdUT1, { direction: 'previous' }).indexFromWinterSolstice, 3);
-  assert.equal(findSolarTerm(lichun.jdUT1, { direction: 'next' }).indexFromWinterSolstice, 4);
+  assert.equal(findSolarTerm(lichun.time.jdUT1, { direction: 'previous' }).indexFromWinterSolstice, 3);
+  assert.equal(findSolarTerm(lichun.time.jdUT1, { direction: 'next' }).indexFromWinterSolstice, 4);
 });
 
 test('direct terms agree with the materialized 2044 cycle', () => {
@@ -179,7 +215,7 @@ test('direct terms agree with the materialized 2044 cycle', () => {
   for (let index = 0; index < 24; index += 1) {
     const direct = getSpecificSolarTerm(2044, index);
     const expected = index <= 18 ? layout.solarTerms[index + 6] : layout.solarTerms[index - 18];
-    assert.ok(Math.abs(direct.jdUT1 - expected.jdUT1) < 1 / 86400);
+    assert.ok(Math.abs(direct.time.jdUT1 - expected.time.jdUT1) < 1 / 86400);
     assert.equal(direct.civilDayNumber, expected.civilDayNumber);
   }
 });
@@ -193,8 +229,8 @@ test('calendar layout remains finite and ordered over the intended long interval
     assert.equal(layout.solarTerms.length, 25);
     assert.equal(layout.newMoons.length, 15);
     assert.equal(layout.months.length, 14);
-    assert.ok(layout.solarTerms.every((event, index, all) => index === 0 || event.jdUT1 > all[index - 1].jdUT1));
-    assert.ok(layout.newMoons.every((event, index, all) => index === 0 || event.jdUT1 > all[index - 1].jdUT1));
+    assert.ok(layout.solarTerms.every((event, index, all) => index === 0 || event.time.jdUT1 > all[index - 1].time.jdUT1));
+    assert.ok(layout.newMoons.every((event, index, all) => index === 0 || event.time.jdUT1 > all[index - 1].time.jdUT1));
     assert.ok(layout.months.every(month => month.dayCount === 29 || month.dayCount === 30));
   }
 });
