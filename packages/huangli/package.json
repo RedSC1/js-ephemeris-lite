@@ -10,6 +10,7 @@
   "types": "./src/index.d.ts",
   "exports": {
     ".": { "types": "./src/index.d.ts", "default": "./src/index.js" },
+    "./locale": { "types": "./src/locale.d.ts", "default": "./src/locale.js" },
     "./rules": { "types": "./src/rules.d.ts", "default": "./src/rules.js" },
     "./feng-shui": { "types": "./src/feng-shui.d.ts", "default": "./src/feng-shui.js" }
   },

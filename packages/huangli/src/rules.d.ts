@@ -17,8 +17,11 @@ export interface AlmanacRulesResult {
   suitableIds: number[]; tabooIds: number[]; suitableActivities: string[]; tabooActivities: string[];
   officerIndex: number; officer: string; thingLevel: number; conflictLevel: number;
 }
+export interface AlmanacOutputOptions { locale?: 'zh-Hans' | 'zh-Hant'; }
 export const ALMANAC_GODS: readonly Readonly<{ key: string; label: string; index: number; auspicious: boolean }>[];
 export const ALMANAC_ACTIVITIES: readonly Readonly<{ key: string; label: string; index: number }>[];
+export function getAlmanacGodCatalog(locale?: 'zh-Hans' | 'zh-Hant'): typeof ALMANAC_GODS;
+export function getAlmanacActivityCatalog(locale?: 'zh-Hans' | 'zh-Hant'): typeof ALMANAC_ACTIVITIES;
 export const ACTIVITY_MASKS: Readonly<Record<'civilian37' | 'imperial67' | 'tongshu60' | 'cnlunarLegacy38', readonly number[]>>;
 export const ALMANAC_RULE_INFO: Readonly<{source: string; gods: number; activities: number; convention: string; monthIndex: string}>;
-export function evaluateAlmanacRules(input: AlmanacRuleInput): AlmanacRulesResult;
+export function evaluateAlmanacRules(input: AlmanacRuleInput, options?: AlmanacOutputOptions): AlmanacRulesResult;

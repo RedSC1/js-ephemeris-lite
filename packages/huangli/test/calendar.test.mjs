@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { HuangliCalendar, getHuangliDay, createFlyingStarBoard, getThreeCyclesNinePeriods, ALMANAC_GODS } from '../src/index.js';
+import {
+  HuangliCalendar, getHuangliDay, createFlyingStarBoard, getThreeCyclesNinePeriods,
+  ALMANAC_GODS, HUANGLI_LOCALE, localizeHuangliText, getAlmanacGodCatalog,
+  getAlmanacActivityCatalog, getPalaceDirections, calculatePaiLong, evaluateAlmanacRules,
+} from '../src/index.js';
 import { getQiShuoYear, JulianTime, ZonedTime, calendarDateFromJulianDay, julianDay, ganzhiIndex, lunarToSolar } from 'js-ephemeris-lite';
 import { getFestivalDetails } from '../src/festivals.js';
 
@@ -29,6 +33,40 @@ test('almanac event accuracy belongs to each instance and cache', () => {
   assert.notEqual(dates[1],dates[2]);
   assert.equal(dates[0],dates[3]);
   assert.throws(()=>new HuangliCalendar({eventAccuracy:'high'}),/eventAccuracy/);
+});
+
+test('Traditional Chinese localizes every display layer without changing rule identity', () => {
+  const simplified=allFestivals.getDay(2026,8,29);
+  const traditional=new HuangliCalendar({festivalMode:'all',locale:HUANGLI_LOCALE.TRADITIONAL}).getDay(2026,8,29);
+  assert.equal(traditional.settings.locale,'zh-Hant');
+  assert.deepEqual(traditional.godIds,simplified.godIds);
+  assert.deepEqual(traditional.suitableIds,simplified.suitableIds);
+  assert.deepEqual(traditional.ruleInput,simplified.ruleInput);
+  assert(traditional.auspiciousGods.includes('普護'));
+  assert(traditional.inauspiciousGods.includes('勾陳'));
+  assert(traditional.suitableActivities.includes('修飾垣牆'));
+  assert.equal(traditional.dutyGod.name,'勾陳');
+  assert.equal(traditional.pengZu,'乙不栽植千株不長，亥不嫁娶不利新郎');
+  assert.equal(traditional.godDirections.財神,'東北');
+  assert.equal(traditional.hours[1].branchName,'丑');
+  assert.equal(traditional.hours[1].pillarName,'丁丑');
+  assert.equal(traditional.hours[0].nayin,'澗下水');
+  assert.equal(new HuangliCalendar({locale:'zh-Hant'}).getDay(2026,3,5).solarTerm.name,'驚蟄');
+  const memorial=new HuangliCalendar({locale:'zh-Hant',festivalMode:'all'}).getDay(2026,12,13).festivalDetails[0];
+  assert.equal(memorial.name,'南京大屠殺死難者國家公祭日');
+  assert.equal(memorial.shortName,'國家公祭');
+  assert.equal(localizeHuangliText('天干丑時與防治荒漠化和干旱日','zh-Hant'),'天干丑時與防治荒漠化和乾旱日');
+  assert.equal(localizeHuangliText('黄历、农历与历法','zh-Hant'),'黃曆、農曆與曆法');
+
+  const pure=evaluateAlmanacRules(simplified.ruleInput,{locale:'zh-Hant'});
+  assert.deepEqual(pure.godIds,simplified.godIds);
+  assert(pure.inauspiciousGods.includes('勾陳'));
+  assert(getAlmanacGodCatalog('zh-Hant').some(item=>item.label==='勾陳'));
+  assert(getAlmanacActivityCatalog('zh-Hant').some(item=>item.label==='修飾垣牆'));
+  assert.deepEqual(getPalaceDirections('zh-Hant'),['東南','正南','西南','正東','中宮','正西','東北','正北','西北']);
+  assert.equal(calculatePaiLong('壬','午',{locale:'zh-Hant'}).facingStar,'祿存');
+  assert.throws(()=>new HuangliCalendar({locale:'en'}),/locale/);
+  assert.throws(()=>evaluateAlmanacRules(simplified.ruleInput,{locale:'en'}),/locale/);
 });
 test('368 clock-time calendar cases match Dart outside documented source bugs', () => {
   const instances=new Map();

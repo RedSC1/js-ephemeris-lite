@@ -63,6 +63,16 @@ Selected modern public and memorial names follow these sources:
 Festival labels and source public-holiday flags do not include annual holiday,
 make-up workday or historical name schedules.
 
+## Unicode simplified-to-traditional conversion data
+
+The committed `src/zh-hant-data.js` display lookup is generated at development
+time with Foundation's `Simplified-Traditional` string transform, backed by
+Unicode/ICU conversion data. The published package performs table lookup only
+and has no ICU runtime dependency.
+
+- ICU project and license: <https://github.com/unicode-org/icu/blob/main/LICENSE>.
+- Copyright © Unicode, Inc. All rights reserved.
+
 ## js-ephemeris-lite
 
 The astronomical/calendar runtime is a separate dependency licensed under

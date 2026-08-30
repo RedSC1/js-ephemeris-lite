@@ -119,7 +119,7 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
 | `js-ephemeris-lite` | 天文位置、事件、时间与中国历法 |
 | [bazi-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/bazi) | 四柱、十神藏干、神煞、起运大运与反查 |
 | [ziwei-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/ziwei) | 紫微命盘、流运、自定义规则与星曜反查 |
-| [huangli-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/huangli)（1.0.0 beta） | 每日宜忌、神煞、节日和九宫飞星 |
+| [huangli-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/huangli)（1.0.0 beta） | 每日宜忌、神煞、节日、九宫飞星及简繁体展示 |
 
 ## 文档与许可
 

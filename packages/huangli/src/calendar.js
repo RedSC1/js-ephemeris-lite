@@ -8,6 +8,7 @@ import { evaluateAlmanacRules } from './rules.js';
 import { mod, integer } from './rule-tables.js';
 import { createFlyingStarBoard, getThreeCyclesNinePeriods } from './feng-shui.js';
 import { getFestivalDetails } from './festivals.js';
+import { HUANGLI_LOCALE, localizeHuangliText, validateHuangliLocale } from './locale.js';
 export { createFlyingStarBoard, getThreeCyclesNinePeriods, PALACE_DIRECTIONS } from './feng-shui.js';
 
 const DUTY_NAMES=['青龙','明堂','天刑','朱雀','金匮','天德','白虎','玉堂','天牢','玄武','司命','勾陈'];
@@ -15,21 +16,35 @@ const SEASON_STARTS = [21, 3, 9, 15];
 const NAYIN_NAMES = '海中金 炉中火 大林木 路旁土 剑锋金 山头火 涧下水 城头土 白蜡金 杨柳木 泉中水 屋上土 霹雳火 松柏木 长流水 沙中金 山下火 平地木 壁上土 金箔金 覆灯火 天河水 大驿土 钗钏金 桑柘木 大溪水 沙中土 天上火 石榴木 大海水'.split(' ');
 const WUXING_NAMES = ['水', '木', '金', '土', '火'];
 const hourText = hour => String(hour).padStart(2, '0') + ':00';
-function duty(target, source) {
+function duty(target, source, locale = HUANGLI_LOCALE.SIMPLIFIED) {
   const index=mod(target-mod(source-2,6)*2,12);
-  return { index, name:DUTY_NAMES[index], isHuangDao:[0,1,4,5,7,10].includes(index) };
+  return { index, name:localizeHuangliText(DUTY_NAMES[index], locale), isHuangDao:[0,1,4,5,7,10].includes(index) };
 }
 function dateAt(day) { const {year,month,day:d}=calendarDateFromJulianDay(day); return {year,month,day:d}; }
-function tuWangPeriod(term) {
-  return { seasonStart: term.name, startDate: dateAt(term.dayNumber - 18), endDateExclusive: dateAt(term.dayNumber) };
+function tuWangPeriod(term, locale = HUANGLI_LOCALE.SIMPLIFIED) {
+  return { seasonStart: localizeHuangliText(term.name, locale), startDate: dateAt(term.dayNumber - 18), endDateExclusive: dateAt(term.dayNumber) };
 }
-function describeHour(dayPillar, branch, pillar = getHourGanzhi(ganzhiStem(dayPillar), branch)) {
+function describeHour(dayPillar, branch, pillar = getHourGanzhi(ganzhiStem(dayPillar), branch), locale = HUANGLI_LOCALE.SIMPLIFIED) {
   const startHour = mod(branch * 2 - 1, 24), endHour = (branch * 2 + 1) % 24;
   const nayinId = getNayinId(pillar);
-  return { branch, branchName: '子丑寅卯辰巳午未申酉戌亥'[branch], ...duty(branch, dayPillar & 15),
+  return { branch, branchName: '子丑寅卯辰巳午未申酉戌亥'[branch], ...duty(branch, dayPillar & 15, locale),
     dayPillar, pillar, pillarName: ganzhiName(pillar), nayinId, nayin: NAYIN_NAMES[nayinId],
     nayinElement: WUXING_NAMES[getNayinElement(pillar)], startHour, endHour,
     timeRange: `${hourText(startHour)} - ${hourText(endHour)}` };
+}
+function localizeHour(hour, locale) {
+  return { ...hour, branchName:localizeHuangliText(hour.branchName,locale),
+    pillarName:localizeHuangliText(hour.pillarName,locale),nayin:localizeHuangliText(hour.nayin,locale),
+    nayinElement:localizeHuangliText(hour.nayinElement,locale),name:localizeHuangliText(hour.name,locale) };
+}
+function localizeFestival(item, locale) {
+  return { ...item, name:localizeHuangliText(item.name,locale), shortName:localizeHuangliText(item.shortName,locale),
+    aliases:item.aliases.map(alias=>localizeHuangliText(alias,locale)) };
+}
+function localizeRecord(record, locale) {
+  return Object.fromEntries(Object.entries(record).map(([key,value])=>[
+    localizeHuangliText(key,locale),localizeHuangliText(value,locale),
+  ]));
 }
 /** Explicit clock time, fixed minute offset, and shared js-ephemeris-lite calendar. */
 export class HuangliCalendar {
@@ -37,7 +52,8 @@ export class HuangliCalendar {
   constructor(options={}) {
     const config={utcOffsetMinutes:480, ratHourMode:RAT_HOUR_MODE.NEXT_DAY, exactJieQiTime:false,
       mode:CALENDAR_MODE.CHINA_ASTRONOMICAL, flyingStarMethod:'consecutive', flyingStarBoundary:'solar',
-      isYeargodDuty:true, tuWangMethod:'four-seasons-18-days', festivalMode:'common', eventAccuracy:'mid', ...options};
+      isYeargodDuty:true, tuWangMethod:'four-seasons-18-days', festivalMode:'common', eventAccuracy:'mid',
+      locale:HUANGLI_LOCALE.SIMPLIFIED, ...options};
     integer(config.utcOffsetMinutes,-840,840,'utcOffsetMinutes');
     if(!Object.values(RAT_HOUR_MODE).includes(config.ratHourMode)) throw new RangeError('invalid ratHourMode');
     if(!Object.values(CALENDAR_MODE).includes(config.mode)) throw new RangeError('invalid calendar mode');
@@ -46,9 +62,10 @@ export class HuangliCalendar {
     if(!['four-seasons-18-days','manual'].includes(config.tuWangMethod)) throw new RangeError('invalid tuWangMethod');
     if(!['major','common','all'].includes(config.festivalMode)) throw new RangeError('invalid festivalMode');
     if(!['fast','mid','accurate'].includes(config.eventAccuracy)) throw new RangeError('invalid eventAccuracy');
+    validateHuangliLocale(config.locale);
     if(typeof config.exactJieQiTime!=='boolean' || typeof config.isYeargodDuty!=='boolean') throw new TypeError('flags must be boolean');
     // The almanac boundary is the selected clock offset, not an inferred longitude.
-    for(const key of Object.keys(options)) if(!['utcOffsetMinutes','ratHourMode','exactJieQiTime','mode','flyingStarMethod','flyingStarBoundary','isYeargodDuty','tuWangMethod','festivalMode','eventAccuracy'].includes(key)) throw new RangeError(`unknown almanac option: ${key}`);
+    for(const key of Object.keys(options)) if(!['utcOffsetMinutes','ratHourMode','exactJieQiTime','mode','flyingStarMethod','flyingStarBoundary','isYeargodDuty','tuWangMethod','festivalMode','eventAccuracy','locale'].includes(key)) throw new RangeError(`unknown almanac option: ${key}`);
     this.options=Object.freeze(config);
     Object.freeze(this); // Configuration cannot change underneath the event cache.
   }
@@ -77,7 +94,7 @@ export class HuangliCalendar {
     const terms=all.filter(e=>e.kind==='solar-term');
     const nextSeason=terms.find(e=>SEASON_STARTS.includes(e.termIndex) && e.dayNumber>metaDay);
     const automaticTuWang=nextSeason.dayNumber-metaDay<=18;
-    const tuWangYongShi={...tuWangPeriod(nextSeason),
+    const tuWangYongShi={...tuWangPeriod(nextSeason,cfg.locale),
       active:isTuWangYongShi ?? (cfg.tuWangMethod==='four-seasons-18-days' && automaticTuWang),
       source:isTuWangYongShi!==undefined?'override':cfg.tuWangMethod==='manual'?'manual':'calendar'};
     const passed=e=>cfg.exactJieQiTime && cfg.mode!=='historical'?e.time.jdUT1<=jdUT1:e.dayNumber<=localDay;
@@ -102,10 +119,10 @@ export class HuangliCalendar {
       mansion:mansion.fullName,nextSolarTermIndex:mod(upcoming.termIndex+5,24),...flags,
       isPhaseOfMoon:all.some(e=>e.kind==='lunar-phase' && e.localCivilDayNumber===metaDay),isYeargodDuty:cfg.isYeargodDuty,
       ...(activityMask===undefined?{}:{activityMask:Array.isArray(activityMask)?[...activityMask]:activityMask})};
-    const rules=evaluateAlmanacRules(ruleInput);
+    const rules=evaluateAlmanacRules(ruleInput,{locale:cfg.locale});
     const weekday=mod(localDay,7)+1;
     const festivalDetails=getFestivalDetails({year,month,day},lunar,todayTerm,weekday,cfg.festivalMode,
-      {dayNumber:localDay,dayIndex:mod(dayIndex-(nextDay?1:0),60),terms});
+      {dayNumber:localDay,dayIndex:mod(dayIndex-(nextDay?1:0),60),terms}).map(item=>localizeFestival(item,cfg.locale));
     // Solstice side and nearest Jiazi anchor reproduce the source's actual
     // consecutive/discontinuous anchor algorithms. Integer civil days avoid
     // the source's epsilon subtraction assigning exact midnight to yesterday.
@@ -126,14 +143,15 @@ export class HuangliCalendar {
       solarDate:date.toJSON(), lunarDate:lunar, jdUT1, weekday, pillars,
       ruleDate:metaDate, ruleLunarDate:{...metaLunar}, ruleInput,
       pillarNames:Object.fromEntries(Object.entries(pillars).map(([k,v])=>[k,ganzhiName(v)])),
-      solarTerm:todayTerm?{name:todayTerm.name,time:todayTerm.time,localTime:{...todayTerm.localTime},assignedDate:{...todayTerm.assignedDate}}:null,
-      moonPhases:all.filter(e=>e.kind==='lunar-phase' && e.localCivilDayNumber===localDay).map(e=>({name:e.name,time:e.time})),
-      mansion:{...mansion}, festivals:festivalDetails.map(f=>f.name), festivalDetails,
-      flags, tuWangYongShi, ...rules, dutyGod:duty(dayIndex%12,monthBranch),
-      pengZu:`${DATA.pengzuStem[dayIndex%10]}，${DATA.pengzuBranch[dayIndex%12]}`,
-      taiShen:DATA.taishen[dayIndex],godDirections:{...DATA.directions[dayIndex%10]},
-      chongSha:{branch:'子丑寅卯辰巳午未申酉戌亥'[(dayIndex%12+6)%12],animal:'鼠牛虎兔龙蛇马羊猴鸡狗猪'[(dayIndex%12+6)%12],direction:['南','东','北','西'][dayIndex%4]},
-      hours:Array.from({length:12},(_,branch)=>describeHour(pillars.day,branch)),
+      solarTerm:todayTerm?{name:localizeHuangliText(todayTerm.name,cfg.locale),time:todayTerm.time,localTime:{...todayTerm.localTime},assignedDate:{...todayTerm.assignedDate}}:null,
+      moonPhases:all.filter(e=>e.kind==='lunar-phase' && e.localCivilDayNumber===localDay).map(e=>({name:localizeHuangliText(e.name,cfg.locale),time:e.time})),
+      mansion:{...mansion,name:localizeHuangliText(mansion.name,cfg.locale),fullName:localizeHuangliText(mansion.fullName,cfg.locale),direction:localizeHuangliText(mansion.direction,cfg.locale)},
+      festivals:festivalDetails.map(f=>f.name), festivalDetails,
+      flags, tuWangYongShi, ...rules, dutyGod:duty(dayIndex%12,monthBranch,cfg.locale),
+      pengZu:localizeHuangliText(`${DATA.pengzuStem[dayIndex%10]}，${DATA.pengzuBranch[dayIndex%12]}`,cfg.locale),
+      taiShen:localizeHuangliText(DATA.taishen[dayIndex],cfg.locale),godDirections:localizeRecord(DATA.directions[dayIndex%10],cfg.locale),
+      chongSha:{branch:localizeHuangliText('子丑寅卯辰巳午未申酉戌亥'[(dayIndex%12+6)%12],cfg.locale),animal:localizeHuangliText('鼠牛虎兔龙蛇马羊猴鸡狗猪'[(dayIndex%12+6)%12],cfg.locale),direction:localizeHuangliText(['南','东','北','西'][dayIndex%4],cfg.locale)},
+      hours:Array.from({length:12},(_,branch)=>localizeHour(describeHour(pillars.day,branch,undefined,cfg.locale),cfg.locale)),
       flyingStars:{year:createFlyingStarBoard(9-mod(starYear-2027,9)),
         month:createFlyingStarBoard(mod(7-3*(starYearBranch%3)-mod(starMonthBranch-2,12),9)+1),
         day:createFlyingStarBoard(dayCenter,forward),hour:createFlyingStarBoard(hourCenter,forward),forward},
@@ -152,7 +170,7 @@ export class HuangliCalendar {
   getTuWangPeriods(year) {
     integer(year,-5999,9999,'year');
     return this.#events(year).filter(e=>e.kind==='solar-term' && SEASON_STARTS.includes(e.termIndex))
-      .sort((a,b)=>a.dayNumber-b.dayNumber).map(tuWangPeriod);
+      .sort((a,b)=>a.dayNumber-b.dayNumber).map(term=>tuWangPeriod(term,this.options.locale));
   }
   /** Civil-day intervals; day/hour pillars and stars are sampled at each interval start. */
   getHours(year,month,day) {
@@ -166,7 +184,7 @@ export class HuangliCalendar {
       const end=new ZonedTime(endHour===24?{...nextDate,offsetMinutes}:{year,month,day,hour:endHour,offsetMinutes});
       const result=this.getDay(year,month,day,{hour});
       const branch=Math.floor((hour+1)/2)%12;
-      return {...describeHour(result.pillars.day,branch,result.pillars.hour),
+      return {...localizeHour(describeHour(result.pillars.day,branch,result.pillars.hour,this.options.locale),this.options.locale),
         startHour:hour,endHour,timeRange:`${hourText(hour)} - ${hourText(endHour)}`,
         segment:i===0?'early-zi':i===12?'late-zi':'hour',
         startTime:start.toJSON(),endTime:end.toJSON(),

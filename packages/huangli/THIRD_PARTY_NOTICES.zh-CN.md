@@ -50,6 +50,15 @@
 
 节日名称和来源表中的放假标记不等同于逐年官方放假、补班安排。
 
+## Unicode 简繁转换资料
+
+随包发布的 `src/zh-hant-data.js` 展示字典在开发阶段通过 Foundation 的
+`Simplified-Traditional` 字符串转换生成，其转换资料由 Unicode／ICU 提供。
+发布包在运行时只读取已生成的字典，不依赖 ICU。
+
+- ICU 项目及许可证：<https://github.com/unicode-org/icu/blob/main/LICENSE>
+- Copyright © Unicode, Inc. All rights reserved.
+
 ## 土王用事资料参考
 
 四立前十八日的自动判定参考《钦定协纪辨方书》五行部分：

@@ -143,7 +143,7 @@ function shortName(name, aliases) {
 function normalize(raw) {
   const formal = FORMAL_NAMES.get(raw.name) ?? ALIAS_OF.get(raw.name) ?? raw.name;
   const aliases = [...(formal === raw.name ? [] : [raw.name]), ...(EXTRA_ALIASES.get(formal) ?? [])];
-  return { ...raw, name: formal, aliases };
+  return { ...raw, name: formal, aliases: [...new Set(aliases)] };
 }
 
 function isVisible(item, mode) {

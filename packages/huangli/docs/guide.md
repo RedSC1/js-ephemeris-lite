@@ -31,6 +31,7 @@ console.log(day.suitableActivities, month.length, year.length, single.ruleDate);
 
 | `HuangliOptions` | 默认值 | 含义 |
 | --- | --- | --- |
+| `locale` | `zh-Hans` | 展示文字；可选繁体中文 `zh-Hant` |
 | `utcOffsetMinutes` | `480` | 固定钟表时区，整数分钟，范围 `-840..840` |
 | `mode` | `china-astronomical` | 现代中国天文历法；另选 `historical` 或 `local-astronomical` |
 | `eventAccuracy` | `mid` | 此实例的定朔定气档位；可选 `fast`、`mid`、`accurate` |
@@ -49,6 +50,27 @@ console.log(day.suitableActivities, month.length, year.length, single.ruleDate);
 黄历入口只使用固定钟表时区，不接受经度或太阳时设置，不自动处理夏令时。
 `local-astronomical` 按该固定时区重新排布农历；中国天文模式仍使用中国农历结构。
 历史模式始终使用中国历表归日，忽略 `exactJieQiTime` 设置。
+
+## 简体与繁体输出
+
+`locale: 'zh-Hant'` 会转换日期结果中面向用户展示的节日、节气、神煞、宜忌、
+建除、黄黑道、纳音、廿八宿、彭祖百忌、胎神和方位等文字。默认 `zh-Hans`
+保持原有简体输出。英文 key、数字 ID、`ruleInput`、日期与计算设置枚举不会转换，
+因此同一天的简繁结果可以依靠 ID 稳定对照。
+
+```js
+import { HuangliCalendar, HUANGLI_LOCALE } from 'huangli-lite';
+
+const calendar = new HuangliCalendar({ locale: HUANGLI_LOCALE.TRADITIONAL });
+const day = calendar.getDay(2026, 8, 29);
+console.log(day.auspiciousGods, day.suitableActivities, day.godDirections);
+```
+
+纯规则入口使用第二个参数 `evaluateAlmanacRules(input, { locale: 'zh-Hant' })`。
+神煞和事项目录可通过 `getAlmanacGodCatalog(locale)`、
+`getAlmanacActivityCatalog(locale)` 取得；`ALMANAC_GODS` 和
+`ALMANAC_ACTIVITIES` 常量继续作为简体规范目录。飞星方位可使用
+`getPalaceDirections(locale)`，排龙输出可传入第三个 `{ locale }` 参数。
 
 ## 土王用事
 
@@ -240,7 +262,7 @@ const result = evaluateAlmanacRules({
   lunarMonth: 1, lunarDay: 1, mansion: '角',
   nextSolarTermIndex: 3,
   activityMask: ACTIVITY_MASKS.civilian37,
-});
+}, { locale: 'zh-Hant' });
 console.log(result.officer, result.suitableActivities, result.tabooActivities);
 ```
 

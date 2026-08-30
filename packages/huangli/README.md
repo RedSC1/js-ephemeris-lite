@@ -5,10 +5,10 @@
 
 ## 安装
 
-发布后可从 npm 安装：
+beta 版本发布后可从 npm 安装：
 
 ```sh
-npm install huangli-lite
+npm install huangli-lite@beta
 ```
 
 在本仓库开发时，也可以在仓库根目录安装 workspace 依赖：
@@ -57,6 +57,7 @@ console.log(month.length);
 - 四立前十八日的土王用事自动判定及手动覆盖。
 - 十二时辰的干支、纳音与黄黑道，以及区分早子、晚子的民用日时间表。
 - 多套事项显示筛选，以及独立入口 `huangli-lite/rules`。
+- 简体中文与繁体中文展示输出；稳定 ID 和规则输入不随语言变化。
 - 普通 JSON 结果，包含查询钟表、设置和实际规则输入。
 
 ## 日期与设置
@@ -65,6 +66,16 @@ console.log(month.length);
 历史归日可选 `historical`；按其他时区建立农历结构可选 `local-astronomical`。
 精度通过每个 `HuangliCalendar` 实例的 `eventAccuracy` 设置，实例之间不会共享可变状态。
 固定时区不自动处理夏令时。
+
+展示语言默认为简体中文；传入 `locale: 'zh-Hant'` 可获得繁体节日、神煞、
+宜忌、节气、纳音、方位等标签：
+
+```js
+const traditional = new HuangliCalendar({ locale: 'zh-Hant' });
+console.log(traditional.getDay(2026, 3, 16).suitableActivities);
+```
+
+语言选项只转换展示文字，不改变神煞/事项 ID、规则输入、日期或计算结果。
 
 `solarDate/lunarDate` 是展示日期；`ruleDate/ruleLunarDate` 是子时规则处理后的计算日期。
 完整边界、飞星算法及规则输入说明见[使用指南](./docs/guide.md)。

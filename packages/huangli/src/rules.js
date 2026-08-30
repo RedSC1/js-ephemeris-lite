@@ -2,6 +2,7 @@ import { DATA } from './data.js';
 import { BitSet } from './bitset.js';
 import { G, mod, integer, deepFreeze } from './rule-tables.js';
 import { calculateYiJi } from './yi-ji.js';
+import { HUANGLI_LOCALE, localizeHuangliText, localizeHuangliTexts, validateHuangliLocale } from './locale.js';
 
 export const ALMANAC_GODS = deepFreeze(DATA.gods.map(([key, label], index) => ({ key, label, index, auspicious: DATA.angelMask.includes(index) })));
 export const ALMANAC_ACTIVITIES = deepFreeze(DATA.activities.map(([key, label], index) => ({ key, label, index })));
@@ -11,6 +12,17 @@ export const ALMANAC_RULE_INFO = Object.freeze({
   convention: 'Source rule behavior retained; not an independently verified historical standard.',
   monthIndex: '0=子, 11=亥; individual legacy H-rule offsets are retained pending a separate source audit.',
 });
+
+const TRADITIONAL_GODS = deepFreeze(ALMANAC_GODS.map(item => ({ ...item, label: localizeHuangliText(item.label, HUANGLI_LOCALE.TRADITIONAL) })));
+const TRADITIONAL_ACTIVITIES = deepFreeze(ALMANAC_ACTIVITIES.map(item => ({ ...item, label: localizeHuangliText(item.label, HUANGLI_LOCALE.TRADITIONAL) })));
+
+export function getAlmanacGodCatalog(locale = HUANGLI_LOCALE.SIMPLIFIED) {
+  return validateHuangliLocale(locale) === HUANGLI_LOCALE.TRADITIONAL ? TRADITIONAL_GODS : ALMANAC_GODS;
+}
+
+export function getAlmanacActivityCatalog(locale = HUANGLI_LOCALE.SIMPLIFIED) {
+  return validateHuangliLocale(locale) === HUANGLI_LOCALE.TRADITIONAL ? TRADITIONAL_ACTIVITIES : ALMANAC_ACTIVITIES;
+}
 
 function inputs(input) {
   const { monthBranch, dayIndex, yearIndex, lunarMonth, lunarDay } = input;
@@ -84,7 +96,10 @@ function virtualBits(m,d,officer,gods) {
 }
 
 /** Pure rule evaluation, independent of any ephemeris or timezone engine. */
-export function evaluateAlmanacRules(input) {
+export function evaluateAlmanacRules(input, options = {}) {
+  const { locale = HUANGLI_LOCALE.SIMPLIFIED } = options;
+  for (const key of Object.keys(options)) if (key !== 'locale') throw new RangeError(`unknown almanac output option: ${key}`);
+  validateHuangliLocale(locale);
   const i=inputs(input), gods=godBits(i), officer=mod(i.dayIndex%12-i.monthBranch,12);
   const nextSolarTermIndex=integer(i.nextSolarTermIndex,0,23,'nextSolarTermIndex');
   const yi=calculateYiJi({
@@ -99,11 +114,11 @@ export function evaluateAlmanacRules(input) {
   const sorted=bits=>[...bits].filter(id=>!mask || mask.includes(id)).sort((a,b)=>DATA.sortPriority[a]-DATA.sortPriority[b] || a-b);
   const suitableIds=sorted(yi.goodThings), tabooIds=sorted(yi.badThings), godIds=[...gods];
   return {
-    godIds, auspiciousGods:godIds.filter(id=>ALMANAC_GODS[id].auspicious).map(id=>DATA.gods[id][1]),
-    inauspiciousGods:godIds.filter(id=>!ALMANAC_GODS[id].auspicious).map(id=>DATA.gods[id][1]),
-    suitableIds, tabooIds, suitableActivities:suitableIds.map(id=>DATA.activities[id][1]),
-    tabooActivities:tabooIds.map(id=>DATA.activities[id][1]),
-    officerIndex:officer, officer:'建除满平定执破危成收开闭'[officer],
+    godIds, auspiciousGods:localizeHuangliTexts(godIds.filter(id=>ALMANAC_GODS[id].auspicious).map(id=>DATA.gods[id][1]), locale),
+    inauspiciousGods:localizeHuangliTexts(godIds.filter(id=>!ALMANAC_GODS[id].auspicious).map(id=>DATA.gods[id][1]), locale),
+    suitableIds, tabooIds, suitableActivities:localizeHuangliTexts(suitableIds.map(id=>DATA.activities[id][1]), locale),
+    tabooActivities:localizeHuangliTexts(tabooIds.map(id=>DATA.activities[id][1]), locale),
+    officerIndex:officer, officer:localizeHuangliText('建除满平定执破危成收开闭'[officer], locale),
     thingLevel:yi.thingLevel, conflictLevel:yi.maxLevel,
   };
 }

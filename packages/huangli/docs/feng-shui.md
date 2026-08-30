@@ -61,7 +61,7 @@ console.log(mountain, facing);
 ```js
 import { calculatePaiLong, getPaiLongFacingStar } from 'huangli-lite/feng-shui';
 
-const result = calculatePaiLong('壬', '午');
+const result = calculatePaiLong('壬', '午', { locale: 'zh-Hant' });
 console.log(result.facingStar);
 console.log(result.stars); // 按子至亥排列的十二宫
 console.log(getPaiLongFacingStar('壬', '午'));

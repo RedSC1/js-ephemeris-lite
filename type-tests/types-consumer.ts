@@ -81,10 +81,13 @@ import {
   searchLunarApsides, searchEarthApsides, searchLunarNodes, searchGreatestElongations,
   searchRelativeRightAscension, searchRightAscensionStations, type LunarNodeEvent,
 } from 'js-ephemeris-lite/orbital-events';
-import { HuangliCalendar, getHuangliDay, ACTIVITY_MASKS, type HuangliDay } from '../packages/huangli/src/index.js';
+import {
+  HuangliCalendar, getHuangliDay, ACTIVITY_MASKS, HUANGLI_LOCALE, localizeHuangliText,
+  getAlmanacGodCatalog, type HuangliDay, type HuangliLocale,
+} from '../packages/huangli/src/index.js';
 import { evaluateAlmanacRules } from '../packages/huangli/src/rules.js';
 import {
-  MOUNTAIN, createFengShuiChart, calculatePaiLong, mountainForAzimuth,
+  MOUNTAIN, createFengShuiChart, calculatePaiLong, mountainForAzimuth, getPalaceDirections,
   type FengShuiChart,
 } from 'huangli-lite/feng-shui';
 import type {
@@ -216,6 +219,10 @@ searchRightAscensionStations('mercury', instant.jdTT, instant.jdTT + 365);
 searchGreatestElongations('mars', 2451545, 2451555);
 
 const almanac = new HuangliCalendar({utcOffsetMinutes: 480, ratHourMode: 'next-day'});
+const huangliLocale: HuangliLocale = HUANGLI_LOCALE.TRADITIONAL;
+const traditionalAlmanac = new HuangliCalendar({locale:huangliLocale});
+localizeHuangliText('黄历',huangliLocale);
+getAlmanacGodCatalog(huangliLocale);
 const almanacDay: HuangliDay = almanac.getDay(2026,3,16,{activityMask:ACTIVITY_MASKS.civilian37});
 const festivalDetails: FestivalDetail[] = almanacDay.festivalDetails;
 const festivalLevels: FestivalLevel[] = festivalDetails.map(f=>f.level);
@@ -228,18 +235,21 @@ const festivalMode: 'major'|'common'|'all' = almanacDay.settings.festivalMode;
 new HuangliCalendar({festivalMode:'religious'});
 void [festivalLevels,festivalSources,traditionalFestivalNames,festivalShortNames,festivalMode];
 const clockDay: HuangliDay = getHuangliDay({year:2026,month:3,day:16,hour:10});
-evaluateAlmanacRules(almanacDay.ruleInput);
+evaluateAlmanacRules(almanacDay.ruleInput,{locale:huangliLocale});
 const effectiveDate: number = almanacDay.ruleDate.day;
 const effectiveLunarMonth: number = almanacDay.ruleLunarDate.month;
 evaluateAlmanacRules({monthBranch:3,dayIndex:25,yearIndex:42,lunarMonth:1,lunarDay:28,mansion:'危',nextSolarTermIndex:5});
 // @ts-expect-error clock offsets are explicit; no inferred true-solar clock
 new HuangliCalendar({longitude:116});
+// @ts-expect-error supported display locales are explicit
+new HuangliCalendar({locale:'en'});
 // @ts-expect-error settings must not change after the event cache has been initialized
 almanac.options.utcOffsetMinutes = 0;
 void [nodeEvents,almanacDay,clockDay,effectiveDate,effectiveLunarMonth];
 
 const earthChart: FengShuiChart = createFengShuiChart({period:9,sitting:MOUNTAIN.ZI});
-calculatePaiLong('壬', mountainForAzimuth(180).key);
+calculatePaiLong('壬', mountainForAzimuth(180).key,{locale:huangliLocale});
+getPalaceDirections(huangliLocale);
 const hourlyPeriods: HuangliHourPeriod[] = almanac.getHours(2026,2,16);
 const soilPeriods: TuWangPeriod[] = almanac.getTuWangPeriods(2026);
 new HuangliCalendar({tuWangMethod:'manual'}).getDay(2026,1,20,{isTuWangYongShi:false});
@@ -247,4 +257,4 @@ new HuangliCalendar({tuWangMethod:'manual'}).getDay(2026,1,20,{isTuWangYongShi:f
 createFengShuiChart({period:9,sitting:180});
 // @ts-expect-error only explicit TuWang modes are supported
 new HuangliCalendar({tuWangMethod:'unknown'});
-void [earthChart,hourlyPeriods,soilPeriods];
+void [earthChart,hourlyPeriods,soilPeriods,traditionalAlmanac];

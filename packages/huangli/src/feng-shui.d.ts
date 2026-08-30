@@ -16,6 +16,7 @@ export interface MountainInfo {
 export const MOUNTAIN: Readonly<{ [K in MountainKey as Uppercase<K>]: K }>;
 export const MOUNTAINS: readonly MountainInfo[];
 export const PALACE_DIRECTIONS: readonly string[];
+export function getPalaceDirections(locale?: 'zh-Hans' | 'zh-Hant'): readonly string[];
 export function getMountain(value: MountainInput): MountainInfo;
 export function mountainForAzimuth(azimuthDeg: number): MountainInfo;
 export function oppositeMountain(value: MountainInput): MountainInfo;
@@ -43,5 +44,5 @@ export interface PaiLongResult {
   stars: Array<{ branch: number; branchName: string; star: string }>;
   facingStar: string;
 }
-export function calculatePaiLong(laiLong: MountainInput, facing: MountainInput): PaiLongResult;
-export function getPaiLongFacingStar(laiLong: MountainInput, facing: MountainInput): string;
+export function calculatePaiLong(laiLong: MountainInput, facing: MountainInput, options?: {locale?: 'zh-Hans' | 'zh-Hant'}): PaiLongResult;
+export function getPaiLongFacingStar(laiLong: MountainInput, facing: MountainInput, options?: {locale?: 'zh-Hans' | 'zh-Hant'}): string;

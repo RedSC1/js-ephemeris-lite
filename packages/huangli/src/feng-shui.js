@@ -1,3 +1,5 @@
+import { HUANGLI_LOCALE, localizeHuangliText, validateHuangliLocale } from './locale.js';
+
 const mod = (n, base) => ((n % base) + base) % base;
 function integer(value, min, max, name) {
   if (!Number.isInteger(value) || value < min || value > max) {
@@ -9,6 +11,11 @@ const BOARD_PATH = [4, 8, 5, 6, 1, 7, 2, 3, 0];
 const PALACE_INDEX = [7, 2, 3, 0, 4, 8, 5, 6, 1];
 const BRANCHES = [...'子丑寅卯辰巳午未申酉戌亥'];
 export const PALACE_DIRECTIONS = Object.freeze(['东南', '正南', '西南', '正东', '中宫', '正西', '东北', '正北', '西北']);
+const TRADITIONAL_PALACE_DIRECTIONS = Object.freeze(PALACE_DIRECTIONS.map(value => localizeHuangliText(value, HUANGLI_LOCALE.TRADITIONAL)));
+
+export function getPalaceDirections(locale = HUANGLI_LOCALE.SIMPLIFIED) {
+  return validateHuangliLocale(locale) === HUANGLI_LOCALE.TRADITIONAL ? TRADITIONAL_PALACE_DIRECTIONS : PALACE_DIRECTIONS;
+}
 
 export function createFlyingStarBoard(centerNumber, forward = true) {
   integer(centerNumber, 1, 9, 'centerNumber');
@@ -109,16 +116,20 @@ const PAI_LONG_STARS = ['破军', '右弼', '廉贞', '破军', '武曲', '贪�
 // Pairs: 子癸、丑艮、寅甲……亥壬. Independent of the flying-star palace mapping.
 const paiLongPalace = mountain => Math.floor(mountain.azimuthDeg / 30);
 
-export function calculatePaiLong(laiLong, facing) {
+export function calculatePaiLong(laiLong, facing, options = {}) {
+  const { locale = HUANGLI_LOCALE.SIMPLIFIED } = options;
+  for (const key of Object.keys(options)) if (key !== 'locale') throw new RangeError(`unknown PaiLong option: ${key}`);
+  validateHuangliLocale(locale);
   const source = getMountain(laiLong), target = getMountain(facing);
   const startBranch = (paiLongPalace(source) + 6) % 12;
   const forward = BRANCHES.includes(source.name), step = forward ? 1 : -1;
   const stars = BRANCHES.map((branchName, branch) => ({
-    branch, branchName, star: PAI_LONG_STARS[mod((branch - startBranch) * step, 12)],
+    branch, branchName: localizeHuangliText(branchName, locale),
+    star: localizeHuangliText(PAI_LONG_STARS[mod((branch - startBranch) * step, 12)], locale),
   }));
   return { laiLong: source, facing: target, startBranch, forward, stars, facingStar: stars[paiLongPalace(target)].star };
 }
 
-export function getPaiLongFacingStar(laiLong, facing) {
-  return calculatePaiLong(laiLong, facing).facingStar;
+export function getPaiLongFacingStar(laiLong, facing, options = {}) {
+  return calculatePaiLong(laiLong, facing, options).facingStar;
 }

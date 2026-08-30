@@ -1,8 +1,12 @@
 import type { JulianTime, CalendarMode, CalendarInput, CivilDate, CivilDateTime, ResolvedLunarDate, FourPillars, RatHourMode, EventAccuracy } from 'js-ephemeris-lite';
 import type { AlmanacRuleInput, AlmanacRulesResult } from './rules.js';
+import type { HuangliLocale } from './locale.js';
+export * from './locale.js';
 export * from './rules.js';
 export * from './feng-shui.js';
 export interface HuangliOptions {
+  /** Display-label locale; default zh-Hans. IDs and rule inputs never change. */
+  locale?: HuangliLocale;
   /** Fixed clock offset, in minutes, default +480. */
   utcOffsetMinutes?: number;
   /** Default next-day: 23:00 advances the effective day, not the display date. */
