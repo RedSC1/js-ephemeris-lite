@@ -58,6 +58,7 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
 | 查询黄经穿越、合冲、留和入宫 | `searchLongitudeCrossings()`、`searchRelativeLongitude()`、`searchStations()`、`searchIngresses()` | [黄经事件](./docs/sky-events.md#黄经合冲留与入宫) |
 | 查询近远点、交点、大距和赤经事件 | `searchLunarApsides()`、`searchLunarNodes()`、`searchGreatestElongations()` 等 | [轨道与赤经事件](./docs/sky-events.md#轨道与赤经事件) |
 | 查询日出日落、太阳高度和晨昏蒙影 | `solarRiseSetForDate()`、`solarAltitude()` | [太阳观测](./docs/sky-events.md#日出日落与太阳高度) |
+| 计算地方平太阳时、真太阳时与均时差 | `meanSolarTime()`、`trueSolarTime()`、`equationOfTime()` | [太阳时](./docs/time-and-calendar.md#地方平太阳时与真太阳时) |
 | 搜索全球及地方日月食 | `searchSolarEclipses()`、`getLocalLunarEclipse()` 等 | [日月食查询](./docs/eclipse-search.md) |
 | 查询节气、月相、农历和历史历法 | `getQiShuoYear()`、`solarToLunar()`、`calculateChineseCalendarYear()` | [时间与历法](./docs/time-and-calendar.md) |
 
