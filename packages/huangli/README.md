@@ -5,7 +5,7 @@
 
 ## 安装
 
-beta 版本发布后可从 npm 安装：
+安装当前 beta 版本：
 
 ```sh
 npm install huangli-lite@beta

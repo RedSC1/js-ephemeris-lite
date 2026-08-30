@@ -13,11 +13,10 @@
 需要 Node.js 18 或更高版本；浏览器项目可通过支持 ES modules 的构建工具使用。
 
 ```sh
-npm install js-ephemeris-lite
+npm install js-ephemeris-lite@beta
 ```
 
-本文档对应当前源码。标注“开发中”的接口尚未发布到 npm；
-使用已安装版本时，请以该版本随包文档为准。当前处于 1.0.0 beta 阶段，
+本文档对应当前 1.0.0 beta 源码；使用已安装版本时，请以该版本随包文档为准。
 正式版发布前接口仍可能调整。
 
 ## 快速开始
@@ -83,7 +82,7 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
 - 面向应用的[日月食查询接口](./docs/eclipse-search.md)，接受常规日期和角度制
   观测位置，返回全球事件、接触时刻及地方可见性；不包含地图或行政区数据。
 
-开发中的[视位置与天象搜索](./docs/sky-events.md)还提供三种参考面、
+[视位置与天象搜索](./docs/sky-events.md)还提供三种参考面、
 行星留与黄经穿越、月球照明、天体出没、近远点、交点、大距和赤经事件。
 暂不支持小行星；日月食接口、寿星原参数和时间约定见
 [日月食文档](./docs/eclipses.md)。
@@ -136,7 +135,7 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
 | `js-ephemeris-lite` | 天文位置、事件、时间与中国历法 |
 | [bazi-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/bazi) | 四柱、十神藏干、神煞、起运大运与反查 |
 | [ziwei-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/ziwei) | 紫微命盘、流运、自定义规则与星曜反查 |
-| [huangli-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/huangli)（1.0.0 beta） | 每日宜忌、神煞、节日、九宫飞星及简繁体展示 |
+| [huangli-lite](https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/huangli) | 每日宜忌、神煞、节日、九宫飞星及简繁体展示 |
 
 ## 文档与许可
 

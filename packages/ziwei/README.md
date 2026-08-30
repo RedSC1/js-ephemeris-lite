@@ -9,7 +9,7 @@
 需要 Node.js 18 或更高版本，或支持 ES modules 的浏览器构建环境。
 
 ```sh
-npm install ziwei-lite js-ephemeris-lite
+npm install ziwei-lite@beta js-ephemeris-lite@beta
 ```
 
 文档对应当前源码；已发布版本的 API 请以随包文档为准。

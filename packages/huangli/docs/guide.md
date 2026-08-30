@@ -1,6 +1,6 @@
 # 黄历使用指南
 
-[返回首页](../README.md)。本包尚未发布，以下示例在仓库 workspace 中运行。
+[返回首页](../README.md)。以下示例适用于 npm beta 包和仓库 workspace。
 
 ## 单日、月与年
 
