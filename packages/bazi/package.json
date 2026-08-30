@@ -1,9 +1,10 @@
 {
   "name": "bazi-lite",
   "version": "1.0.0-beta.1",
-  "description": "Lightweight TypeScript BaZi rules built on js-ephemeris-lite",
+  "description": "BaZi and Four Pillars for JavaScript with Ten Gods, hidden stems, Shen Sha, fortune cycles, solar time, and birth-time reverse lookup",
   "type": "module",
   "license": "MPL-2.0",
+  "author": "RedSC1",
   "keywords": [
     "bazi",
     "ba-zi",

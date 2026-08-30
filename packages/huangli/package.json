@@ -1,7 +1,7 @@
 {
   "name": "huangli-lite",
   "version": "1.0.0-beta.1",
-  "description": "Chinese almanac rules and daily Yi/Ji on js-ephemeris-lite",
+  "description": "Chinese almanac for JavaScript with daily Yi/Ji, Shen Sha, festivals, flying stars, feng shui, and Simplified or Traditional Chinese output",
   "type": "module",
   "license": "MIT",
   "author": "RedSC1",
@@ -30,5 +30,5 @@
     "test:exhaustive": "node audit/replay-dart-rules.mjs",
     "prepack": "npm test"
   },
-  "keywords": ["huangli", "almanac", "chinese-calendar", "ganzhi", "yi-ji", "shen-sha"]
+  "keywords": ["huangli", "almanac", "chinese-calendar", "ganzhi", "yi-ji", "shen-sha", "festivals", "flying-stars", "feng-shui", "traditional-chinese"]
 }
