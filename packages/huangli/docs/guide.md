@@ -33,13 +33,14 @@ console.log(day.suitableActivities, month.length, year.length, single.ruleDate);
 | --- | --- | --- |
 | `utcOffsetMinutes` | `480` | 固定钟表时区，整数分钟，范围 `-840..840` |
 | `mode` | `china-astronomical` | 现代中国天文历法；另选 `historical` 或 `local-astronomical` |
+| `eventAccuracy` | `mid` | 此实例的定朔定气档位；可选 `fast`、`mid`、`accurate` |
 | `ratHourMode` | `next-day` | 23:00 换入次日；另外两种约定见下文 |
 | `exactJieQiTime` | `false` | 年月柱按交节日切换；`true` 按天文瞬时切换 |
 | `flyingStarMethod` | `consecutive` | 日飞星以距至日最近的甲子日为锚点 |
 | `flyingStarBoundary` | `solar` | 年/月飞星按节令；可选 `lunar` |
 | `isYeargodDuty` | `true` | 传入宜忌引擎的岁神规则选项 |
 | `tuWangMethod` | `four-seasons-18-days` | 四立前十八日自动判定；`manual` 仅使用调用者标记 |
-| `festivalMode` | `common` | 常见节日与纪念日；`all` 包含扩展的宗教、人物、地方及国际纪念日 |
+| `festivalMode` | `common` | 常用节日、民俗及重要纪念日；`major` 仅主要节日，`all` 返回完整寿星节日表 |
 
 单日选项为 `hour`（默认 12）、`minute`（0）、`second`（0，允许小数秒）、
 `isTuWangYongShi`（省略时按配置计算）和 `activityMask`（省略表示所有事项）。
@@ -111,7 +112,7 @@ console.log(custom.tuWangYongShi.source); // override
 | `dutyGod`, `hours` | 日黄黑道及子至亥十二时辰的干支、纳音、时段和黄黑道 |
 | `mansion`, `pengZu`, `taiShen`, `godDirections`, `chongSha` | 廿八宿、彭祖百忌、胎神、方位与冲煞 |
 | `solarTerm`, `moonPhases`, `festivals` | 当日节气、月相和整理后的节日名称 |
-| `festivalDetails` | 节日名称、分类、别名与来源表中的原始名称 |
+| `festivalDetails` | 节日正式名、月历短名、内容级别、月格显示级别、计算来源、公休标记与别名 |
 | `tuWangYongShi` | 土王用事的区间、判定值与来源 |
 | `flyingStars`, `cycle`, `period`, `settings` | 飞星盘、三元九运及解析后的设置 |
 
@@ -119,71 +120,54 @@ console.log(custom.tuWangYongShi.source); // override
 节日标签不是官方放假安排。
 查询某一时刻的时柱与时飞星可传 `hour`；完整时辰表见下文。
 
-## 节日名称与分类
+## 节日名称与层级
 
-`festivals` 是去重后的名称数组，与 `festivalDetails.map(f => f.name)` 顺序一致。
-两者都受 `festivalMode` 控制，默认 `common`，返回以下 40 个名称中当日匹配的条目：
+节日数据源自寿星天文历原版节日表，包括固定公历、
+固定农历、星期规则、除夕，以及数九、三伏、入梅和出梅。农历节日不在闰月重复；
+带起止年份的纪念日会按查询年份过滤。二十四节气仍由 `solarTerm` 返回，清明同时标为节日。
 
-| 内容 | 名称 |
+`festivalMode` 有三档：
+
+| 值 | 内容 |
 | --- | --- |
-| 节假日 | 元旦、春节、清明节、劳动节、端午节、中秋节、国庆节 |
-| 其他传统节日 | 除夕、元宵节、龙抬头、三月三、七夕节、中元节、重阳节、寒衣节、下元节、腊八节、小年 |
-| 常用公共节日 | 妇女节、青年节、儿童节、中国人民解放军建军纪念日、植树节、教师节 |
-| 社会习俗节日 | 情人节、愚人节、母亲节、父亲节、感恩节、平安夜、圣诞节 |
-| 常用纪念日 | 中国共产党诞生日、香港回归纪念日、七七抗战纪念日、中国人民抗日战争胜利纪念日、九一八纪念日、南京大屠杀死难者国家公祭日 |
-| 常用国际日 | 国际消费者权益日、世界图书和版权日、世界环境日 |
+| `major` | 法定、主要传统和流行节日，以及重要历史纪念日 |
+| `common` | 默认；在 `major` 基础上加入民俗、民族节日和与国内用户关联较强的国际纪念日 |
+| `all` | 完整来源表，包括较冷门的国际纪念日和数九、三伏的逐日标记 |
 
-这是一份用于日常日历的显示选集，不是完整的法定节假日或国际纪念日目录。
-节日标签只标识节日日期，不展开其法定假期。冬至等节气仍通过 `solarTerm` 返回。
+`festivals` 是正式名称数组，与 `festivalDetails.map(f => f.name)` 顺序一致。
+月历等紧凑界面应只显示 `calendarDisplay` 为 `primary` 或 `secondary` 的记录，并读取
+`shortName`；`detail` 记录保留在当日详情中。这一显示级别沿用寿星万年历的 A/B/C
+密度，与 `level` 表示的节日内容类别相互独立。
 
 ```js
-const day = calendar.getDay(2026, 8, 19);
-console.log(day.festivals); // ['七夕节']
-
-const extended = new HuangliCalendar({ festivalMode: 'all' });
-const fullDay = extended.getDay(2026, 8, 19);
-console.log(fullDay.festivals); // ['七夕节', '魁星诞']
-
-const traditional = fullDay.festivalDetails
-  .filter(f => f.category === 'traditional')
-  .map(f => f.name);
-console.log(traditional); // ['七夕节']
+const day = calendar.getDay(2026, 8, 1);
+console.log(day.festivals); // ['中国人民解放军建军纪念日']
 console.log(day.festivalDetails[0]);
 // {
-//   name: '七夕节', category: 'traditional',
-//   aliases: ['七夕'], sourceNames: ['七夕-魁星诞']
+//   name: '中国人民解放军建军纪念日',
+//   shortName: '建军节',
+//   level: 'historical', calendarDisplay: 'secondary', source: 'solar',
+//   isPublicHoliday: false, aliases: ['建军节']
 // }
 ```
 
-| `category` | 内容 |
+| `level` | 内容 |
 | --- | --- |
-| `traditional` | 传统节日，如春节、龙抬头、七夕节 |
-| `civic` | 国内公共节日、行业节日与宣传日，如元旦、教师节、全国爱眼日 |
-| `international` | 国际纪念日与宣传日，如世界图书和版权日 |
-| `popular` | 社会习俗节日，如母亲节、情人节、圣诞节 |
-| `religious` | 神佛诞辰与宗教纪念日 |
-| `historical` | 历史事件、组织及人物纪念日 |
-| `local` | 地方纪念日，如上海解放日 |
+| `statutory` | 来源表标记的法定或公休节日 |
+| `traditional` | 传统与民俗节日，以及数九、三伏首日 |
+| `popular` | 社会、行业和流行节日 |
+| `commemorative` | 科普、公共议题及国际纪念日 |
+| `historical` | 历史事件与纪念日 |
+| `ethnic` | 少数民族节日与地方民俗 |
 
-`all` 保留扩展节日的分类与名称，可按 `category` 进一步筛选。
-杨公忌属于择日禁忌，不在任一模式的节日列表中；其规则仍由宜忌引擎计算，
-命中结果可在 `godIds`、`inauspiciousGods` 中读取。节日筛选不改变宜忌、干支或飞星结果。
+`source` 为 `solar`、`lunar`、`weekBased`、`termBased` 或 `custom`。
+`aliases` 保存来源表名称和常用异名；例如国家公祭日保留“南京大屠杀纪念日”，
+世界图书和版权日保留“世界读书日”。`isPublicHoliday` 只复现来源表标记，
+不提供某一年度的放假、调休或补班安排。
+来源表中固定写在 10 月 2、3 日的“国庆节假日”属于旧式放假模板，导入时不作为
+永久节日保留；年度假期应由独立的年份数据提供。
 
-`aliases` 保存同一节日的其他名称，`sourceNames` 保存导入表中的原始标签。
-例如“七夕-魁星诞”拆成两项后，两项都有这个来源标签，但不会将它作为各自的别名。
-名称使用“元旦”“劳动节”“妇女节”“青年节”“儿童节”等规范写法；
-“中国人民解放军建军纪念日”保留“建军节”作为别名。
-二月二使用“龙抬头”，“春龙节”为别名。
-按名称检索时，可同时匹配 `name` 和 `aliases`。
-
-农历节日不在闰月重复；除夕按腊月实际末日匹配，清明节按所选历法模式的清明归日匹配。
-母亲节、父亲节、感恩节按各自的星期规则计算。
-小年沿用农历腊月二十三的标注，尚未提供南北习俗切换。
-世界图书和版权日为 4 月 23 日，“世界读书日”为其别名。
-
-分类仅用于内容筛选，不表示法定放假资格。
-节日表包含民俗名称及纪念日，没有设立年份和历年名称版本，
-查询历史日期时不保证当时已有该节日或名称。接口不提供年度放假、补班安排。
+杨公忌属于择日禁忌，不在任一节日模式中；节日筛选不改变宜忌、干支或飞星结果。
 来源与名称依据见[第三方声明](../THIRD_PARTY_NOTICES.md)。
 
 ## 十二时辰与当天时间表

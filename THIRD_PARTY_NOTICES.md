@@ -17,6 +17,22 @@ The initial per-coordinate truncation budgets follow Shou Xing Tian Wen Li
 published counts for the folded models. Retired VSOP87 implementations are
 available in Git history.
 
+## Shou Xing eclipse algorithms
+
+`src/eclipses.js` and `src/solar-eclipses.js` contain `ecFast`, `ysPL`, `rsGS`
+and `rsPL`, ported from Shou Xing Tian Wen Li while preserving their original
+public names, classification/contact conventions and J2000-relative TT-day
+input. They cover fast eclipse classification, lunar-eclipse contacts, global
+solar-eclipse Bessel geometry and paths, and local solar-eclipse contacts and
+boundaries. The port uses this package's current apparent Sun/Moon positions,
+sidereal time and Delta T. Project validation and module/type wrappers do not
+relicense the original algorithms under MPL-2.0.
+
+- Upstream project mirror and attribution: <https://github.com/sxwnl/sxwnl>
+- Upstream copyright statement:
+  <https://sxwnl.github.io/src/sm1.htm#copyright>
+
+
 ## VSOP2013 Mercury, Venus, Earth and Mars
 
 The Mercury, Venus, Earth and Mars sections of `src/planet-series.js`

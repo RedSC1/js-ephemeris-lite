@@ -148,30 +148,25 @@ console.log(equinox.jdTT, newMoon.jdUT1);
 
 ### 定朔定气档位：fast / mid / accurate
 
-`solveSolarLongitude / solveLunarPhase / solveNewMoon` 按档位路由，库初始默认是 `mid`。
-八字交节、起运、农历排月和黄历等调用这些接口的功能，会随全局默认一起切换。
+`solveSolarLongitude / solveLunarPhase / solveNewMoon` 按单次选项路由，省略时默认 `mid`。
+中国历法及八字、黄历等上层功能通过各自的 `eventAccuracy` 查询或实例选项选择档位。
 
 | 档位 | 算法 |
 | --- | --- |
-| `fast` | 截断级数与固定次数修正，追求速度，不承诺求根容差 |
+| `fast` | 寿星式固定次数修正；最终太阳／月球主黄经使用完整级数，不承诺求根容差 |
 | `mid` | 专用定气定朔模型，按数值容差迭代；默认档位 |
 | `accurate` | 完整库内视位置模型，按数值容差迭代 |
 
 ```js
-import { setEventAccuracy, getEventAccuracy, solveNewMoon } from 'js-ephemeris-lite';
+import { solveNewMoon, calculateChineseCalendarYear } from 'js-ephemeris-lite';
 
-setEventAccuracy('fast'); // 应用初始化时选择；不调用则保持 mid
-console.log(getEventAccuracy()); // fast
-const normal = solveNewMoon(2461212);
+const quick = solveNewMoon(2461212, { accuracy: 'fast' });
 const precise = solveNewMoon(2461212, { accuracy: 'accurate', toleranceSeconds: 0.01 });
-// 单次 accuracy 覆盖不改变全局；后续默认仍是 fast。
-setEventAccuracy('mid');
+const calendar = calculateChineseCalendarYear(2461212, { eventAccuracy: 'fast' });
 ```
 
-全局设置作用于同一模块实例的后续同步计算；Worker 或另一份库实例有各自的设置。
-服务端不要在交错的异步请求中反复切全局档位：直接调用 `solve…` 时用单次 `accuracy` 覆盖。
-已有命盘或历法结果不会自动重算；黄历内部年度缓存按档位区分。
-此设置不切换通用星体坐标、视位置、真太阳时等其他算法。
+精度选项属于本次调用或上层对象，不会改变其他求解器、日历实例或并发请求。
+它也不切换通用星体坐标、视位置、真太阳时等其他算法。
 
 三档的 `solve…` 都直接返回 `JulianTime`，它实现共享结构类型 `AstroTime`：
 `{ jdTT, jdUT1, deltaTSeconds }`。
@@ -190,8 +185,8 @@ Mid/Accurate 的 `solver` 默认 `auto`，也可选择带区间保护的 `safegu
 
 | 接口 | 计算路线 |
 | --- | --- |
-| `solarLongitudeTimeFast` | 固定阶段定气：截断级数与简化光行差 |
-| `lunarPhaseTimeFast` | 固定阶段定相：截断级数与简化月球光行时修正 |
+| `solarLongitudeTimeFast` | 固定阶段定气：最终地球黄经使用完整级数，采用简化光行差 |
+| `lunarPhaseTimeFast` | 固定阶段定相：最终月球黄经使用完整级数，采用简化月球光行时修正 |
 | `solarLongitudeTimeAccurate` | 对完整库内太阳视黄经迭代求根 |
 | `lunarPhaseTimeAccurate` | 月、日分别走完整库内视位置链，再求视黄经差的根 |
 
@@ -217,7 +212,7 @@ Fast 不接受数值容差，也不保证所有日期取整到分钟后与 Accur
 Accurate 使用完整库内视位置，`toleranceSeconds` 默认 `0.01` 秒。
 该容差仅控制数值求根，无法达到时会抛错；模型限制见[精度说明](./accuracy.md)。
 
-带 `Fast`、`Accurate` 后缀的标量接口不受全局档位设置影响。
+带 `Fast`、`Accurate` 后缀的标量接口固定使用名称所示档位。
 
 ## 地方平太阳时与真太阳时
 

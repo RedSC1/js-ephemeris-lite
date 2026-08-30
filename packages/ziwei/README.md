@@ -83,5 +83,6 @@ JSON 为本命盘快照，包含出生时间、计算设置和自定义规则。
 - [规则选项与自定义星曜](./docs/custom-rules.md)
 
 传统规则用于术数研究和应用展示；本包提供计算与数据，不包含网页界面。
-代码采用 [MPL-2.0](./LICENSE)。天文与历史数据来源见核心库的
-[第三方声明](https://github.com/RedSC1/js-ephemeris-lite/blob/main/THIRD_PARTY_NOTICES.md)。
+代码采用 [MPL-2.0](./LICENSE)。本包来源说明见
+[中文第三方声明](./THIRD_PARTY_NOTICES.zh-CN.md)；天文与历史数据来源另见核心库的
+[中文第三方声明](https://github.com/RedSC1/js-ephemeris-lite/blob/main/THIRD_PARTY_NOTICES.zh-CN.md)。

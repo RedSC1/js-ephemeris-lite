@@ -2,33 +2,33 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { HuangliCalendar, getHuangliDay, createFlyingStarBoard, getThreeCyclesNinePeriods, ALMANAC_GODS } from '../src/index.js';
-import { getQiShuoYear, JulianTime, ZonedTime, calendarDateFromJulianDay, julianDay, ganzhiIndex, lunarToSolar, setEventAccuracy, getEventAccuracy } from 'js-ephemeris-lite';
+import { getQiShuoYear, JulianTime, ZonedTime, calendarDateFromJulianDay, julianDay, ganzhiIndex, lunarToSolar } from 'js-ephemeris-lite';
 import { getFestivalDetails } from '../src/festivals.js';
 
 const cal=new HuangliCalendar();
+const majorFestivals=new HuangliCalendar({festivalMode:'major'});
 const allFestivals=new HuangliCalendar({festivalMode:'all'});
 const fixture=JSON.parse(readFileSync(new URL('./fixtures/calendar-dart.json',import.meta.url)));
 const additions=JSON.parse(readFileSync(new URL('./fixtures/additions-dart.json',import.meta.url)));
-test('existing almanac instances do not reuse event caches across accuracy modes', () => {
-  const saved=getEventAccuracy(), instance=new HuangliCalendar(), dates=[];
-  try {
-    for(const accuracy of ['mid','fast','accurate','mid']) {
-      setEventAccuracy(accuracy);
+test('almanac event accuracy belongs to each instance and cache', () => {
+  const dates=[];
+  for(const accuracy of ['mid','fast','accurate','mid']) {
+      const instance=new HuangliCalendar({eventAccuracy:accuracy});
       const actual=instance.getDay(2026,6,21).solarTerm;
       assert.ok(actual.time instanceof JulianTime);
       assert.equal(actual.time.toZonedTime(480).offsetMinutes,480);
       assert.equal('jdTT' in actual,false);
-      const fresh=new HuangliCalendar().getDay(2026,6,21).solarTerm;
+      const fresh=new HuangliCalendar({eventAccuracy:accuracy}).getDay(2026,6,21).solarTerm;
       assert.equal(actual.time.jdTT,fresh.time.jdTT);
-      const event=getQiShuoYear(2026,{lunarPhaseAnglesDeg:[]}).events.find(e=>e.kind==='solar-term' && e.termIndex===6);
+      const event=getQiShuoYear(2026,{eventAccuracy:accuracy,lunarPhaseAnglesDeg:[]}).events.find(e=>e.kind==='solar-term' && e.termIndex===6);
       assert.equal(actual.time.jdTT,event.time.jdTT);
       assert.equal('residualRadians' in event,false);
       dates.push(actual.time.jdTT);
-    }
-    assert.notEqual(dates[0],dates[1]);
-    assert.notEqual(dates[1],dates[2]);
-    assert.equal(dates[0],dates[3]);
-  } finally { setEventAccuracy(saved); }
+  }
+  assert.notEqual(dates[0],dates[1]);
+  assert.notEqual(dates[1],dates[2]);
+  assert.equal(dates[0],dates[3]);
+  assert.throws(()=>new HuangliCalendar({eventAccuracy:'high'}),/eventAccuracy/);
 });
 test('368 clock-time calendar cases match Dart outside documented source bugs', () => {
   const instances=new Map();
@@ -76,8 +76,8 @@ test('1914 historical new-moon assignment remains distinct from astronomical mod
   const historical=new HuangliCalendar({mode:'historical'}).getDay(1914,11,17);
   assert.deepEqual([modern.lunarDate.month,modern.lunarDate.day],[9,30]);
   assert.deepEqual([historical.lunarDate.month,historical.lunarDate.day],[10,1]);
-  assert(historical.festivals.includes('寒衣节'));
-  assert(!modern.festivals.includes('寒衣节'));
+  assert(historical.festivals.includes('祭祖节(十月朝)'));
+  assert(!modern.festivals.includes('祭祖节(十月朝)'));
 });
 
 test('midnight and late-Zi rules agree across day pillar and daily flying stars', () => {
@@ -117,61 +117,33 @@ test('civil dates, leap months, holidays and JSON preserve the supplied clock', 
   assert.deepEqual(JSON.parse(JSON.stringify(result)),result);
 });
 
-test('festival display names retain source labels and searchable aliases', () => {
-  for (const [month, day, source, name, category] of [
-    [1,1,'元旦节','元旦','civic'],
-    [2,7,'京汉铁路罢工纪念','二七纪念日','historical'],
-    [3,8,'国际劳动妇女节','妇女节','civic'],
-    [3,12,'中国植树节','植树节','civic'],
-    [4,1,'国际愚人节','愚人节','popular'],
-    [5,1,'国际劳动节','劳动节','civic'],
-    [5,4,'中国青年节','青年节','civic'],
-    [6,1,'国际儿童节','儿童节','civic'],
-    [7,7,'中国人民抗日战争纪念日','七七抗战纪念日','historical'],
-    [8,1,'中国人民解放军建军节','中国人民解放军建军纪念日','civic'],
-    [9,3,'中国抗日战争胜利纪念日','中国人民抗日战争胜利纪念日','historical'],
-    [9,10,'中国教师节','教师节','civic'],
-    [9,18,'“九·一八”事变纪念日','九一八纪念日','historical'],
-    [12,13,'南京大屠杀纪念日','南京大屠杀死难者国家公祭日','historical'],
+test('festival details expose formal names, compact labels, levels and aliases', () => {
+  for (const [month,day,name,shortName,level,alias] of [
+    [3,15,'国际消费者权益日','消费者权益日','popular','消费者权益日'],
+    [7,1,'中国共产党成立纪念日','建党日','historical','中共诞辰'],
+    [8,1,'中国人民解放军建军纪念日','建军节','historical','建军节'],
+    [9,3,'中国人民抗日战争暨世界反法西斯战争胜利纪念日','抗战胜利','historical','抗日战争胜利纪念'],
+    [12,13,'南京大屠杀死难者国家公祭日','国家公祭','historical','南京大屠杀纪念日'],
   ]) {
-    const result = allFestivals.getDay(2026,month,day);
-    const detail = result.festivalDetails.find(f=>f.name===name);
-    assert(detail, `${month}-${day}: ${name}`);
-    assert.equal(detail.category,category);
-    assert(detail.aliases.includes(source));
-    assert.deepEqual(detail.sourceNames,[source]);
-    assert(!result.festivals.includes(source));
+    const result=allFestivals.getDay(2026,month,day);
+    const detail=result.festivalDetails.find(f=>f.name===name);
+    assert(detail,`${month}-${day}: ${name}`);
+    assert.equal(detail.shortName,shortName);
+    assert.equal(detail.level,level);
+    assert(detail.aliases.includes(alias));
     assert.deepEqual(result.festivals,result.festivalDetails.map(f=>f.name));
   }
-  assert(cal.getDay(2026,8,1).festivalDetails.find(f=>f.category==='civic').aliases.includes('建军节'));
-  const march12=allFestivals.getDay(2026,3,12).festivalDetails;
-  assert(march12.some(f=>f.name==='孙中山逝世纪念日'&&f.category==='historical'));
-  assert(allFestivals.getDay(2026,5,27).festivalDetails.some(f=>f.name==='上海解放日'&&f.category==='local'));
+  assert(allFestivals.getDay(2026,4,23).festivalDetails[0].aliases.includes('世界读书日'));
 });
 
-test('combined lunar observances split into separate traditional and religious entries', () => {
-  const solar={year:2026,month:1,day:2}; // No solar festival.
-  for (const [month,day,source,expected] of [
-    [2,2,'春龙节-福德土地正神诞',[['龙抬头','traditional'],['福德土地正神诞','religious']]],
-    [3,3,'三月三-玄天上帝诞',[['三月三','traditional'],['玄天上帝诞','religious']]],
-    [7,7,'七夕-魁星诞',[['七夕节','traditional'],['魁星诞','religious']]],
-    [7,13,'长真谭真人诞-大势至菩萨诞',[['长真谭真人诞','religious'],['大势至菩萨诞','religious']]],
-    [9,9,'重阳节-酆都大帝诞',[['重阳节','traditional'],['酆都大帝诞','religious']]],
-    [12,8,'腊八节-释迦如来成佛之辰',[['腊八节','traditional'],['释迦如来成佛之辰','religious']]],
-  ]) {
-    const lunar={month,day,monthDays:30,isLeap:false};
-    const details=getFestivalDetails(solar,lunar,null,5,'all');
-    assert.deepEqual(details.map(f=>[f.name,f.category]),expected);
-    for(const detail of details) {
-      assert.deepEqual(detail.sourceNames,[source]);
-      assert(!detail.aliases.includes(source));
-    }
-    assert.deepEqual(getFestivalDetails(solar,{...lunar,isLeap:true},null,5,'all'),[]);
-  }
+test('sxwnl lunar aliases merge while distinct folk observances remain separate', () => {
   const qixi=allFestivals.getDay(2026,8,19,{hour:23});
-  assert.deepEqual(qixi.festivals,['七夕节','魁星诞']);
-  assert.deepEqual(qixi.festivalDetails.filter(f=>f.category==='traditional').map(f=>f.name),['七夕节']);
-  assert(qixi.festivalDetails[0].aliases.includes('七夕'));
+  assert(qixi.festivals.includes('七夕节'));
+  assert.deepEqual(qixi.festivalDetails.find(f=>f.name==='七夕节').aliases.sort(),['乞巧节','女儿节']);
+  const dragon=getFestivalDetails({year:2026,month:1,day:2},{month:2,day:2,monthDays:30,isLeap:false},null,5,'all');
+  assert.deepEqual(dragon.map(f=>[f.name,f.level]),[['龙抬头','traditional'],['畲族会亲节','ethnic']]);
+  assert(dragon[0].aliases.includes('春龙节'));
+  assert.deepEqual(getFestivalDetails({year:2026,month:1,day:2},{month:2,day:2,monthDays:30,isLeap:true},null,5,'all'),[]);
 });
 
 test('festival date rules keep Qingming, weekday holidays and both year-end lengths', () => {
@@ -190,56 +162,76 @@ test('festival date rules keep Qingming, weekday holidays and both year-end leng
   assert(!cal.getDay(2026,5,23).festivalDetails.some(f=>f.name.includes('读书')||f.name.includes('版权')));
 });
 
+test('seasonal markers follow the mode-resolved solar-term civil days', () => {
+  const solar={year:2026,month:7,day:20};
+  const lunar={month:6,day:7,monthDays:30,isLeap:true};
+  const context={dayNumber:120,dayIndex:6};
+  const modernTerms=[
+    {name:'夏至',dayNumber:100,assignedDate:{year:2026}},
+    {name:'立秋',dayNumber:160,assignedDate:{year:2026}},
+  ];
+  const historicalTerms=[
+    {name:'夏至',dayNumber:101,assignedDate:{year:2026}},
+    {name:'立秋',dayNumber:160,assignedDate:{year:2026}},
+  ];
+  const modern=getFestivalDetails(solar,lunar,null,1,'all',{...context,terms:modernTerms});
+  const historical=getFestivalDetails(solar,lunar,null,1,'all',{...context,terms:historicalTerms});
+  assert(modern.some(item=>item.name==='初伏'));
+  assert(!historical.some(item=>item.name.includes('伏')));
+});
+
 test('festival details are fresh JSON snapshots, including nested aliases and sources', () => {
   const day=allFestivals.getDay(2026,8,19);
   assert.deepEqual(JSON.parse(JSON.stringify(day.festivalDetails)),day.festivalDetails);
   day.festivalDetails[0].aliases.push('changed');
-  day.festivalDetails[0].sourceNames.length=0;
-  day.festivalDetails[0].category='changed';
+  day.festivalDetails[0].shortName='changed';
   day.festivals.length=0;
   const again=allFestivals.getDay(2026,8,19);
   assert.deepEqual(again.festivalDetails[0],{
-    name:'七夕节',category:'traditional',aliases:['七夕'],sourceNames:['七夕-魁星诞'],
+    name:'七夕节',shortName:'七夕节',level:'traditional',calendarDisplay:'secondary',source:'lunar',isPublicHoliday:false,aliases:['乞巧节','女儿节'],
   });
-  assert.deepEqual(again.festivals,['七夕节','魁星诞']);
+  assert.deepEqual(again.festivals,['七夕节','末伏第6天']);
 });
 
-test('common festivals keep familiar dates and leave detailed observances opt-in', () => {
-  assert.deepEqual(cal.getDay(2026,2,17).festivals,['春节']);
-  assert.deepEqual(cal.getDay(2026,8,19).festivals,['七夕节']);
-  assert.deepEqual(cal.getDay(2026,3,12).festivals,['植树节']);
-  assert(!cal.getDay(2026,5,27).festivals.includes('上海解放日'));
+test('festival calendar display preserves sxwnl A/B/C density independently of semantic level', () => {
+  assert.equal(allFestivals.getDay(2026,9,10).festivalDetails.find(f=>f.name==='教师节').calendarDisplay,'secondary');
+  assert.equal(allFestivals.getDay(2026,9,9).festivalDetails.find(f=>f.name==='毛泽东逝世纪念日').calendarDisplay,'detail');
+  assert.equal(allFestivals.getDay(2026,8,25).festivalDetails.find(f=>f.name==='侗族吃新节').calendarDisplay,'detail');
+  assert.equal(allFestivals.getDay(2026,5,31).festivalDetails.find(f=>f.name==='世界无烟日').calendarDisplay,'secondary');
+});
+
+test('source-era National Day schedule placeholders are not recurring festivals', () => {
+  assert(allFestivals.getDay(2026,10,1).festivals.includes('国庆节'));
+  assert(!allFestivals.getDay(2026,10,2).festivals.includes('国庆节假日'));
+  assert(!allFestivals.getDay(2026,10,3).festivals.includes('国庆节假日'));
+});
+
+test('festival modes separate principal, broadly relevant and complete source data', () => {
+  assert(majorFestivals.getDay(2026,8,1).festivals.includes('中国人民解放军建军纪念日'));
+  assert(!majorFestivals.getDay(2026,8,6).festivals.includes('火把节'));
+  assert(cal.getDay(2026,8,6).festivals.includes('火把节'));
+  assert(cal.getDay(2026,5,31).festivals.includes('世界无烟日'));
   assert(!cal.getDay(2026,3,1).festivals.includes('国际海豹日'));
   assert(allFestivals.getDay(2026,3,1).festivals.includes('国际海豹日'));
-  const dragon=getFestivalDetails({year:2026,month:1,day:2},{month:2,day:2,monthDays:30,isLeap:false},null,5);
-  assert.deepEqual(dragon,[{name:'龙抬头',category:'traditional',aliases:['春龙节'],sourceNames:['春龙节-福德土地正神诞']}]);
+  assert(!allFestivals.getDay(1926,8,1).festivals.includes('中国人民解放军建军纪念日'));
+  assert(allFestivals.getDay(1927,8,1).festivals.includes('中国人民解放军建军纪念日'));
   assert.throws(()=>new HuangliCalendar({festivalMode:'religious'}),/invalid festivalMode/);
   assert.throws(()=>new HuangliCalendar({festivalMode:null}),/invalid festivalMode/);
 });
 
 test('festival selection applies to batch queries without changing any Yi/Ji or calendar results', () => {
-  const commonYear=cal.getYear(2026), fullYear=allFestivals.getYear(2026);
-  const names=new Set();
+  const majorYear=majorFestivals.getYear(2026), commonYear=cal.getYear(2026), fullYear=allFestivals.getYear(2026);
   for(let i=0;i<commonYear.length;i++) {
     const {festivals,festivalDetails,settings,...common}=commonYear[i];
     const {festivals:fullNames,festivalDetails:fullDetails,settings:fullSettings,...full}=fullYear[i];
+    const majorNames=new Set(majorYear[i].festivals);
     assert.deepEqual(common,full);
     assert.deepEqual(settings,{...fullSettings,festivalMode:'common'});
     assert.deepEqual(festivals,festivalDetails.map(f=>f.name));
-    assert(festivalDetails.every(f=>f.category!=='religious'&&f.category!=='local'));
     assert.deepEqual(festivalDetails,fullDetails.filter(f=>festivals.includes(f.name)));
+    assert([...majorNames].every(name=>festivals.includes(name)));
     assert(!fullNames.includes('杨公忌'));
-    festivals.forEach(name=>names.add(name));
   }
-  assert.deepEqual([...names].sort(),[
-    '元旦','春节','清明节','劳动节','端午节','中秋节','国庆节',
-    '除夕','元宵节','龙抬头','三月三','七夕节','中元节','重阳节','寒衣节','下元节','腊八节','小年',
-    '妇女节','青年节','儿童节','中国人民解放军建军纪念日','植树节','教师节',
-    '情人节','愚人节','母亲节','父亲节','感恩节','平安夜','圣诞节',
-    '中国共产党诞生日','香港回归纪念日','七七抗战纪念日','中国人民抗日战争胜利纪念日',
-    '九一八纪念日','南京大屠杀死难者国家公祭日',
-    '国际消费者权益日','世界图书和版权日','世界环境日',
-  ].sort());
 });
 
 test('Yang Gong Ji remains in the independent rule engine, never in either festival selection', () => {
@@ -249,7 +241,7 @@ test('Yang Gong Ji remains in the independent rule engine, never in either festi
     const result=calendar.getDay(date.year,date.month,date.day);
     assert(result.godIds.includes(id));
     assert(!result.festivals.includes('杨公忌'));
-    assert(!result.festivalDetails.some(f=>f.sourceNames.includes('杨公忌')));
+    assert(!result.festivalDetails.some(f=>f.name.includes('杨公忌')||f.aliases.includes('杨公忌')));
   }
 });
 

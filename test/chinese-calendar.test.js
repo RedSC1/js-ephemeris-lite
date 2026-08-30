@@ -21,15 +21,14 @@ import {
 } from '../src/chinese-calendar.js';
 import { JulianTime, ZonedTime, julianDay } from '../src/time.js';
 import { HISTORICAL_CALENDAR_DATA as HISTORY } from '../src/generated/historical-calendar-data.js';
-import { setEventAccuracy, getEventAccuracy, solveSolarLongitude } from '../src/calendar-events.js';
+import { solveSolarLongitude } from '../src/calendar-events.js';
 import { fourPillarsForZonedTime, ganzhiName } from '../src/ganzhi.js';
 
-test('global accuracy reaches calendar events and BaZi year/month boundaries', () => {
-  const saved = getEventAccuracy(), options = { mode: CALENDAR_MODE.CHINA_ASTRONOMICAL };
+test('per-query accuracy reaches calendar events and BaZi year/month boundaries', () => {
+  const baseOptions = { mode: CALENDAR_MODE.CHINA_ASTRONOMICAL };
   const dates = [];
-  try {
-    for (const accuracy of ['fast', 'mid', 'accurate']) {
-      setEventAccuracy(accuracy);
+  for (const accuracy of ['fast', 'mid', 'accurate']) {
+      const options = { ...baseOptions, eventAccuracy: accuracy };
       const lichun = getSpecificSolarTerm(2026, 21, options);
       const explicit = solveSolarLongitude(315 * Math.PI / 180, lichun.time.jdTT, { accuracy });
       assert.ok(Math.abs(lichun.time.jdTT - explicit.jdTT) * 86400 < 0.02);
@@ -42,10 +41,9 @@ test('global accuracy reaches calendar events and BaZi year/month boundaries', (
       const lunar = solarToLunar({ year: 2033, month: 12, day: 22 }, options);
       assert.equal(lunar.month, 11);
       assert.equal(lunar.isLeap, true);
-    }
-    assert.notEqual(dates[0], dates[1], 'Fast setting must reach the calendar event solver');
-    assert.notEqual(dates[1], dates[2], 'Accurate setting must reach the calendar event solver');
-  } finally { setEventAccuracy(saved); }
+  }
+  assert.notEqual(dates[0], dates[1], 'Fast setting must reach the calendar event solver');
+  assert.notEqual(dates[1], dates[2], 'Accurate setting must reach the calendar event solver');
 });
 
 function phaseEstimate(kind, phaseIndex) {

@@ -7,7 +7,7 @@ export const ALMANAC_GODS = deepFreeze(DATA.gods.map(([key, label], index) => ({
 export const ALMANAC_ACTIVITIES = deepFreeze(DATA.activities.map(([key, label], index) => ({ key, label, index })));
 export const ACTIVITY_MASKS = DATA.activityMasks;
 export const ALMANAC_RULE_INFO = Object.freeze({
-  source: 'chinese_lunar_almanac 0.1.5', gods: 171, activities: 98,
+  source: 'cnlunar + huangli-lite adaptations', gods: 171, activities: 98,
   convention: 'Source rule behavior retained; not an independently verified historical standard.',
   monthIndex: '0=子, 11=亥; individual legacy H-rule offsets are retained pending a separate source audit.',
 });

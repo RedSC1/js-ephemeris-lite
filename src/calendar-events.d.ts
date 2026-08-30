@@ -2,12 +2,9 @@ import type { MoonLatitudeTerms, ScalarState } from './ephemeris.js';
 import type { JulianTime } from './time.js';
 
 export type EventAccuracy = 'fast' | 'mid' | 'accurate';
-/** Default for future solve calls in this module instance; initially mid. */
-export function setEventAccuracy(accuracy: EventAccuracy): void;
-export function getEventAccuracy(): EventAccuracy;
 
 export interface EventSolveOptions {
-  /** Per-call override of getEventAccuracy(). */
+  /** Event model used for this call; default mid. */
   accuracy?: EventAccuracy;
   /** Mid/accurate only; specifying this in fast mode throws. */
   toleranceSeconds?: number;

@@ -11,8 +11,8 @@ function select(blocks,stride,score,limits,pack){
   return[limit,blocks.map((rows,n)=>{const out=[];for(let i=0;i<rows.length;i+=stride)if(chosen.has(n+':'+i))out.push(...pack(rows,i));return out;})];
  }));
 }
-const EARTH=[EARTH_L,EARTH_B,EARTH_R].map((b,c)=>select(b,3,(a,i)=>Math.abs(a[i]),c===0?[11,28,48,129,160]:c===1?[0,'full']:[3,30],(a,i)=>a.slice(i,i+3)));
-const MOON=[MOON_L,MOON_B].map((b,c)=>select(b,3,(a,i)=>Math.hypot(a[i],a[i+1]),c===0?[8,33,256]:[0,10],(a,i)=>[Math.hypot(a[i],a[i+1]),-Math.atan2(a[i],a[i+1]),...MOON_ARGUMENTS[a[i+2]]]));
+const EARTH=[EARTH_L,EARTH_B,EARTH_R].map((b,c)=>select(b,3,(a,i)=>Math.abs(a[i]),c===0?[11,28,48,129,'full']:c===1?[0,'full']:[3,30],(a,i)=>a.slice(i,i+3)));
+const MOON=[MOON_L,MOON_B].map((b,c)=>select(b,3,(a,i)=>Math.hypot(a[i],a[i+1]),c===0?[8,33,'full']:[0,10],(a,i)=>[Math.hypot(a[i],a[i+1]),-Math.atan2(a[i],a[i+1]),...MOON_ARGUMENTS[a[i+2]]]));
 const EARTH_DEGREE = Math.max(EARTH_L.length, EARTH_B.length, EARTH_R.length) - 1;
 const J=2451545,S=2922000,A=20.4898*Math.PI/648000;
 export const wrap=x=>x-2*Math.PI*Math.floor((x+Math.PI)/(2*Math.PI));
@@ -47,11 +47,11 @@ function longitude(v,x,offset){
  return Math.atan2(poly(FRAMES[offset+3],x)*cl+poly(FRAMES[offset+4],x)*sl+poly(FRAMES[offset+5],x)*tb,
   poly(FRAMES[offset],x)*cl+poly(FRAMES[offset+1],x)*sl+poly(FRAMES[offset+2],x)*tb);
 }
-export function fastSolarLongitude(jd,n=160,nut=10,bn='full',rn=30){
+export function fastSolarLongitude(jd,n='full',nut=10,bn='full',rn=30){
  const e=earth(jd,n,bn,rn);
  return wrap(longitude(e,(jd-J)/S,0)+Math.PI)+iau2000bNutationLongitude(jd,nut)-A/e[2];
 }
-export function fastElongation(jd,m=256,n=129,bn=10,eb='full',rn=30){
+export function fastElongation(jd,m='full',n=129,bn=10,eb='full',rn=30){
  const e=earth(jd,n,eb,rn),v=moon(jd,m,bn),x=(jd-J)/S;
  return wrap(longitude(v,x,6)-longitude(e,x,0)-Math.PI-3.4e-6+A/e[2]);
 }

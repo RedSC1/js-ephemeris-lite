@@ -83,5 +83,5 @@ console.log(snapshot.schemaVersion, json);
 [使用指南](./docs/guide.md)涵盖读取命盘、太阳时、神煞、运限、反查与默认设置。
 
 代码采用 [MPL-2.0](./LICENSE)。
-天文与历史数据来源见核心库的
-[第三方声明](https://github.com/RedSC1/js-ephemeris-lite/blob/main/THIRD_PARTY_NOTICES.md)。
+本包来源说明见[中文第三方声明](./THIRD_PARTY_NOTICES.zh-CN.md)；天文与历史
+数据来源另见核心库的[中文第三方声明](https://github.com/RedSC1/js-ephemeris-lite/blob/main/THIRD_PARTY_NOTICES.zh-CN.md)。

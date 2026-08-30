@@ -64,6 +64,13 @@ function normalizeMode(value) {
   return value;
 }
 
+function normalizeEventAccuracy(value) {
+  if (!['fast', 'mid', 'accurate'].includes(value)) {
+    throw new RangeError("eventAccuracy must be 'fast', 'mid', or 'accurate'");
+  }
+  return value;
+}
+
 function normalizeDayBoundaryMode(value) {
   if (!Object.values(CALENDAR_DAY_BOUNDARY_MODE).includes(value)) {
     throw new RangeError(`unknown calendar day-boundary mode: ${value}`);
@@ -155,9 +162,11 @@ function solarEvents(startJdUT1, endJdUT1, stepCount, options) {
     let solved = solveSolarLongitude(
       targetLongitude,
       startJdTT + forwardAngle / TWO_PI * DAYS_PER_TROPICAL_YEAR,
+      { accuracy: options.eventAccuracy },
     );
     if (solved.jdUT1 < startJdUT1 - ROOT_EQUALITY_DAYS) {
-      solved = solveSolarLongitude(targetLongitude, solved.jdTT + DAYS_PER_TROPICAL_YEAR);
+      solved = solveSolarLongitude(targetLongitude, solved.jdTT + DAYS_PER_TROPICAL_YEAR,
+        { accuracy: options.eventAccuracy });
     }
     const degree = step * 360 / stepCount;
     const termIndex = stepCount === 24 ? step : Math.floor(step / 3);
@@ -181,7 +190,8 @@ function solarEvents(startJdUT1, endJdUT1, stepCount, options) {
         ...options,
         historicalKind: stepCount === 24 || pentadIndex === 0 ? 'solarTerm' : null,
       }));
-      solved = solveSolarLongitude(targetLongitude, solved.jdTT + DAYS_PER_TROPICAL_YEAR);
+      solved = solveSolarLongitude(targetLongitude, solved.jdTT + DAYS_PER_TROPICAL_YEAR,
+        { accuracy: options.eventAccuracy });
     }
   }
   return events;
@@ -197,9 +207,11 @@ function lunarPhaseEvents(startJdUT1, endJdUT1, anglesDeg, options) {
     let solved = solveLunarPhase(
       targetElongation,
       startJdTT + forwardAngle / TWO_PI * DAYS_PER_SYNODIC_MONTH,
+      { accuracy: options.eventAccuracy },
     );
     if (solved.jdUT1 < startJdUT1 - ROOT_EQUALITY_DAYS) {
-      solved = solveLunarPhase(targetElongation, solved.jdTT + DAYS_PER_SYNODIC_MONTH);
+      solved = solveLunarPhase(targetElongation, solved.jdTT + DAYS_PER_SYNODIC_MONTH,
+        { accuracy: options.eventAccuracy });
     }
     let serial = 0;
     while (solved.jdUT1 < endJdUT1 - ROOT_EQUALITY_DAYS) {
@@ -215,7 +227,8 @@ function lunarPhaseEvents(startJdUT1, endJdUT1, anglesDeg, options) {
         historicalKind: Math.abs(angleDeg) < 1e-10 ? 'newMoon' : null,
       }));
       serial += 1;
-      solved = solveLunarPhase(targetElongation, solved.jdTT + DAYS_PER_SYNODIC_MONTH);
+      solved = solveLunarPhase(targetElongation, solved.jdTT + DAYS_PER_SYNODIC_MONTH,
+        { accuracy: options.eventAccuracy });
     }
   }
   return events;
@@ -231,6 +244,7 @@ export function getQiShuoYear(civilYear, rawOptions = {}) {
   const year = normalizeYear(civilYear);
   const utcOffsetMinutes = normalizeOffset(rawOptions.utcOffsetMinutes ?? CHINA_OFFSET_MINUTES);
   const mode = normalizeMode(rawOptions.mode ?? CALENDAR_MODE.HISTORICAL);
+  const eventAccuracy = normalizeEventAccuracy(rawOptions.eventAccuracy === undefined ? 'mid' : rawOptions.eventAccuracy);
   const dayBoundaryMode = normalizeDayBoundaryMode(
     rawOptions.dayBoundaryMode ?? CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET,
   );
@@ -267,7 +281,7 @@ export function getQiShuoYear(civilYear, rawOptions = {}) {
     second: 0,
     offsetMinutes: utcOffsetMinutes,
   }).toJulianTime().jdUT1;
-  const options = { mode, dayBoundaryMode, utcOffsetMinutes, meridianDeg };
+  const options = { mode, dayBoundaryMode, utcOffsetMinutes, meridianDeg, eventAccuracy };
   const events = [];
   if (includeSolarTerms) events.push(...solarEvents(start, end, 24, options));
   if (includePentads) {
@@ -282,6 +296,7 @@ export function getQiShuoYear(civilYear, rawOptions = {}) {
     civilYear: year,
     utcOffsetMinutes,
     mode,
+    eventAccuracy,
     dayBoundaryMode,
     meridianDeg,
     startJdUT1: start,

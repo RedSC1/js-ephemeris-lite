@@ -3,10 +3,15 @@
 面向 JavaScript 和 TypeScript 的黄历库，提供每日宜忌、神煞、节日和九宫飞星。
 可查询单日、整月或全年，也可单独调用不依赖日期计算的规则引擎。
 
-## 使用状态
+## 安装
 
-本包正在开发，尚未发布到 npm，目前通过本仓库的 npm workspace 使用。
-在仓库根目录安装依赖：
+发布后可从 npm 安装：
+
+```sh
+npm install huangli-lite
+```
+
+在本仓库开发时，也可以在仓库根目录安装 workspace 依赖：
 
 ```sh
 npm install
@@ -45,8 +50,8 @@ console.log(month.length);
 
 - 171 个神煞条目、98 类宜忌事项及冲突裁决。
 - 建除十二神、日/时黄黑道、廿八宿、彭祖百忌、胎神和神煞方位。
-- 农历、干支、节气、月相及节日名称、分类、别名。
-- 默认显示常见节日与纪念日；`festivalMode: 'all'` 可读取扩展节日。
+- 农历、干支、节气、月相，以及源自寿星天文历的完整节日表。
+- 节日提供正式名、月历短名、别名、来源、内容级别和独立的月格显示级别；支持 `major/common/all` 三档。
 - 三元九运与年/月/日/时九宫飞星。
 - 二十四山、运盘、山盘、向盘与排龙诀。
 - 四立前十八日的土王用事自动判定及手动覆盖。
@@ -56,8 +61,9 @@ console.log(month.length);
 
 ## 日期与设置
 
-默认采用现代中国天文历法、UTC+8、23:00 换日和按交节日切换年月柱。
+默认采用现代中国天文历法、UTC+8、`mid` 定朔定气、23:00 换日和按交节日切换年月柱。
 历史归日可选 `historical`；按其他时区建立农历结构可选 `local-astronomical`。
+精度通过每个 `HuangliCalendar` 实例的 `eventAccuracy` 设置，实例之间不会共享可变状态。
 固定时区不自动处理夏令时。
 
 `solarDate/lunarDate` 是展示日期；`ruleDate/ruleLunarDate` 是子时规则处理后的计算日期。
@@ -75,4 +81,5 @@ console.log(month.length);
 - [二十四山、山向盘与排龙](./docs/feng-shui.md)
 
 黄历代码采用 [MIT](./LICENSE)，天文依赖采用 MPL-2.0。
-规则与数据来源见[第三方声明](./THIRD_PARTY_NOTICES.md)。
+规则与数据来源见[中文第三方声明](./THIRD_PARTY_NOTICES.zh-CN.md)及
+[英文第三方声明](./THIRD_PARTY_NOTICES.md)。

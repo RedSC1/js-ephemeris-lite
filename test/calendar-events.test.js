@@ -10,7 +10,6 @@ import {
   solveLunarPhase,
   solveSolarLongitude,
   solveNewMoon,
-  setEventAccuracy, getEventAccuracy,
   solarLongitudeTimeFast, lunarPhaseTimeFast, solarLongitudeTimeAccurate, lunarPhaseTimeAccurate,
 } from '../src/calendar-events.js';
 import { J2000 } from '../src/ephemeris.js';
@@ -49,49 +48,37 @@ test('event results contain only TT, UT1 and delta T in every accuracy mode', ()
   }
 });
 
-test('global event accuracy routes solve calls, with explicit overrides and unchanged mid results', () => {
-  const saved = getEventAccuracy();
-  assert.equal(saved, 'mid');
+test('event accuracy is per call and omitted accuracy remains mid', () => {
   const nearJd = 2461212, target = Math.PI / 2;
   const midSolar = solveSolarLongitude(target, nearJd), midMoon = solveNewMoon(nearJd);
   const solarW = unwrappedEventAngle(target, nearJd), moonW = unwrappedEventAngle(0, nearJd, true);
-  try {
-    setEventAccuracy('fast');
-    assert.equal(getEventAccuracy(), 'fast');
-    const solar = solveSolarLongitude(target, nearJd), moon = solveNewMoon(nearJd);
-    assert.equal(solar.jdTT, solarLongitudeTimeFast(solarW));
-    assert.equal(moon.jdTT, lunarPhaseTimeFast(moonW));
-    near((solar.jdTT - solar.jdUT1) * 86400, solar.deltaTSeconds, 3e-5);
-    assert.deepEqual(solveSolarLongitude(target, nearJd, { accuracy: 'mid' }), midSolar);
-    assert.deepEqual(solveNewMoon(nearJd, { accuracy: 'mid' }), midMoon);
-    const physical = solveSolarLongitude(target, nearJd, { accuracy: 'accurate' });
-    assert.equal(physical.jdTT, solarLongitudeTimeAccurate(solarW));
-    assert.equal(getEventAccuracy(), 'fast', 'local override must not change the global default');
-    setEventAccuracy('accurate');
-    const accurateMoon = solveNewMoon(nearJd);
-    assert.equal(accurateMoon.jdTT, lunarPhaseTimeAccurate(moonW));
-    const safeguarded = solveSolarLongitude(target, nearJd, { solver: 'safeguarded' });
-    near((safeguarded.jdTT - physical.jdTT) * 86400, 0, 0.02);
-    setEventAccuracy('mid');
-    assert.deepEqual(solveSolarLongitude(target, nearJd), midSolar);
-    assert.deepEqual(solveNewMoon(nearJd), midMoon);
-    for (const bad of ['high', '', null, undefined, 1]) {
-      assert.throws(() => setEventAccuracy(bad), RangeError);
-      assert.equal(getEventAccuracy(), 'mid');
-    }
-    assert.throws(() => solveNewMoon(nearJd, { accuracy: 'high' }), /accuracy/);
-    assert.throws(() => solveNewMoon(nearJd, { accuracy: null }), /accuracy/);
-    assert.throws(() => solveSolarLongitude(target, nearJd, { accuracy: 'fast', toleranceSeconds: 1 }), /no tolerance/);
-    assert.throws(() => solveNewMoon(nearJd, { accuracy: 'fast', solver: 'safeguarded' }), /no tolerance/);
-    assert.throws(() => solveNewMoon(nearJd, { accuracy: 'fast', moonLatitudeTerms: 'full' }), /moonLatitudeTerms/);
-    assert.throws(() => solveNewMoon(nearJd, { accuracy: 'accurate', moonLatitudeTerms: 10 }), /moonLatitudeTerms/);
-    assert.throws(() => solveNewMoon(nearJd, { accuracy: 'accurate', toleranceSeconds: 0 }), /toleranceSeconds/);
-    for (const accuracy of ['fast', 'accurate']) {
-      assert.throws(() => solveNewMoon(NaN, { accuracy }), TypeError);
-      assert.throws(() => solveSolarLongitude(Infinity, nearJd, { accuracy }), TypeError);
-      assert.throws(() => solveNewMoon(1e9, { accuracy }), RangeError);
-    }
-  } finally { setEventAccuracy(saved); }
+  const solar = solveSolarLongitude(target, nearJd, { accuracy: 'fast' });
+  const moon = solveNewMoon(nearJd, { accuracy: 'fast' });
+  assert.equal(solar.jdTT, solarLongitudeTimeFast(solarW));
+  assert.equal(moon.jdTT, lunarPhaseTimeFast(moonW));
+  near((solar.jdTT - solar.jdUT1) * 86400, solar.deltaTSeconds, 3e-5);
+  assert.deepEqual(solveSolarLongitude(target, nearJd, { accuracy: 'mid' }), midSolar);
+  assert.deepEqual(solveNewMoon(nearJd, { accuracy: 'mid' }), midMoon);
+  const physical = solveSolarLongitude(target, nearJd, { accuracy: 'accurate' });
+  assert.equal(physical.jdTT, solarLongitudeTimeAccurate(solarW));
+  const accurateMoon = solveNewMoon(nearJd, { accuracy: 'accurate' });
+  assert.equal(accurateMoon.jdTT, lunarPhaseTimeAccurate(moonW));
+  const safeguarded = solveSolarLongitude(target, nearJd, { accuracy: 'accurate', solver: 'safeguarded' });
+  near((safeguarded.jdTT - physical.jdTT) * 86400, 0, 0.02);
+  assert.deepEqual(solveSolarLongitude(target, nearJd), midSolar);
+  assert.deepEqual(solveNewMoon(nearJd), midMoon);
+  assert.throws(() => solveNewMoon(nearJd, { accuracy: 'high' }), /accuracy/);
+  assert.throws(() => solveNewMoon(nearJd, { accuracy: null }), /accuracy/);
+  assert.throws(() => solveSolarLongitude(target, nearJd, { accuracy: 'fast', toleranceSeconds: 1 }), /no tolerance/);
+  assert.throws(() => solveNewMoon(nearJd, { accuracy: 'fast', solver: 'safeguarded' }), /no tolerance/);
+  assert.throws(() => solveNewMoon(nearJd, { accuracy: 'fast', moonLatitudeTerms: 'full' }), /moonLatitudeTerms/);
+  assert.throws(() => solveNewMoon(nearJd, { accuracy: 'accurate', moonLatitudeTerms: 10 }), /moonLatitudeTerms/);
+  assert.throws(() => solveNewMoon(nearJd, { accuracy: 'accurate', toleranceSeconds: 0 }), /toleranceSeconds/);
+  for (const accuracy of ['fast', 'accurate']) {
+    assert.throws(() => solveNewMoon(NaN, { accuracy }), TypeError);
+    assert.throws(() => solveSolarLongitude(Infinity, nearJd, { accuracy }), TypeError);
+    assert.throws(() => solveNewMoon(1e9, { accuracy }), RangeError);
+  }
 });
 
 test('fast and accurate solve routes select the nearer occurrence on both sides of half-cycle boundaries', () => {
@@ -249,6 +236,11 @@ test('2026 solar terms and new moons track raw DE441 C++ event fixtures', () => 
     const rounded = new Date(Date.UTC(t.year, t.month - 1, t.day, t.hour, t.minute + (t.second >= 30 ? 1 : 0)));
     assert.equal(rounded.toISOString().slice(0, 16).replace('T', ' '), `2026-${published[i]}`);
   });
+  // Guard the 2026 summer-solstice seconds regression: this used to land at
+  // 16:24:29.xxx in China Standard Time despite the minute rounding correctly.
+  const summerSolstice = roots[11].toZonedTime(480);
+  assert.deepEqual([summerSolstice.month, summerSolstice.day, summerSolstice.hour, summerSolstice.minute], [6, 21, 16, 24]);
+  assert.ok(summerSolstice.second >= 30 && summerSolstice.second < 31);
   const accurateSolar = solar.map(([degrees, oracle]) => solarLongitudeTimeAccurate(unwrappedEventAngle(degrees * Math.PI / 180, oracle)));
   assert.ok(Math.max(...accurateSolar.map((jd, i) => Math.abs(jd - solar[i][1]) * 86400)) < 0.5);
   accurateSolar.forEach((jd, i) => {
@@ -256,10 +248,10 @@ test('2026 solar terms and new moons track raw DE441 C++ event fixtures', () => 
     const rounded = new Date(Date.UTC(t.year, t.month - 1, t.day, t.hour, t.minute + (t.second >= 30 ? 1 : 0)));
     assert.equal(rounded.toISOString().slice(0, 16).replace('T', ' '), `2026-${published[i]}`);
   });
-  // Fast intentionally spends fewer terms than Accurate. Keep a separate
-  // seconds budget and protect all published minutes, especially the solstice.
+  // Fast uses complete final longitude series but retains fixed-stage numerical
+  // corrections and simplified physics. Protect its seconds budget separately.
   const fastSolar = solar.map(([degrees, oracle]) => solarLongitudeTimeFast(unwrappedEventAngle(degrees * Math.PI / 180, oracle)));
-  assert.ok(Math.max(...fastSolar.map((jd, i) => Math.abs(jd - solar[i][1]) * 86400)) < 4);
+  assert.ok(Math.max(...fastSolar.map((jd, i) => Math.abs(jd - solar[i][1]) * 86400)) < 2);
   fastSolar.forEach((jd, i) => {
     const t = calendarDateFromJulianDay(ttToUt1(jd) + 1 / 3);
     const rounded = new Date(Date.UTC(t.year, t.month - 1, t.day, t.hour, t.minute + (t.second >= 30 ? 1 : 0)));
@@ -279,7 +271,7 @@ test('2026 solar terms and new moons track raw DE441 C++ event fixtures', () => 
   assert.ok(Math.max(...accurateMoonErrors.map(Math.abs)) < 0.7);
   assert.ok(accurateMoonErrors.reduce((sum, value) => sum + Math.abs(value), 0) / accurateMoonErrors.length < 0.2);
   const fastMoonErrors = newMoons.map(oracle => (lunarPhaseTimeFast(unwrappedEventAngle(0, oracle, true)) - oracle) * 86400);
-  assert.ok(Math.max(...fastMoonErrors.map(Math.abs)) < 3);
+  assert.ok(Math.max(...fastMoonErrors.map(Math.abs)) < 1);
 });
 
 test('new-moon latitude budget is an explicit runtime switch', () => {

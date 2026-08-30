@@ -1,7 +1,7 @@
 import {
   ZonedTime, julianDay, calendarDateFromJulianDay, CALENDAR_MODE,
   solarToLunar, fourPillarsForZonedTime, ganzhiIndex, ganzhiName, makeGanzhi, getMonthGanzhi,
-  RAT_HOUR_MODE, getQiShuoYear, getHourGanzhi, ganzhiStem, getNayinId, getNayinElement, getEventAccuracy,
+  RAT_HOUR_MODE, getQiShuoYear, getHourGanzhi, ganzhiStem, getNayinId, getNayinElement,
 } from 'js-ephemeris-lite';
 import { DATA } from './data.js';
 import { evaluateAlmanacRules } from './rules.js';
@@ -37,25 +37,26 @@ export class HuangliCalendar {
   constructor(options={}) {
     const config={utcOffsetMinutes:480, ratHourMode:RAT_HOUR_MODE.NEXT_DAY, exactJieQiTime:false,
       mode:CALENDAR_MODE.CHINA_ASTRONOMICAL, flyingStarMethod:'consecutive', flyingStarBoundary:'solar',
-      isYeargodDuty:true, tuWangMethod:'four-seasons-18-days', festivalMode:'common', ...options};
+      isYeargodDuty:true, tuWangMethod:'four-seasons-18-days', festivalMode:'common', eventAccuracy:'mid', ...options};
     integer(config.utcOffsetMinutes,-840,840,'utcOffsetMinutes');
     if(!Object.values(RAT_HOUR_MODE).includes(config.ratHourMode)) throw new RangeError('invalid ratHourMode');
     if(!Object.values(CALENDAR_MODE).includes(config.mode)) throw new RangeError('invalid calendar mode');
     if(!['consecutive','discontinuous'].includes(config.flyingStarMethod)) throw new RangeError('invalid flyingStarMethod');
     if(!['solar','lunar'].includes(config.flyingStarBoundary)) throw new RangeError('invalid flyingStarBoundary');
     if(!['four-seasons-18-days','manual'].includes(config.tuWangMethod)) throw new RangeError('invalid tuWangMethod');
-    if(!['common','all'].includes(config.festivalMode)) throw new RangeError('invalid festivalMode');
+    if(!['major','common','all'].includes(config.festivalMode)) throw new RangeError('invalid festivalMode');
+    if(!['fast','mid','accurate'].includes(config.eventAccuracy)) throw new RangeError('invalid eventAccuracy');
     if(typeof config.exactJieQiTime!=='boolean' || typeof config.isYeargodDuty!=='boolean') throw new TypeError('flags must be boolean');
     // The almanac boundary is the selected clock offset, not an inferred longitude.
-    for(const key of Object.keys(options)) if(!['utcOffsetMinutes','ratHourMode','exactJieQiTime','mode','flyingStarMethod','flyingStarBoundary','isYeargodDuty','tuWangMethod','festivalMode'].includes(key)) throw new RangeError(`unknown almanac option: ${key}`);
+    for(const key of Object.keys(options)) if(!['utcOffsetMinutes','ratHourMode','exactJieQiTime','mode','flyingStarMethod','flyingStarBoundary','isYeargodDuty','tuWangMethod','festivalMode','eventAccuracy'].includes(key)) throw new RangeError(`unknown almanac option: ${key}`);
     this.options=Object.freeze(config);
     Object.freeze(this); // Configuration cannot change underneath the event cache.
   }
   #events(year) {
-    const key=`${getEventAccuracy()}:${year}`;
+    const key=`${this.options.eventAccuracy}:${year}`;
     if(!this.#cache.has(key)) {
       const result=getQiShuoYear(year,{mode:this.options.mode,utcOffsetMinutes:this.options.utcOffsetMinutes,
-        lunarPhaseAnglesDeg:[0,90,180,270]});
+        eventAccuracy:this.options.eventAccuracy,lunarPhaseAnglesDeg:[0,90,180,270]});
       const events=result.events.map(e=>({...e,dayNumber:this.options.mode==='historical' && e.kind==='solar-term'?e.assignedCivilDayNumber:e.localCivilDayNumber}));
       this.#cache.set(key,events);
       if(this.#cache.size>6) this.#cache.delete(this.#cache.keys().next().value);
@@ -90,7 +91,8 @@ export class HuangliCalendar {
     const solarYear=lichun.assignedDate.year;
     const termIndex=mod(previous.termIndex+5,24), monthBranch=(Math.floor(termIndex/2)+1)%12;
     const yearIndex=mod(solarYear-1984,60), yearPillar=makeGanzhi(yearIndex%10,yearIndex%12);
-    const calendarOptions={mode:cfg.mode,utcOffsetMinutes:cfg.utcOffsetMinutes,ratHourMode:cfg.ratHourMode};
+    const calendarOptions={mode:cfg.mode,utcOffsetMinutes:cfg.utcOffsetMinutes,
+      ratHourMode:cfg.ratHourMode,eventAccuracy:cfg.eventAccuracy};
     const pillars={...fourPillarsForZonedTime(date,calendarOptions), year:yearPillar,month:getMonthGanzhi(yearIndex%10,mod(monthBranch-2,12))};
     const lunar=solarToLunar({year,month,day},calendarOptions), metaLunar=nextDay?solarToLunar(metaDate,calendarOptions):lunar;
     const dayIndex=ganzhiIndex(pillars.day), mansion=DATA.mansions[mod(metaDay-2451545+16,28)];
@@ -102,7 +104,8 @@ export class HuangliCalendar {
       ...(activityMask===undefined?{}:{activityMask:Array.isArray(activityMask)?[...activityMask]:activityMask})};
     const rules=evaluateAlmanacRules(ruleInput);
     const weekday=mod(localDay,7)+1;
-    const festivalDetails=getFestivalDetails({year,month,day},lunar,todayTerm,weekday,cfg.festivalMode);
+    const festivalDetails=getFestivalDetails({year,month,day},lunar,todayTerm,weekday,cfg.festivalMode,
+      {dayNumber:localDay,dayIndex:mod(dayIndex-(nextDay?1:0),60),terms});
     // Solstice side and nearest Jiazi anchor reproduce the source's actual
     // consecutive/discontinuous anchor algorithms. Integer civil days avoid
     // the source's epsilon subtraction assigning exact midnight to yesterday.

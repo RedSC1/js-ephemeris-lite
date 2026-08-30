@@ -19,7 +19,7 @@ function near(actual, expected, tolerance = 1e-10) {
     `${actual} != ${expected} (tol ${tolerance})`);
 }
 
-test('Delta T decimal-year model matches the C++ regression vectors', () => {
+test('Delta T decimal-year model matches the historical and future regression vectors', () => {
   const vectors = [
     [-1000, 25427.68], [-720, 20371.848], [-719.5, 20363.7843227998],
     [-100, 11557.668], [0, 10441.312575999998], [399.999, 6535.125452533171],
@@ -28,11 +28,16 @@ test('Delta T decimal-year model matches the C++ regression vectors', () => {
     [1850, 9.338], [1900, -1.977], [1952.999, 30.00175459878804],
     [1953, 30], [1953.25, 30.049765625], [1961.5, 33.486875],
     [1972.5, 42.765625], [2000, 63.83], [2016.5, 68.35],
-    [2024.25, 69.171171875], [2049.5, 71.329375], [2050, 71.44],
-    [2050.5, 72.56600000000005], [2100, 191.95999999999998], [2200, 442.08],
+    [2024.25, 69.171171875], [2026.5, 69.10374999999999],
+    [2027, 69.1], [2027.5, 69.28531704953548],
+    [2028, 69.53072194152077], [2030, 70.12363258453975],
+    [2050, 75.40865726486066], [2100, 93.33429331981992],
+    [2200, 163.1728507954472],
   ];
   for (const [year, expected] of vectors) near(deltaTSeconds(year), expected);
   assert.equal(DELTA_T_INFO.annualInterpolation, 'Catmull-Rom cubic Hermite');
+  assert.equal(DELTA_T_INFO.annualEndYear, 2027);
+  assert.equal(DELTA_T_INFO.futureFormulaStartYear, 2028);
 });
 
 test('the repaired -720 join is continuous in value and first derivative', () => {
@@ -44,6 +49,16 @@ test('the repaired -720 join is continuous in value and first derivative', () =>
     near(leftRate, rightRate, 2e-5);
   }
   assert.equal(DELTA_T_INFO.earlyJoinStartYear, -820);
+});
+
+test('the IERS-to-future Delta T join is continuous in value and first derivative', () => {
+  const h = 1e-5;
+  for (const boundary of [2027, 2028]) {
+    near(deltaTSeconds(boundary - 1e-9), deltaTSeconds(boundary + 1e-9), 1e-7);
+    const leftRate = (deltaTSeconds(boundary) - deltaTSeconds(boundary - h)) / h;
+    const rightRate = (deltaTSeconds(boundary + h) - deltaTSeconds(boundary)) / h;
+    near(leftRate, rightRate, 2e-5);
+  }
 });
 
 test('JD conversion and TT/UT1 estimates match the C++ regression vectors', () => {

@@ -1,4 +1,4 @@
-// Native JS port of the active BitSet YiJiCalc in chinese_lunar_almanac 0.1.5.
+// JavaScript Yi/Ji evaluator derived from cnlunar and maintained by huangli-lite.
 // Copyright (c) 2026 RedSC1; derived rules from cnlunar, Copyright (c) 2025 OPN48. MIT.
 import { DATA } from './data.js';
 import { BitSet } from './bitset.js';

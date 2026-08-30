@@ -1,4 +1,4 @@
-import type { JulianTime, CalendarMode, CalendarInput, CivilDate, CivilDateTime, ResolvedLunarDate, FourPillars, RatHourMode } from 'js-ephemeris-lite';
+import type { JulianTime, CalendarMode, CalendarInput, CivilDate, CivilDateTime, ResolvedLunarDate, FourPillars, RatHourMode, EventAccuracy } from 'js-ephemeris-lite';
 import type { AlmanacRuleInput, AlmanacRulesResult } from './rules.js';
 export * from './rules.js';
 export * from './feng-shui.js';
@@ -12,6 +12,8 @@ export interface HuangliOptions {
   exactJieQiTime?: boolean;
   /** Default china-astronomical. Historical uses China-assigned civil dates. */
   mode?: CalendarMode;
+  /** Event solver owned by this calendar instance; default mid. */
+  eventAccuracy?: EventAccuracy;
   /** Nearest Jiazi anchor (default), or the assigned solstice day itself. */
   flyingStarMethod?: 'consecutive' | 'discontinuous';
   /** Year/month stars only; default solar. Day/hour stars still use solstices. */
@@ -20,9 +22,9 @@ export interface HuangliOptions {
   isYeargodDuty?: boolean;
   /** Default: the 18 assigned days before each season start. */
   tuWangMethod?: 'four-seasons-18-days' | 'manual';
-  /** Default common: everyday calendar selection. all includes additional
-   * religious, historical, local and international observances, but no Yi/Ji taboos. */
-  festivalMode?: 'common' | 'all';
+  /** major: principal holidays; common (default): broadly relevant Chinese and
+   * international observances; all: the complete Shou Xing festival table. */
+  festivalMode?: 'major' | 'common' | 'all';
 }
 export interface HuangliDayOptions {
   /** Local clock, default 12:00:00; fractional seconds are accepted. */
@@ -32,15 +34,22 @@ export interface HuangliDayOptions {
   activityMask?: readonly number[];
 }
 export interface DutyGod { index: number; name: string; isHuangDao: boolean; }
-/** Content categories, not a legal holiday or historical observance status. */
-export type FestivalCategory = 'traditional' | 'civic' | 'international' | 'popular' | 'religious' | 'historical' | 'local';
+export type FestivalLevel = 'statutory' | 'traditional' | 'popular' | 'commemorative' | 'historical' | 'ethnic';
+export type FestivalSource = 'solar' | 'lunar' | 'weekBased' | 'termBased' | 'custom';
+export type FestivalCalendarDisplay = 'primary' | 'secondary' | 'detail';
 export interface FestivalDetail {
+  /** Formal normalized name. */
   name: string;
-  category: FestivalCategory;
-  /** Alternative names for this event, excluding combined source labels. */
+  /** Compact calendar-cell label. */
+  shortName: string;
+  level: FestivalLevel;
+  /** Month-grid density inherited from sxwnl: primary/secondary are shown;
+   * detail remains available in the selected day's full festival list. */
+  calendarDisplay: FestivalCalendarDisplay;
+  source: FestivalSource;
+  isPublicHoliday: boolean;
+  /** Alternative and source-table names. */
   aliases: string[];
-  /** Original labels from the imported festival table. */
-  sourceNames: string[];
 }
 export interface TuWangPeriod {
   seasonStart: string;

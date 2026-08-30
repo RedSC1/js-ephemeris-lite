@@ -76,6 +76,10 @@ function normalizeOptions(options = {}) {
     && meridianDeg !== undefined) {
     throw new RangeError('meridianDeg is only valid with mean-solar-meridian day boundaries');
   }
+  const eventAccuracy = options.eventAccuracy === undefined ? 'mid' : options.eventAccuracy;
+  if (!['fast', 'mid', 'accurate'].includes(eventAccuracy)) {
+    throw new RangeError("eventAccuracy must be 'fast', 'mid', or 'accurate'");
+  }
   const localOffset = dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET
     ? utcOffsetMinutes / 1440
     : meridianDeg / 360;
@@ -84,6 +88,7 @@ function normalizeOptions(options = {}) {
     dayBoundaryMode,
     utcOffsetMinutes,
     meridianDeg,
+    eventAccuracy,
     localOffset,
     structureOffset: mode === CALENDAR_MODE.LOCAL_ASTRONOMICAL ? localOffset : CHINA_OFFSET_MINUTES / 1440,
     historical: mode === CALENDAR_MODE.HISTORICAL,
@@ -187,7 +192,7 @@ function assignedEventDay(kind, estimateJdUT1, preciseJdUT1, options) {
 
 function solarTermEvent(index, estimateJdTT, options) {
   const targetLongitude = normalizeRadians((270 + 15 * index) * Math.PI / 180);
-  const solved = solveSolarLongitude(targetLongitude, estimateJdTT);
+  const solved = solveSolarLongitude(targetLongitude, estimateJdTT, { accuracy: options.eventAccuracy });
   return {
     indexFromWinterSolstice: index,
     targetLongitude,
@@ -197,7 +202,7 @@ function solarTermEvent(index, estimateJdTT, options) {
 }
 
 function newMoonEvent(estimateJdTT, options) {
-  const solved = solveNewMoon(estimateJdTT);
+  const solved = solveNewMoon(estimateJdTT, { accuracy: options.eventAccuracy });
   return {
     time: solved,
     civilDayNumber: assignedEventDay('newMoon', solved.jdUT1, solved.jdUT1, options),
@@ -447,7 +452,8 @@ export function findSolarTerm(jdUT1, { direction = 'previous', filter = 'any', .
     const termId = termIdFromLongitudeStep(longitudeStep);
     if (!matchesTermFilter(termId, filter)) continue;
     const target = positiveMod(longitudeStep, 24) * SOLAR_TERM_STEP;
-    const solved = solveSolarLongitude(target, jdTT + offset * DAYS_PER_SOLAR_TERM);
+    const solved = solveSolarLongitude(target, jdTT + offset * DAYS_PER_SOLAR_TERM,
+      { accuracy: options.eventAccuracy });
     const candidate = {
       indexFromWinterSolstice: positiveMod(termId + 1, 24),
       targetLongitude: target,

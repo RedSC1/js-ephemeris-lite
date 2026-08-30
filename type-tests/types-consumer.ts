@@ -17,7 +17,17 @@ import {
   solarAltitude,
   solarRiseSetForDate,
   solveNewMoon,
-  setEventAccuracy, getEventAccuracy, type EventAccuracy,
+  searchSolarEclipses,
+  searchLunarEclipses,
+  getSolarEclipseDetails,
+  getLunarEclipseDetails,
+  getLocalSolarEclipse,
+  getLocalLunarEclipse,
+  type SolarEclipseEvent,
+  type LunarEclipseEvent,
+  type LocalSolarEclipseEvent,
+  type LocalLunarEclipseEvent,
+  type EventAccuracy,
   solarLongitudeTimeFast, lunarPhaseTimeFast, solarLongitudeTimeAccurate, lunarPhaseTimeAccurate,
   sunGeocentricPosition,
   trueSolarTime,
@@ -29,6 +39,29 @@ import {
   type SolarClock,
 } from 'js-ephemeris-lite';
 import { moonHeliocentricState } from 'js-ephemeris-lite/ephemeris';
+import {
+  ecFast, rsGS, rsPL, ysPL, type EcFastResult, type YsPLResult,
+} from 'js-ephemeris-lite/eclipses';
+const fastEclipse: EcFastResult = ecFast(8864);
+const lunarEclipse: YsPLResult = ysPL.lecMax(8347);
+rsGS.init(8864, 7);
+const globalEclipse = rsGS.feature(8864);
+const localEclipse = rsPL.secMax(8864, globalEclipse.zxJ, globalEclipse.zxW, 0);
+const eclipseBoundary = rsPL.nbj(8864);
+void [fastEclipse, lunarEclipse, globalEclipse, localEclipse, eclipseBoundary];
+const solarEclipses: SolarEclipseEvent[] = searchSolarEclipses(
+  new Date('2024-01-01T00:00:00Z'), new Date('2025-01-01T00:00:00Z'),
+);
+const lunarEclipses: LunarEclipseEvent[] = searchLunarEclipses(2460000, 2460500);
+const solarDetail: SolarEclipseEvent | null = getSolarEclipseDetails(new Date());
+const lunarDetail: LunarEclipseEvent | null = getLunarEclipseDetails(JulianTime.fromUT1(2460000));
+const localSolar: LocalSolarEclipseEvent | null = getLocalSolarEclipse(new Date(), {
+  longitudeDeg: 116.4074, latitudeDeg: 39.9042, heightMeters: 43,
+});
+const localLunar: LocalLunarEclipseEvent | null = getLocalLunarEclipse(new Date(), {
+  longitudeDeg: 116.4074, latitudeDeg: 39.9042,
+});
+void [solarEclipses, lunarEclipses, solarDetail, lunarDetail, localSolar, localLunar];
 const plutoState: CartesianState = plutoHeliocentricState(2451545);
 const plutoYears: readonly [1600, 2200] = PLUTO_MODEL_INFO.recommendedIntervalYears;
 void [plutoState, plutoYears, PLANET.PLUTO];
@@ -54,7 +87,9 @@ import {
   MOUNTAIN, createFengShuiChart, calculatePaiLong, mountainForAzimuth,
   type FengShuiChart,
 } from 'huangli-lite/feng-shui';
-import type { HuangliHourPeriod, TuWangPeriod, FestivalCategory, FestivalDetail } from 'huangli-lite';
+import type {
+  HuangliHourPeriod, TuWangPeriod, FestivalLevel, FestivalSource, FestivalDetail,
+} from 'huangli-lite';
 
 const instant = JulianTime.fromDate(new Date());
 const clock = new ZonedTime({
@@ -89,17 +124,14 @@ const angleEventDates: number[] = [solarLongitudeTimeFast(2 * Math.PI), lunarPha
 void angleEventDates;
 solveSolarLongitude(0, instant.jdTT, { solver: 'auto', toleranceSeconds: 0.01 });
 solveSolarLongitude(0, instant.jdTT, { solver: 'safeguarded' });
-const accuracy: EventAccuracy = getEventAccuracy();
-setEventAccuracy('fast');
+const accuracy: EventAccuracy = 'fast';
 // @ts-expect-error default event results do not carry diagnostics
 solveNewMoon(instant.jdTT).residualRadians;
 // @ts-expect-error latitude budgets belong to options, not event times
 solveNewMoon(instant.jdTT).moonLatitudeTerms;
 solveSolarLongitude(0, instant.jdTT, { accuracy: 'accurate', toleranceSeconds: 0.01 });
 solveNewMoon(instant.jdTT, { accuracy: 'mid', moonLatitudeTerms: 'full' });
-setEventAccuracy(accuracy);
-// @ts-expect-error only the three named accuracy modes exist
-setEventAccuracy('high');
+calculateChineseCalendarYear(instant, { eventAccuracy: accuracy });
 // @ts-expect-error unknown per-call accuracy
 solveNewMoon(instant.jdTT, { accuracy: 'low' });
 const pillars = fourPillarsForZonedTime(clock, {
@@ -186,13 +218,15 @@ searchGreatestElongations('mars', 2451545, 2451555);
 const almanac = new HuangliCalendar({utcOffsetMinutes: 480, ratHourMode: 'next-day'});
 const almanacDay: HuangliDay = almanac.getDay(2026,3,16,{activityMask:ACTIVITY_MASKS.civilian37});
 const festivalDetails: FestivalDetail[] = almanacDay.festivalDetails;
-const festivalCategories: FestivalCategory[] = festivalDetails.map(f=>f.category);
-const traditionalFestivalNames: string[] = festivalDetails.filter(f=>f.category==='traditional').map(f=>f.name);
+const festivalLevels: FestivalLevel[] = festivalDetails.map(f=>f.level);
+const festivalSources: FestivalSource[] = festivalDetails.map(f=>f.source);
+const traditionalFestivalNames: string[] = festivalDetails.filter(f=>f.level==='traditional').map(f=>f.name);
+const festivalShortNames: string[] = festivalDetails.map(f=>f.shortName);
 new HuangliCalendar({festivalMode:'all'}).getYear(2026);
-const festivalMode: 'common'|'all' = almanacDay.settings.festivalMode;
+const festivalMode: 'major'|'common'|'all' = almanacDay.settings.festivalMode;
 // @ts-expect-error festival mode is a selection, not a category name
 new HuangliCalendar({festivalMode:'religious'});
-void [festivalCategories,traditionalFestivalNames,festivalMode];
+void [festivalLevels,festivalSources,traditionalFestivalNames,festivalShortNames,festivalMode];
 const clockDay: HuangliDay = getHuangliDay({year:2026,month:3,day:16,hour:10});
 evaluateAlmanacRules(almanacDay.ruleInput);
 const effectiveDate: number = almanacDay.ruleDate.day;

@@ -1,14 +1,5 @@
 # Sources and licenses
 
-## chinese_lunar_almanac
-
-- Source: <https://github.com/RedSC1/chinese_lunar_almanac>, version 0.1.5.
-- Copyright (c) 2026 RedSC1; MIT License, reproduced in `LICENSE`.
-- `src/data.js`, `src/rules.js`, `src/yi-ji.js`, and the supporting tables are
-  native JavaScript ports of the active Dart rule engine and data. Almanac
-  metadata and flying-star formulas also derive from this project.
-  `src/feng-shui.js` uses its 24-mountain, mountain/facing plate and PaiLong rules.
-
 ## TuWang calendar rule
 
 The automatic TuWang period uses the eighteen civil days before each of the
@@ -22,14 +13,43 @@ four seasonal starts, as described in the Five Elements chapter of
 - Source: <https://github.com/OPN48/cnlunar>.
 - License: <https://github.com/OPN48/cnlunar/blob/master/LICENSE>.
 - Copyright (c) 2025 OPN48; MIT License, reproduced in `LICENSE`.
-- The source Dart package attributes its traditional almanac rules and data
-  to cnlunar. That attribution is retained for this JavaScript derivative.
+- Traditional almanac rules and data in this JavaScript package are derived
+  from cnlunar; that attribution is retained here.
 
-## Festival names
+This package rewrites those rules in JavaScript and maintains its own rule
+corrections, conflict resolution, activity filtering, provenance, boundary
+handling and structured output. Its almanac metadata, flying-star formulas,
+24-mountain plates and PaiLong implementation are project-maintained material.
 
-`src/festivals.js` classifies the imported festival entries, separates combined
-labels, and keeps original names and aliases. Selected public and memorial names
-and the World Book and Copyright Day date follow these sources:
+## Shou Xing festival table
+
+The fixed solar and lunar festival entries, importance levels, public-holiday
+flags, year bounds, weekday rules and dynamic rules in `src/festival-data.js`
+and `src/festivals.js` are derived from the festival definitions in Shou Xing
+Tian Wen Li / Shou Xing Wan Nian Li (寿星天文历 / 寿星万年历), authored by Xu
+Jianwei (许剑伟). This package adds normalized formal names, compact display
+names, aliases and three display tiers.
+
+- Original project mirror and attribution: <https://github.com/sxwnl/sxwnl>.
+- Original copyright statement:
+  <https://sxwnl.github.io/src/sm1.htm#copyright>.
+
+The original copyright statement is reproduced below without modification:
+
+> 本程序是开源的，你可以使用其中的任意部分代码，但不得随意修改“天文算法(eph.js)”及“农历算法(lunar.js)中古历部分的数据及算法”。一旦修改可能影响万年历的准确性，如果你对天文学不太了解而仅凭对历法的热情，请不要对此做任何修改，以免弄巧成拙。
+>
+> 如果在你自己开发的软件中使用了本程序的核心算法及数据，你可以在你的软件中申明“数据或算法来源于寿星天文历”，也可以不申明，但不可以申明为它其它来源。如有异义，可与我共内探讨。
+>
+> 作者：许剑伟，2008年11月于家里。xunmeng04#163.com，13850262218
+
+The Shou Xing distribution describes the program as open source but does not
+provide a conventional SPDX license for the original festival table. This
+notice therefore identifies the retained festival records as third-party
+material and does **not** claim to relicense those records under this package's
+MIT license. The JavaScript classification, compact names, aliases and display
+tiers added by this package are project-maintained adaptations.
+
+Selected modern public and memorial names follow these sources:
 
 - State Council, *全国年节及纪念日放假办法* (2024 revision):
   <https://app.www.gov.cn/govdata/gov/202411/12/521605/article.html>.
@@ -40,8 +60,8 @@ and the World Book and Copyright Day date follow these sources:
 - UNESCO, *世界图书和版权日* (April 23):
   <https://www.unesco.org/zh/days/world-book-and-copyright>.
 
-Categories describe the content, not statutory time off. Festival labels do not
-include annual holiday schedules or historical naming/establishment periods.
+Festival labels and source public-holiday flags do not include annual holiday,
+make-up workday or historical name schedules.
 
 ## js-ephemeris-lite
 

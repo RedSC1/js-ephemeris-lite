@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
-import { RAT_HOUR_MODE, ZonedTime, makeGanzhi } from 'js-ephemeris-lite';
+import {
+  MONTH_NAME, RAT_HOUR_MODE, ZonedTime, makeGanzhi,
+} from 'js-ephemeris-lite';
 import {
   FLOW_LEVEL,
   FLOW_MONTH_PALACE_STRATEGY,
@@ -408,6 +410,19 @@ test('all supported calendar reforms keep month rows inside one historical annua
     assert.equal(manager.context.year.year, year);
     assert.deepEqual(manager.dynamicChart.flowStack[FLOW_LEVEL.YEAR], firstAnnualLayer, `${year} annual layer`);
   }
+
+  assert.equal(
+    manager.timeline.getMonths(690).find((month) => month.monthName === MONTH_NAME.ALT_ONE)?.displayLabel,
+    '一月',
+  );
+  assert.equal(
+    manager.timeline.getMonths(700).find((month) => month.monthName === MONTH_NAME.LATER_SAME_NAME)?.displayLabel,
+    '十二月',
+  );
+  assert.equal(
+    manager.timeline.getMonths(762).find((month) => month.monthName === MONTH_NAME.LATER_SAME_NAME)?.displayLabel,
+    '五月',
+  );
 });
 
 test('runtime flow JSON patches placement and brightness together', () => {

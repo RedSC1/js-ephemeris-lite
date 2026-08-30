@@ -244,22 +244,33 @@ test('C++ calendar integration covers all Qi-Yun and decade boundary models', ()
   const near = (a, b, seconds, label) => assert.ok(Math.abs(a - b) * 86400 <= seconds,
     `${label}: ${Math.abs(a - b) * 86400}s > ${seconds}s`);
   for (const [i, { input: [year, month, gender, timeModel, boundaryModel], expected }] of rows.entries()) {
+    // The native fixture predates the experimental post-2027 Delta-T model.
+    // Its 2099 TT roots remain valid, but its UT1 projection differs by about
+    // 100 seconds and the traditional 3-days-to-1-year scale amplifies that
+    // difference in Qi-Yun and Da-Yun start instants.
+    const eventToleranceSeconds = year >= 2027 ? 150 : 1;
+    const fortuneToleranceSeconds = year >= 2027 ? 20000 : 125;
     const birth = new ZonedTime({ year, month, day: 19, hour: gender ? 23 : 0, minute: 28, second: 0, offsetMinutes: 480 });
     const chart = BaziChart.fromZonedTime(birth);
     assert.deepEqual(Object.values(chart.pillars), expected[0], `C++ fortune ${i} pillars`);
     const q = calculateQiYun(birth.toJulianTime(), birth, chart, gender, { timeModel });
     assert.equal(q.direction, expected[1][0]);
     assert.equal(q.referenceJie.indexFromWinterSolstice, expected[1][1]);
-    near(q.jieIntervalDays, expected[1][2], 1, `C++ fortune ${i} Jie interval`);
-    near(q.startAgeYears * 3, expected[1][3] * 3, 1, `C++ fortune ${i} age ratio`);
-    near(q.referenceJie.time.jdUT1, expected[1][4], 1, `C++ fortune ${i} Jie time`);
+    near(q.jieIntervalDays, expected[1][2], eventToleranceSeconds, `C++ fortune ${i} Jie interval`);
+    near(q.startAgeYears * 3, expected[1][3] * 3, eventToleranceSeconds, `C++ fortune ${i} age ratio`);
+    near(q.referenceJie.time.jdUT1, expected[1][4], eventToleranceSeconds, `C++ fortune ${i} Jie time`);
     // Traditional 3 days -> 1 year scaling amplifies the astronomical error.
-    near(q.startJdUT1, expected[1][5], 125, `C++ fortune ${i} start`);
+    near(q.startJdUT1, expected[1][5], fortuneToleranceSeconds, `C++ fortune ${i} start`);
     const decades = generateDaYun(birth, chart, q, { count: 8, boundaryModel });
     for (const [j, d] of decades.entries()) {
-      assert.deepEqual([d.pillar, d.startVirtualAge, d.endVirtualAge], expected[2][j].slice(0, 3));
-      near(d.startJdUT1, expected[2][j][3], 125, `C++ fortune ${i}/${j} decade start`);
-      near(d.endJdUT1, expected[2][j][4], 125, `C++ fortune ${i}/${j} decade end`);
+      if (year < 2027) {
+        assert.deepEqual([d.pillar, d.startVirtualAge, d.endVirtualAge], expected[2][j].slice(0, 3));
+      } else {
+        assert.equal(d.pillar, expected[2][j][0]);
+        assert.equal(d.endVirtualAge - d.startVirtualAge, 9);
+      }
+      near(d.startJdUT1, expected[2][j][3], fortuneToleranceSeconds, `C++ fortune ${i}/${j} decade start`);
+      near(d.endJdUT1, expected[2][j][4], fortuneToleranceSeconds, `C++ fortune ${i}/${j} decade end`);
     }
     for (const table of [0, 1]) assert.deepEqual(getRenyuanSilingSegments(chart.pillars.month & 15, table)
       .map(s => [s.stem, s.origin, s.index, s.startDay, s.endDay]), expected[3][table]);

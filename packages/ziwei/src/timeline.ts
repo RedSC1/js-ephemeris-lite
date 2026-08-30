@@ -99,6 +99,7 @@ export interface TimelineManifest {
 }
 
 const MONTH_LABELS = ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '冬', '腊'];
+const HISTORICAL_MONTH_LABELS = ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 
 function dateOnly(jd: number): Readonly<{ year: number; month: number; day: number }> {
   const value = calendarDateFromJulianDay(jd);
@@ -109,8 +110,10 @@ function monthLabel(month: number, monthName: number, isLeap: boolean): string {
   if (monthName === MONTH_NAME.THIRTEEN) return '十三月';
   if (monthName === MONTH_NAME.LATER_NINE) return '后九月';
   if (monthName === MONTH_NAME.ALT_TWELVE) return '拾贰月';
-  if (monthName === MONTH_NAME.ALT_ONE) return '改正月';
-  if (monthName === MONTH_NAME.LATER_SAME_NAME) return `后${MONTH_LABELS[month - 1] ?? month}月`;
+  if (monthName === MONTH_NAME.ALT_ONE) return '一月';
+  if (monthName === MONTH_NAME.LATER_SAME_NAME) {
+    return `${HISTORICAL_MONTH_LABELS[month - 1] ?? month}月`;
+  }
   return `${isLeap ? '闰' : ''}${MONTH_LABELS[month - 1] ?? month}月`;
 }
 

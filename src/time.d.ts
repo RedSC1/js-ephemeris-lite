@@ -84,6 +84,7 @@ export const DELTA_T_INFO: Readonly<{
   earlyJoin: string;
   annualStartYear: number;
   annualEndYear: number;
-  extrapolationJoinEndYear: number;
+  futureFormulaStartYear: number;
+  futureModel: string;
   annualInterpolation: string;
 }>;

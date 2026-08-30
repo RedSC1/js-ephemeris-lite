@@ -46,8 +46,8 @@ const S15_SPLINE = [
   [1950, 1953, -0.277, 0.220, 1.127, 28.932],
 ];
 
-// Annual observed/predicted values. Since the years are consecutive, storing
-// just the ordinates avoids repeating 1953..2050 in the runtime bundle.
+// Annual observed values plus the short IERS forecast through 2027. Since the
+// years are consecutive, storing just the ordinates avoids repeating them.
 const ANNUAL_START_YEAR = 1953;
 const ANNUAL_DELTA_T = [
   30.00, 30.20, 30.41, 30.76, 31.34, 32.03, 32.65, 33.07,
@@ -59,12 +59,19 @@ const ANNUAL_DELTA_T = [
   64.09, 64.30, 64.47, 64.57, 64.69, 64.85, 65.15, 65.46,
   65.78, 66.07, 66.32, 66.60, 66.91, 67.28, 67.64, 68.10,
   68.59, 68.97, 69.22, 69.36, 69.36, 69.29, 69.20, 69.18,
-  69.14, 69.11, 69.10, 69.08, 69.07, 69.08, 69.09, 69.12,
-  69.16, 69.20, 69.26, 69.33, 69.41, 69.51, 69.61, 69.72,
-  69.85, 69.98, 70.13, 70.28, 70.45, 70.63, 70.81, 71.01,
-  71.22, 71.44,
+  69.14, 69.11, 69.10,
 ];
 const ANNUAL_END_YEAR = ANNUAL_START_YEAR + ANNUAL_DELTA_T.length - 1;
+const FUTURE_FORMULA_START_YEAR = ANNUAL_END_YEAR + 1;
+
+// Precomputed once from the documented formula. Keep runtime evaluation to the
+// two year-dependent trigonometric terms; do not rely on engine constant folding.
+const DELTA_T_W15 = 0.41887902047863906; // 2π / 15
+const DELTA_T_W18 = 0.33756972584642919; // 2π / 18.613
+const DELTA_T_PHASE18 = 2013.91314;
+const DELTA_T_FUTURE_OFFSET = -293.95181375822420;
+const DELTA_T_COSINE_RATE = 1.4610000000591095; // 348.7880578 × W15 / 100
+const DELTA_T_NODAL_RATE = 0.19793400875005376; // 0.58635 × W18
 
 function longTermDeltaT(year) {
   const u = (year - 1820) / 100;
@@ -73,6 +80,27 @@ function longTermDeltaT(year) {
 
 function longTermDeltaTRate(year) {
   return 64 * (year - 1820) / 10000;
+}
+
+// Experimental modern/future model: the Stephenson-Morrison-Hohenkerk
+// long-term baseline, a 15-year cosine term, and an 18.613-year nodal-period
+// correction anchored to zero in 2015.
+function futureDeltaT(year) {
+  const t = (year - 1825) / 100;
+  // Offset combines the 2015 anchor and all other invariant terms:
+  // 67.643909 - 32.50725×1.9² - 348.7880578×cos(W15×1.9)
+  // - 0.58635×sin(W18×(2015-2013.91314)).
+  return DELTA_T_FUTURE_OFFSET
+    + 32.50725 * t * t
+    + 348.7880578 * Math.cos(DELTA_T_W15 * t)
+    + 0.58635 * Math.sin(DELTA_T_W18 * (year - DELTA_T_PHASE18));
+}
+
+function futureDeltaTRate(year) {
+  const t = (year - 1825) / 100;
+  return 0.650145 * t
+    - DELTA_T_COSINE_RATE * Math.sin(DELTA_T_W15 * t)
+    + DELTA_T_NODAL_RATE * Math.cos(DELTA_T_W18 * (year - DELTA_T_PHASE18));
 }
 
 function evaluateS15(year) {
@@ -147,6 +175,25 @@ function interpolateAnnualDeltaT(year) {
     + (x3 - x2) * m2;
 }
 
+// Preserve the final IERS forecast ordinate at 2027, then join it to the
+// experimental future formula over one year with matching endpoint slopes.
+function futureJoinDeltaT(year) {
+  const x0 = ANNUAL_END_YEAR;
+  const x1 = FUTURE_FORMULA_START_YEAR;
+  const span = x1 - x0;
+  const x = (year - x0) / span;
+  const x2 = x * x;
+  const x3 = x2 * x;
+  const p0 = ANNUAL_DELTA_T.at(-1);
+  const p1 = futureDeltaT(x1);
+  const m0 = (ANNUAL_DELTA_T.at(-1) - ANNUAL_DELTA_T.at(-2)) * span;
+  const m1 = futureDeltaTRate(x1) * span;
+  return (2 * x3 - 3 * x2 + 1) * p0
+    + (x3 - 2 * x2 + x) * m0
+    + (-2 * x3 + 3 * x2) * p1
+    + (x3 - x2) * m1;
+}
+
 /** Estimated TT - UT1 in seconds for a decimal calendar year. */
 export function deltaTSeconds(decimalYear) {
   if (!Number.isFinite(decimalYear)) return decimalYear;
@@ -156,19 +203,12 @@ export function deltaTSeconds(decimalYear) {
   if (decimalYear >= ANNUAL_START_YEAR && decimalYear < ANNUAL_END_YEAR) {
     return interpolateAnnualDeltaT(decimalYear);
   }
-  if (decimalYear < EARLY_JOIN_START_YEAR || decimalYear > ANNUAL_END_YEAR + 100) {
+  if (decimalYear < EARLY_JOIN_START_YEAR) {
     return longTermDeltaT(decimalYear);
   }
   if (decimalYear < S15_START_YEAR) return earlyJoinDeltaT(decimalYear);
-
-  // Join the last annual value continuously to the long-term parabola over
-  // 2050..2150. The value is continuous; this intentionally mirrors the C++
-  // model rather than inventing another far-future fit.
-  const annualEndValue = ANNUAL_DELTA_T.at(-1);
-  const parabola = longTermDeltaT(decimalYear);
-  const mismatchAtEnd = longTermDeltaT(ANNUAL_END_YEAR) - annualEndValue;
-  const blend = (ANNUAL_END_YEAR + 100 - decimalYear) / 100;
-  return parabola - mismatchAtEnd * blend;
+  if (decimalYear < FUTURE_FORMULA_START_YEAR) return futureJoinDeltaT(decimalYear);
+  return futureDeltaT(decimalYear);
 }
 
 function julianDayAtYearStart(year) {
@@ -435,6 +475,7 @@ export const DELTA_T_INFO = Object.freeze({
   earlyJoin: 'cubic Hermite, value and first derivative continuous',
   annualStartYear: ANNUAL_START_YEAR,
   annualEndYear: ANNUAL_END_YEAR,
-  extrapolationJoinEndYear: ANNUAL_END_YEAR + 100,
+  futureFormulaStartYear: FUTURE_FORMULA_START_YEAR,
+  futureModel: 'SMH long-term baseline + 15-year cosine + 18.613-year nodal correction',
   annualInterpolation: 'Catmull-Rom cubic Hermite',
 });

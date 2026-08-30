@@ -52,4 +52,4 @@ console.log(earth.position, earth.velocity);
 适用范围与模型限制见[精度说明](./accuracy.md)。
 
 行星和月球的系数分别位于 `src/planet-series.js`、`src/moon-series.js`；
-文件结构、基底与参考系见[模型数据](./architecture.md#模型数据)。
+文件结构、基底与参考系见[星历模型与运行时数据](./architecture.md#星历模型与运行时数据)。
