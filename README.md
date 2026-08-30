@@ -47,6 +47,22 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
 需要单独求某次事件时，可用 `solveSolarLongitude(targetRadians, nearJdTT)`
 或 `solveNewMoon(nearJdTT)`。完整示例见[历法与时间指南](./docs/time-and-calendar.md)。
 
+## 按需求找示例
+
+| 想做什么 | 主要 API | 示例与说明 |
+| --- | --- | --- |
+| 查询行星、日月的几何位置和速度 | `planetHeliocentricState()`、`planetGeocentricPosition()`、`moonGeocentricPosition()` | [天体位置](./docs/positions.md) |
+| 查询视黄经、赤经、赤纬和角速度 | `apparentBodyPosition()`、`apparentBodyState()` | [视位置](./docs/sky-events.md#视位置与恒星时) |
+| 查询月相比例、照明、距日角和视直径 | `moonIllumination()`、`bodyPhenomena()` | [照明与视直径](./docs/sky-events.md#照明相位与视直径) |
+| 查询地平坐标、天体出没与中天 | `bodyHorizontalPosition()`、`bodyRiseSetForDay()` | [地平位置与出没](./docs/sky-events.md#地平位置与天体出没) |
+| 查询黄经穿越、合冲、留和入宫 | `searchLongitudeCrossings()`、`searchRelativeLongitude()`、`searchStations()`、`searchIngresses()` | [黄经事件](./docs/sky-events.md#黄经合冲留与入宫) |
+| 查询近远点、交点、大距和赤经事件 | `searchLunarApsides()`、`searchLunarNodes()`、`searchGreatestElongations()` 等 | [轨道与赤经事件](./docs/sky-events.md#轨道与赤经事件) |
+| 查询日出日落、太阳高度和晨昏蒙影 | `solarRiseSetForDate()`、`solarAltitude()` | [太阳观测](./docs/sky-events.md#日出日落与太阳高度) |
+| 搜索全球及地方日月食 | `searchSolarEclipses()`、`getLocalLunarEclipse()` 等 | [日月食查询](./docs/eclipse-search.md) |
+| 查询节气、月相、农历和历史历法 | `getQiShuoYear()`、`solarToLunar()`、`calculateChineseCalendarYear()` | [时间与历法](./docs/time-and-calendar.md) |
+
+所有专题示例都从包的公开入口导入，并注明输入时间尺度、角度和距离单位。
+
 ## 模型系数
 
 行星系数集中在 [`src/planet-series.js`](./src/planet-series.js)，按水、金、地、火、木、土、天、海、冥排列；

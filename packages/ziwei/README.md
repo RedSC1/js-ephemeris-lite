@@ -40,6 +40,16 @@ console.log(chart.birthYearTransformations);
 出生钟表需明确固定 UTC 偏移，`ZiweiOptions` 需提供性别。
 请使用 `ZIWEI_GENDER` 常量；它与八字包的性别数值编码不同。
 
+## 示例导航
+
+| 需求 | 指南 |
+| --- | --- |
+| 从钟表时间或农历日期创建命盘 | [创建命盘](./docs/guide.md#创建命盘) |
+| 读取宫位、星曜、亮度与四化 | [读取十二宫](./docs/guide.md#读取十二宫) · [读取星曜](./docs/guide.md#读取星曜) |
+| 查询大限、流年、流月、流日和流时 | [流运与时间线](./docs/guide.md#流运与时间线) |
+| 按星曜条件反查出生时辰 | [反查时辰](./docs/guide.md#反查时辰) |
+| 选择流派或加载自定义规则 | [规则选项与自定义星曜](./docs/custom-rules.md) |
+
 ## 功能
 
 - 十二宫、五行局、115 颗本命星、亮度、命主与身主。

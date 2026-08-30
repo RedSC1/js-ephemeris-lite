@@ -13,28 +13,24 @@
 **1600..2200 之外仍可求解，但后备星历精度较低；求根收敛不代表天象时刻准确。**
 范围、质心约定及限制见[冥王星警告](./accuracy.md#冥王星)。
 
+## 视位置与恒星时
+
 ```js
 import {
-  apparentBodyPosition, apparentBodyState, searchStations,
-  searchIngresses, searchRelativeLongitude, moonIllumination,
-  bodyHorizontalPosition, bodyRiseSetForDay,
+  apparentBodyPosition,
+  apparentBodyState,
 } from 'js-ephemeris-lite';
 
 const jdTT = 2460409.25;
 const fixed = apparentBodyPosition('mars', jdTT, { frame: 'j2000' });
 const mean = apparentBodyPosition('mars', jdTT, { frame: 'mean-of-date' });
 const date = apparentBodyState('mars', jdTT, { frame: 'true-of-date' });
-console.log(date.longitudeDeg, date.rightAscensionDeg, date.longitudeSpeedDegPerDay);
-
-const stations = searchStations('mercury', 2460401.5, 2460431.5);
-const ingresses = searchIngresses('moon', 2460401.5, 2460431.5);
-const conjunctions = searchRelativeLongitude('moon', 'sun', 0, 2460401.5, 2460431.5);
-const moon = moonIllumination(jdTT);
-
-const site = { longitudeDeg: 116.4, latitudeDeg: 39.9, heightMeters: 40 };
-const horizontal = bodyHorizontalPosition('moon', 2460409.25, site); // 此处 JD 是 UT1
-// 指定民用日时，先构造当地午夜的 ZonedTime，再读取 toJulianTime().jdUT1。
-const riseSet = bodyRiseSetForDay('moon', 2460409.5, site);
+console.table([
+  { frame: fixed.frame, longitude: fixed.longitudeDeg, rightAscension: fixed.rightAscensionDeg },
+  { frame: mean.frame, longitude: mean.longitudeDeg, rightAscension: mean.rightAscensionDeg },
+  { frame: date.frame, longitude: date.longitudeDeg, rightAscension: date.rightAscensionDeg },
+]);
+console.log(date.longitudeSpeedDegPerDay, date.distanceSpeedAuPerDay);
 ```
 
 支持 `sun`、`moon`、`mercury`、`venus`、`mars`、`jupiter`、`saturn`、`uranus`、`neptune`、`pluto`。视位置接口的输入是 **JD(TT)**，角度为 **degree**，距离与向量为 **AU**，速度为对应单位每天。几何接口的地心月球距离使用 km；视位置接口统一使用 AU。
@@ -51,6 +47,69 @@ const riseSet = bodyRiseSetForDay('moon', 2460409.5, site);
 
 模型包含项与限制见[精度说明](./accuracy.md)。
 
+`greenwichSiderealTime()` 输入 JD(UT1)，返回 0～360° 的格林尼治视恒星时；如已知
+同一瞬间的 TT，可作为第二个参数传入，避免函数内部再次换算：
+
+```js
+import { JulianTime, greenwichSiderealTime } from 'js-ephemeris-lite';
+
+const time = JulianTime.fromDate(new Date('2026-08-29T04:00:00Z'));
+const gastDeg = greenwichSiderealTime(time.jdUT1, time.jdTT);
+console.log(gastDeg);
+```
+
+## 照明、相位与视直径
+
+```js
+import { bodyPhenomena, moonIllumination } from 'js-ephemeris-lite';
+
+const jdTT = 2461281.0;
+const venus = bodyPhenomena('venus', jdTT);
+console.log({
+  elongation: venus.solarElongationDeg,
+  illuminated: venus.illuminatedFraction,
+  diameterArcsec: venus.apparentDiameterArcsec,
+});
+
+const moon = moonIllumination(jdTT);
+console.log({
+  illuminated: moon.illuminatedFraction,
+  phaseCycle: moon.phaseCycle,
+  waxing: moon.waxing,
+});
+```
+
+`bodyPhenomena()` 返回真实球面距日角、相位角、照明比例、视直径（角秒）和地平视差；
+太阳的相位/照明比例返回 `null`。`moonIllumination()` 增加 `phaseCycle`（0 朔、0.25
+上弦、0.5 望、0.75 下弦）及 `waxing`。`phaseCycle` 是归一化黄经差，**不是月龄天数**。
+目前不提供星等计算。`BODY_DISC_RADIUS_KM` 是这些视直径计算使用的物理半径表，通常无需修改。
+
+## 黄经、合冲、留与入宫
+
+```js
+import {
+  searchLongitudeCrossings,
+  searchRelativeLongitude,
+  searchStations,
+  searchIngresses,
+} from 'js-ephemeris-lite';
+
+const startTT = 2461041.5;
+const endTT = 2461406.5;
+
+// 火星穿越真春分点起算的 90° 视黄经。
+const longitude90 = searchLongitudeCrossings('mars', 90, startTT, endTT);
+// 木星相对太阳黄经差 180°，即黄经意义下的冲。
+const oppositions = searchRelativeLongitude('jupiter', 'sun', 180, startTT, endTT);
+// 水星视黄经速度变号，以及穿越 30° 角区边界（逆行回退也保留）。
+const stations = searchStations('mercury', startTT, endTT);
+const ingresses = searchIngresses('mercury', startTT, endTT);
+
+for (const event of [...oppositions, ...stations]) {
+  console.log(event.time.toZonedTime(480), event.longitudeDeg);
+}
+```
+
 天文事件记录用 `time: JulianTime` 保存时刻；
 用 `event.time.jdTT` 读取 TT，用 `event.time.toZonedTime(480)` 转为东八区钟表。
 区间输入仍是数值，搜索使用半开区间 **`[startTT, endTT)`**：
@@ -61,7 +120,36 @@ const riseSet = bodyRiseSetForDay('moon', 2460409.5, site);
 - `searchIngresses(body, ...)`：穿越每 30° 边界，保留逆行回退；`fromSign`/`toSign` 是 0～11 的角区编号，不是 IAU 星座边界。
 - 搜索参考面通过 `options.apparent.frame` 指定，默认 `true-of-date`。底层 `searchCrossings`/`searchAngleCrossings` 接收自定义函数，`stepDays` 默认 0.5；只保证采样能分辨的变号根，不保证找到同一采样间隔内的多根或相切根。大范围应分段搜索；单次最多 200000 个扫描间隔。
 
-`bodyPhenomena()` 返回真实球面距日角、相位角、照明比例、视直径（角秒）和地平视差；太阳的相位/照明比例返回 `null`。`moonIllumination()` 增加 `phaseCycle`（0 朔、0.25 上弦、0.5 望、0.75 下弦）及 `waxing`。`phaseCycle` 是归一化黄经差，**不是月龄天数**。目前不提供星等计算。
+自定义标量或周期角也能复用同一个扫描与求根器：
+
+```js
+import { searchAngleCrossings, searchCrossings } from 'js-ephemeris-lite';
+
+const zeroes = searchCrossings(t => Math.sin(t), 0, 20, { stepDays: 0.25 });
+const wraps = searchAngleCrossings(t => t * 13, 0, 0, 60, { stepDays: 0.5 });
+console.log(zeroes, wraps); // 这里的 time 是数值，不是 JulianTime
+```
+
+## 地平位置与天体出没
+
+```js
+import { bodyHorizontalPosition, bodyRiseSetForDay, ZonedTime } from 'js-ephemeris-lite';
+
+const site = { longitudeDeg: 116.4074, latitudeDeg: 39.9042, heightMeters: 43 };
+const midnight = new ZonedTime({
+  year: 2026, month: 8, day: 29,
+  hour: 0, minute: 0, second: 0,
+  offsetMinutes: 480,
+}).toJulianTime();
+
+const horizontal = bodyHorizontalPosition('moon', midnight.jdUT1 + 0.5, site);
+console.log(horizontal.azimuthDeg, horizontal.apparentAltitudeDeg);
+
+const events = bodyRiseSetForDay('moon', midnight.jdUT1, site);
+console.log(events.rises.map(time => time.toZonedTime(480)));
+console.log(events.sets.map(time => time.toZonedTime(480)));
+console.log(events.upperTransits.map(time => time.toZonedTime(480)));
+```
 
 `bodyHorizontalPosition()` 和 `bodyRiseSetForDay()` 使用 **JD(UT1)** 控制地球自转，内部转换 TT 计算天体；仅接受 `true-of-date`。方位角从北向东计，返回几何/折射后高度。出没区间精确为 `[dayStartUT1, dayStartUT1 + 1)`，不会按经度猜时区；`rises`、`sets`、`upperTransits`、`lowerTransits` 均为该区间内的 `JulianTime` 数组，读取 `.jdUT1` 得 UT1 数值。支持 `limb`、`horizonDegrees`、`refraction`，默认上边缘和折射；没有地形、地平俯角、极移或周日光行差。极昼/极夜以 `altitudeState` 返回。晨昏蒙影可用太阳、`limb: 'center'`、`refraction: false`，再设 `horizonDegrees: -6/-12/-18`。
 
@@ -139,6 +227,12 @@ const nodes = searchLunarNodes(startTT, endTT, {frame: 'mean-of-date'});
 const elongations = searchGreatestElongations('mercury', startTT, endTT);
 const conjunctions = searchRelativeRightAscension('venus', 'moon', 0, startTT, endTT);
 const raStations = searchRightAscensionStations('mercury', startTT, endTT);
+
+console.log(lunarApsides[0]?.kind, lunarApsides[0]?.distanceKm);
+console.log(nodes[0]?.kind, nodes[0]?.longitudeDeg);
+console.log(elongations[0]?.kind, elongations[0]?.elongationDeg);
+console.log(conjunctions[0]?.time.toZonedTime(480));
+console.log(raStations[0]?.direction, raStations[0]?.rightAscensionDeg);
 ```
 
 这些搜索的区间输入是 JD(TT)，使用半开区间 `[startTT, endTT)`。
