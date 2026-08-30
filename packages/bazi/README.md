@@ -20,8 +20,8 @@ import { ZonedTime, describeFourPillars } from 'js-ephemeris-lite';
 import { BaziChart, BaziOptions, GENDER, shenShaNames } from 'bazi-lite';
 
 const birth = new ZonedTime({
-  year: 2000, month: 1, day: 1,
-  hour: 12, minute: 0, second: 0,
+  year: 2003, month: 3, day: 13,
+  hour: 14, minute: 15, second: 0,
   offsetMinutes: 480,
 });
 
