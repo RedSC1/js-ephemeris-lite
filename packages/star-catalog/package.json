@@ -1,7 +1,7 @@
 {
   "name": "taiyin-star-catalog-lite",
   "version": "1.0.0-beta.1",
-  "description": "Distribution-sized TSC1 fixed-star catalog with 2,114 bright stars and multilingual aliases",
+  "description": "Complete distribution-sized C++ Taiyin TSC1 lite catalog with 2,114 records and multilingual aliases",
   "type": "module",
   "license": "MPL-2.0",
   "author": "RedSC1",
