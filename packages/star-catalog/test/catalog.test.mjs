@@ -11,8 +11,8 @@ test('packaged catalog is the complete checked TSC1 lite asset', async () => {
   assert.equal(bytes.byteLength, LITE_STAR_CATALOG_INFO.bytes);
   assert.equal(createHash('sha256').update(bytes).digest('hex'), LITE_STAR_CATALOG_INFO.sha256);
   const catalog = await loadLiteStarCatalog();
-  assert.equal(catalog.starCount, 2114);
-  assert.equal(catalog.aliasCount, 9621);
+  assert.equal(catalog.starCount, 2057);
+  assert.equal(catalog.aliasCount, 12242);
   assert.equal(catalog.catalogMinEpoch, 1991.25);
   assert.equal(catalog.catalogMaxEpoch, 2016);
 });
@@ -23,7 +23,9 @@ test('aliases, Unicode names and full astrometry survive the package boundary', 
   assert.equal(vega.canonicalId, 'vega');
   assert.equal(catalog.find('HIP 91262').index, vega.index);
   assert.equal(catalog.find('HR-7001').index, vega.index);
+  assert.equal(catalog.find('织女一').index, vega.index);
   assert.equal(catalog.find('角宿一').canonicalId, 'spica');
+  assert.equal(catalog.find('毕宿一').index, catalog.find('HIP 20889').index);
   assert.ok(vega.parallaxMas > 100);
   assert.ok(Number.isFinite(vega.referenceEpoch));
 });

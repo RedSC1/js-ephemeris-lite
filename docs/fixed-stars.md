@@ -38,8 +38,8 @@ npm run demo:fixed-stars -- 角宿一 2460000.5
 - NUL 结尾字符串的文件边界；
 - alias 的星体索引、FNV-1a 64 位 hash 排序和 UTF-8 次序。
 
-因此同一个读取器既可使用 2,114 颗的 lite 表，也可读取 C++ 生成的 9,098 颗
-亮星表或 118,058 颗 Hipparcos/Gaia 表。大表不会随主包或默认数据包分发。
+因此同一个读取器既可使用 2,057 条记录的 lite 表，也可读取 C++ 生成的 9,098 颗
+亮星表或 118,059 颗 Hipparcos/Gaia 表。大表不会随主包或默认数据包分发。
 
 ```js
 import { readFile } from 'node:fs/promises';

@@ -16,8 +16,8 @@ test('TSC1 parser accepts a nonzero Uint8Array offset and preserves catalog meta
   const wrapped = new Uint8Array(catalogBytes.length + 17);
   wrapped.set(catalogBytes, 11);
   const catalog = parseTsc1Catalog(wrapped.subarray(11, 11 + catalogBytes.length));
-  assert.equal(catalog.starCount, 2114);
-  assert.equal(catalog.aliasCount, 9621);
+  assert.equal(catalog.starCount, 2057);
+  assert.equal(catalog.aliasCount, 12242);
   assert.equal(catalog.version, 1);
   assert.equal(catalog.find('Sirius').canonicalId, 'sirius');
   assert.equal(catalog.find('HIP-32349').canonicalId, 'sirius');

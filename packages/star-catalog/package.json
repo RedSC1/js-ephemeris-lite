@@ -1,7 +1,7 @@
 {
   "name": "taiyin-star-catalog-lite",
   "version": "1.0.0-beta.1",
-  "description": "Complete distribution-sized C++ Taiyin TSC1 lite catalog with 2,114 records and multilingual aliases",
+  "description": "TSC1 bright-star catalog with complete Chinese-asterism and western-zodiac line coverage",
   "type": "module",
   "license": "MPL-2.0",
   "author": "RedSC1",
