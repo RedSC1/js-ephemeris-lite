@@ -257,6 +257,14 @@ const J2000_ECLIPTIC_STATE = (() => {
   return multiply(rotationX(obliquity.value), precession.matrix);
 })();
 
+/** ICRF/J2000 equatorial vector -> this library's fixed mean-J2000 ecliptic axes. */
+export function icrfEquatorialToJ2000Ecliptic(vector) {
+  if (!Array.isArray(vector) || vector.length !== 3 || !vector.every(Number.isFinite)) {
+    throw new TypeError('ICRF vector must contain three finite numbers');
+  }
+  return J2000_ECLIPTIC_STATE.map(row => row.reduce((sum, value, index) => sum + value * vector[index], 0));
+}
+
 /** J2000 mean ecliptic vector -> mean ecliptic/equinox of date. */
 export function meanEclipticOfDateMatrixState(jdTT) {
   const precession = vondrak2011PrecessionMatrixState(jdTT);

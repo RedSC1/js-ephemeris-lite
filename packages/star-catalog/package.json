@@ -1,0 +1,41 @@
+{
+  "name": "taiyin-star-catalog-lite",
+  "version": "1.0.0-beta.1",
+  "description": "Distribution-sized TSC1 fixed-star catalog with 2,114 bright stars and multilingual aliases",
+  "type": "module",
+  "license": "MPL-2.0",
+  "author": "RedSC1",
+  "sideEffects": false,
+  "main": "./src/node.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "browser": "./src/browser.js",
+      "node": "./src/node.js",
+      "default": "./src/browser.js"
+    },
+    "./catalog.tsc1": "./data/stars-bright-v5.tsc1",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "data",
+    "src",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "THIRD_PARTY_NOTICES.zh-CN.md"
+  ],
+  "engines": { "node": ">=18" },
+  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RedSC1/js-ephemeris-lite.git",
+    "directory": "packages/star-catalog"
+  },
+  "bugs": { "url": "https://github.com/RedSC1/js-ephemeris-lite/issues" },
+  "homepage": "https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/star-catalog#readme",
+  "dependencies": { "js-ephemeris-lite": "^1.0.0-beta.1" },
+  "scripts": { "test": "node --test test/*.test.mjs", "prepack": "npm test" },
+  "keywords": ["astronomy", "fixed-stars", "star-catalog", "gaia", "hipparcos", "tsc1"]
+}

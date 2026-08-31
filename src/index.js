@@ -13,6 +13,7 @@ export * from './coordinates.js';
 export * from './ephemeris.js';
 export * from './eclipses.js';
 export * from './eclipse-search.js';
+export * from './fixed-stars.js';
 export * from './ganzhi.js';
 export * from './qi-shuo.js';
 export * from './solar-visibility.js';

@@ -5,10 +5,10 @@
 
 ## 安装
 
-安装当前 beta 版本：
+安装：
 
 ```sh
-npm install huangli-lite@beta
+npm install huangli-lite
 ```
 
 在本仓库开发时，也可以在仓库根目录安装 workspace 依赖：

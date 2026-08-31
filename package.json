@@ -36,6 +36,10 @@
       "types": "./src/eclipse-search.d.ts",
       "default": "./src/eclipse-search.js"
     },
+    "./fixed-stars": {
+      "types": "./src/fixed-stars.d.ts",
+      "default": "./src/fixed-stars.js"
+    },
     "./apparent": {
       "types": "./src/apparent.d.ts",
       "default": "./src/apparent.js"
@@ -107,12 +111,15 @@
     "lunar-phases",
     "solar-eclipse",
     "lunar-eclipse",
+    "fixed-stars",
+    "star-catalog",
     "sky-events",
     "equation-of-time",
     "true-solar-time"
   ],
   "scripts": {
     "demo": "node examples/ephemeris.mjs",
+    "demo:fixed-stars": "node examples/fixed-stars.mjs",
     "build:workspaces": "npm run build --workspaces --if-present",
     "generate:historical-calendar-data": "node tools/generate-calendar-data.mjs",
     "generate:huangli-zh-hant": "node scripts/build-huangli-zh-hant.mjs",

@@ -40,6 +40,10 @@ import {
 } from 'js-ephemeris-lite';
 import { moonHeliocentricState } from 'js-ephemeris-lite/ephemeris';
 import {
+  parseTsc1Catalog, fixedStarPosition, fixedStarState,
+  type Tsc1Catalog, type FixedStarPosition, type FixedStarState,
+} from 'js-ephemeris-lite/fixed-stars';
+import {
   ecFast, rsGS, rsPL, ysPL, type EcFastResult, type YsPLResult,
 } from 'js-ephemeris-lite/eclipses';
 const fastEclipse: EcFastResult = ecFast(8864);
@@ -49,6 +53,11 @@ const globalEclipse = rsGS.feature(8864);
 const localEclipse = rsPL.secMax(8864, globalEclipse.zxJ, globalEclipse.zxW, 0);
 const eclipseBoundary = rsPL.nbj(8864);
 void [fastEclipse, lunarEclipse, globalEclipse, localEclipse, eclipseBoundary];
+declare const tsc1Bytes: Uint8Array;
+const starCatalog: Tsc1Catalog = parseTsc1Catalog(tsc1Bytes);
+const starPosition: FixedStarPosition = fixedStarPosition(starCatalog, 'vega', 2451545);
+const starState: FixedStarState = fixedStarState(starCatalog, 0, 2451545, { frame: 'mean-of-date' });
+void [starPosition, starState];
 const solarEclipses: SolarEclipseEvent[] = searchSolarEclipses(
   new Date('2024-01-01T00:00:00Z'), new Date('2025-01-01T00:00:00Z'),
 );

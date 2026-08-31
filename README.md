@@ -20,7 +20,7 @@
 需要 Node.js 18 或更高版本；浏览器项目可通过支持 ES modules 的构建工具使用。
 
 ```sh
-npm install js-ephemeris-lite@beta
+npm install js-ephemeris-lite
 ```
 
 本文档对应当前 1.0.0 beta 源码；使用已安装版本时，请以该版本随包文档为准。
@@ -58,6 +58,7 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
 | 想做什么 | 主要 API | 示例与说明 |
 | --- | --- | --- |
 | 查询行星、日月的几何位置和速度 | `planetHeliocentricState()`、`planetGeocentricPosition()`、`moonGeocentricPosition()` | [天体位置](./docs/positions.md) |
+| 读取 TSC1 星表并计算恒星位置 | `parseTsc1Catalog()`、`fixedStarPosition()` | [恒星表、API 与演示](./docs/fixed-stars.md) |
 | 查询视黄经、赤经、赤纬和角速度 | `apparentBodyPosition()`、`apparentBodyState()` | [视位置](./docs/sky-events.md#视位置与恒星时) |
 | 查询月相比例、照明、距日角和视直径 | `moonIllumination()`、`bodyPhenomena()` | [照明与视直径](./docs/sky-events.md#照明相位与视直径) |
 | 查询地平坐标、天体出没与中天 | `bodyHorizontalPosition()`、`bodyRiseSetForDay()` | [地平位置与出没](./docs/sky-events.md#地平位置与天体出没) |
@@ -70,6 +71,13 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
 
 所有专题示例都从包的公开入口导入，并注明输入时间尺度、角度和距离单位。
 
+仓库内的恒星表示例可直接运行；第一个参数支持中文名、常用名、HIP/HR/HD、
+Bayer 或 Flamsteed 编号，第二个参数是可选的 JD(TT)：
+
+```sh
+npm run demo:fixed-stars -- 角宿一 2460000.5
+```
+
 ## 模型系数
 
 行星系数集中在 [`src/planet-series.js`](./src/planet-series.js)，按水、金、地、火、木、土、天、海、冥排列；
@@ -80,6 +88,7 @@ console.log(year.events); // 节气、朔、上弦、望、下弦
 ## 功能
 
 - 太阳、月球、八大行星及冥王星的位置与速度，提供日心、地心及地月质心接口。
+- 完整 TSC1 v1 恒星表读取、别名查询、三维空间运动传播和恒星视位置；默认亮星数据由可选的 `taiyin-star-catalog-lite` 提供。
 - 二十四节气、七十二候、朔与指定月相求解。
 - 阴阳历互转、闰月，以及中国历史历法和历史纪年查询。
 - 年月日时干支、三种晚子时规则、地方平太阳时与真太阳时。
