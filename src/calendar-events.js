@@ -1,4 +1,6 @@
 import { earthModel } from './planet-models.js';
+import { EARTH_L, EARTH_R } from './planet-series.js';
+import { EARTH_L_PREFIX_COUNTS, EARTH_R_PREFIX_COUNTS } from './earth-prefix-counts.js';
 import { LOW_SOLAR_DRIFT, LOW_ELONGATION_DRIFT, FAST_EARTH_RADIUS_TERMS } from './event-series.js';
 import { MOON_L } from './moon-series.js';
 import { moonSeriesLongitudeState } from './moon-model.js';
@@ -87,16 +89,30 @@ function rankEnvelopeTerms(blocks) {
 
 // Counts are our own low-model choice. Lunar amplitudes already use x in [-1,1],
 // so ranking their envelopes retains the contribution of high-order terms.
-const LOW_EARTH_LONGITUDE_CANDIDATES = earthModel.ranked[0];
+function describeEarthPrefix(blocks, counts) {
+  const frequencies = new Map();
+  for (let power = 0; power < blocks.length; power++) {
+    const rows = blocks[power];
+    const end = Math.min((counts[power] ?? 0) * 3, rows.length);
+    for (let i = 0; i < end; i += 3) {
+      const frequency = rows[i + 2];
+      if (!frequencies.has(frequency)) frequencies.set(frequency, []);
+      frequencies.get(frequency).push(power);
+    }
+  }
+  return [...frequencies].map(([frequency, powers], serial) => ({ frequency, powers, serial }));
+}
+
+const LOW_EARTH_LONGITUDE_CANDIDATES = describeEarthPrefix(EARTH_L, EARTH_L_PREFIX_COUNTS[10]);
 const LOW_MOON_LONGITUDE_CANDIDATES = rankEnvelopeTerms(MOON_L);
-const LOW_EARTH_RADIUS_TERMS = earthModel.ranked[2].slice(0, 3);
+const LOW_EARTH_RADIUS_TERMS = describeEarthPrefix(EARTH_R, EARTH_R_PREFIX_COUNTS[3]);
 
 function lowDriftState(coefficients, jdTT) {
   const x = (jdTT - J2000) / (LOW_INTERVAL_YEARS * 365.25);
   return chebyshevState(coefficients, x, 1 / (LOW_INTERVAL_YEARS * 365.25));
 }
 
-/** Apparent solar longitude and analytic rate; full L/B, 30-term R for aberration. */
+/** Apparent solar longitude and analytic rate; full L/B, 30-frequency-envelope R for aberration. */
 export function solarLongitudeState(jdTT) {
   if (!Number.isFinite(jdTT)) throw new TypeError('jdTT must be finite');
   const earth = earthModel.state(jdTT, { 2: FAST_EARTH_RADIUS_TERMS });
@@ -170,7 +186,7 @@ function fastElongationState(jdTT, moonLatitudeTerms) {
   };
 }
 
-/** Independent ten-term solar estimator; intended only to locate a root. */
+/** Independent ten-envelope solar estimator; intended only to locate a root. */
 export function lowSolarLongitudeState(jdTT, { withDrift = true, termCount = 10 } = {}) {
   const earth = earthModel.state(jdTT, { 0: termCount, 1: 0, 2: LOW_EARTH_RADIUS_TERMS.length });
   const unit = {
@@ -187,7 +203,7 @@ export function lowSolarLongitudeState(jdTT, { withDrift = true, termCount = 10 
   };
 }
 
-/** Independent ten-term lunar-solar elongation estimator. */
+/** Independent ten-envelope lunar-solar elongation estimator. */
 export function lowElongationState(jdTT, { withDrift = true, moonTermCount = 10, earthTermCount = 10 } = {}) {
   const moon = moonSeriesLongitudeState(jdTT, moonTermCount);
   // The elongation fit was trained against the complete no-drift low
@@ -480,8 +496,16 @@ function solveTierEvent(targetAngle, nearJdTT, lunar, accuracy, options) {
 }
 
 export const LOW_MODEL_INFO = Object.freeze({
-  earthLongitudeTerms: LOW_EARTH_LONGITUDE_CANDIDATES.slice(0, 10).map(({ degree, serial }) => ({ power: degree, serial })),
+  earthLongitudeTerms: LOW_EARTH_LONGITUDE_CANDIDATES.map(({ frequency, powers, serial }) => Object.freeze({
+    frequency,
+    powers: Object.freeze(powers),
+    serial,
+  })),
   moonLongitudeTerms: LOW_MOON_LONGITUDE_CANDIDATES.slice(0, 10).map(({ power, serial }) => ({ power, serial })),
-  earthRadiusTerms: LOW_EARTH_RADIUS_TERMS.map(({ degree, serial }) => ({ power: degree, serial })),
+  earthRadiusTerms: LOW_EARTH_RADIUS_TERMS.map(({ frequency, powers, serial }) => Object.freeze({
+    frequency,
+    powers: Object.freeze(powers),
+    serial,
+  })),
   nutationTerms: 10,
 });

@@ -41,7 +41,7 @@ console.log(day.suitableActivities, month.length, year.length, single.ruleDate);
 | `flyingStarBoundary` | `solar` | 年/月飞星按节令；可选 `lunar` |
 | `isYeargodDuty` | `true` | 传入宜忌引擎的岁神规则选项 |
 | `tuWangMethod` | `four-seasons-18-days` | 四立前十八日自动判定；`manual` 仅使用调用者标记 |
-| `festivalMode` | `common` | 常用节日、民俗及重要纪念日；`major` 仅主要节日，`all` 返回完整寿星节日表 |
+| `festivalMode` | `common` | 常用节日、民俗及重要纪念日；`major` 仅主要节日，`all` 返回完整节日表 |
 
 单日选项为 `hour`（默认 12）、`minute`（0）、`second`（0，允许小数秒）、
 `isTuWangYongShi`（省略时按配置计算）和 `activityMask`（省略表示所有事项）。
@@ -158,8 +158,8 @@ console.log(custom.tuWangYongShi.source); // override
 
 `festivals` 是正式名称数组，与 `festivalDetails.map(f => f.name)` 顺序一致。
 月历等紧凑界面应只显示 `calendarDisplay` 为 `primary` 或 `secondary` 的记录，并读取
-`shortName`；`detail` 记录保留在当日详情中。这一显示级别沿用寿星万年历的 A/B/C
-密度，与 `level` 表示的节日内容类别相互独立。
+`shortName`；`detail` 记录保留在当日详情中。显示密度分为 A/B/C 三档，
+与 `level` 表示的节日内容类别相互独立。
 
 ```js
 const day = calendar.getDay(2026, 8, 1);

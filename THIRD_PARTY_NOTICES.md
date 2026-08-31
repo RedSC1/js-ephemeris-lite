@@ -10,27 +10,50 @@ The runtime package contains selected numerical coefficients, JavaScript
 evaluators, fitted correction coefficients, and a compressed historical
 civil-day profile. Model and data sources are credited below.
 
-## Planetary coefficient budgets
+## Upstream calendar and eclipse materials
 
-The initial per-coordinate truncation budgets follow Shou Xing Tian Wen Li
-(寿星天文历), by Xu Jianwei (许剑伟). Fitted terms are included in the
-published counts for the folded models. Retired VSOP87 implementations are
-available in Git history.
+The following materials originate from **Shou Xing Tian Wen Li / Shou Xing
+Wan Nian Li** (寿星天文历 / 寿星万年历), authored by Xu Jianwei (许剑伟):
 
-## Shou Xing eclipse algorithms
-
-`src/eclipses.js` and `src/solar-eclipses.js` contain `ecFast`, `ysPL`, `rsGS`
-and `rsPL`, ported from Shou Xing Tian Wen Li while preserving their original
-public names, classification/contact conventions and J2000-relative TT-day
-input. They cover fast eclipse classification, lunar-eclipse contacts, global
-solar-eclipse Bessel geometry and paths, and local solar-eclipse contacts and
-boundaries. The port uses this package's current apparent Sun/Moon positions,
-sidereal time and Delta T. Project validation and module/type wrappers do not
-relicense the original algorithms under MPL-2.0.
+- the `ecFast`, `ysPL`, `rsGS`, and `rsPL` eclipse algorithms;
+- the ancient-calendar rules and civil-day assignments used to generate
+  `src/generated/historical-calendar-data.js`;
+- the first seven fields of the 529 era-name records generated in
+  `src/generated/chinese-era-data.js`.
 
 - Upstream project mirror and attribution: <https://github.com/sxwnl/sxwnl>
 - Upstream copyright statement:
   <https://sxwnl.github.io/src/sm1.htm#copyright>
+
+The upstream distribution describes the program as open source, asks that its
+astronomical algorithms and ancient-calendar data not be arbitrarily modified,
+and does not provide a conventional SPDX license for the historical tables.
+The materials listed above remain identified as third-party material and are
+not claimed to be relicensed under MPL-2.0.
+
+### Eclipse algorithms
+
+`src/eclipses.js` and `src/solar-eclipses.js` contain `ecFast`, `ysPL`, `rsGS`
+and `rsPL`, preserving their original public names, classification/contact
+conventions and J2000-relative TT-day input. They cover fast eclipse
+classification, lunar-eclipse contacts, global solar-eclipse Bessel geometry
+and paths, and local solar-eclipse contacts and boundaries. The port uses this
+package's current apparent Sun/Moon positions, sidereal time and Delta T.
+
+## cnlunar rules used by `huangli-lite`
+
+The sibling `huangli-lite` package derives its traditional shen-sha
+(神煞), daily auspicious/inauspicious activities, and supporting base rules
+and data from **cnlunar**. This project rewrites those rules in JavaScript and
+maintains its own corrections, conflict resolution, activity filtering,
+provenance, boundary handling, and structured output.
+
+- Source: <https://github.com/OPN48/cnlunar>
+- License: <https://github.com/OPN48/cnlunar/blob/master/LICENSE>
+- Copyright (c) 2025 OPN48; MIT License.
+
+The package-specific notice is distributed in
+`packages/huangli/THIRD_PARTY_NOTICES.md`.
 
 
 ## VSOP2013 Mercury, Venus, Earth and Mars
@@ -41,9 +64,10 @@ VSOP2013 Mercury, Venus, Earth and Mars elliptic-element
 solution. Offline coordinate conversion and Fourier/polynomial expansion are
 followed by coefficient selection targeting DE441. These tables fold fitted
 polynomial and periodic residual terms into the same coefficient series.
-Runtime evaluation uses 299/160/242, 156/82/153 and 489/101/528 Fourier–Legendre
-terms for Mercury, Venus and Mars, and 386/38/487 anchored-Chebyshev terms
-for physical Earth. Runtime evaluation does
+Runtime evaluation uses 299/160/242, 156/82/153, 386/50/475 and 489/101/528
+classic Fourier–monomial terms for Mercury, Venus, physical Earth and Mars.
+Fast event paths truncate Earth by complete same-frequency polynomial envelopes,
+not by separating their time powers. Runtime evaluation does
 not solve Kepler's equation. The Earth table incorporates the library's lunar
 displacement during generation, so it represents physical Earth without a
 runtime lunar subtraction.
@@ -63,8 +87,8 @@ underlying published planetary theory or reference ephemerides.
 
 The Jupiter, Saturn, Uranus and Neptune sections of `src/planet-series.js` contain
 selections from the official `TOP2013LBR.dat` spherical-coordinate
-series. The polynomial basis is converted to Legendre or Chebyshev before
-selection. All four use DE441-directed selection with fitted
+series. The published tables use the classic polynomial-in-time Poisson form.
+All four use DE441-directed selection with fitted
 polynomial and periodic residuals folded into one table. Some residual
 frequencies are selected from a training spectrum and locally refined.
 Each planet uses one global coefficient table, without regional selections
@@ -141,23 +165,12 @@ the DE441 binary kernel is used during coefficient generation.
 ## Historical Chinese calendar profile
 
 `src/generated/historical-calendar-data.js` contains civil-day assignments
-derived from the ancient-calendar data and rules of **Shou Xing Tian Wen Li /
-Shou Xing Wan Nian Li** (寿星天文历 / 寿星万年历), authored by Xu Jianwei
-(许剑伟). This project stores the derived assignments in a compact
-linear-plus-sparse-residual representation.
-
-- Upstream project mirror and attribution: <https://github.com/sxwnl/sxwnl>
-- Upstream copyright statement:
-  <https://sxwnl.github.io/src/sm1.htm#copyright>
-
-The upstream distribution describes the program as open source while also
-requesting that its astronomical algorithms and ancient-calendar data not be
-arbitrarily modified. It does not provide a conventional SPDX license for
-these historical materials. Accordingly, the historical profile is identified
-here as third-party-derived material and is **not claimed to be relicensed by
-this project under MPL-2.0**. Users who require independently licensed
-historical calendar data should replace or omit this generated profile and use
-the `china-astronomical` or `local-astronomical` modes instead.
+derived from the upstream ancient-calendar data and rules identified at the
+beginning of this notice. This project stores the derived assignments in a
+compact linear-plus-sparse-residual representation. Users who require
+independently licensed historical calendar data should replace or omit this
+generated profile and use the `china-astronomical` or `local-astronomical`
+modes instead.
 
 The upstream documentation states that its historical calendar was checked
 against works including Zhang Peiyu's *San Qian Wu Bai Nian Li Ri Tian Xiang*,
@@ -180,20 +193,19 @@ This project generates and maintains:
 `src/generated/chinese-era-data.js` combines three separately attributed data
 sources. It is generated by `tools/build-chinese-era-data.mjs`.
 
-### Era-name records: Shou Xing Tian Wen Li
+### Era-name records: upstream `JNB` table
 
 The first seven fields of each of the 529 records are parsed from the `JNB`
-table in `src/lunar.js` distributed with **Shou Xing Tian Wen Li / Shou Xing
-Wan Nian Li** (寿星天文历 / 寿星万年历), originally authored by Xu Jianwei
-(许剑伟). Those fields are, in order: start year, nominal duration, previously
-used era years, dynasty, ruler title, ruler name, and era name.
+table in the upstream `src/lunar.js` identified above. Those fields are, in
+order: start year, nominal duration, previously used era years, dynasty, ruler
+title, ruler name, and era name.
 
-Two deliberate source-field normalizations are applied. Shou Xing's finite `9999`-year
-duration value, effectively serving as a sentinel for the open-ended modern
-record, is expanded to `999999999` years so the record remains open throughout
-this project's extended ephemeris range. This normalization does not alter the
-record's start year, era name, or year numbering; the source offset `1948` is
-preserved unchanged.
+Two deliberate source-field normalizations are applied. The finite `9999`-year
+duration value serves as a sentinel for the open-ended modern record and is
+expanded to `999999999` years so the record remains open throughout this
+project's extended ephemeris range. This normalization does not alter the
+record's start year, era name, or year numbering; the source offset `1948`
+is preserved unchanged.
 
 The Later Han Tianfu row is published upstream as `947,12,0`, which swaps the
 nominal-duration and previously-used-era-year fields. It is normalized to
@@ -202,16 +214,7 @@ Qianyou. Keeping `12,0` would incorrectly extend Liu Zhiyuan and Tianfu through
 958 and restart the era at year 1.
 
 Run `npm run verify:chinese-era-data` to verify the generated records against a
-local Shou Xing checkout and detect unintended source-field changes.
-
-- Upstream project mirror and attribution: <https://github.com/sxwnl/sxwnl>
-- Upstream copyright statement:
-  <https://sxwnl.github.io/src/sm1.htm#copyright>
-
-The Shou Xing distribution describes the program as open source but does not
-provide a conventional SPDX license for the `JNB` historical table. This
-project therefore identifies the retained era-name records as third-party
-material and does **not** claim to relicense them under MPL-2.0.
+local upstream checkout and detect unintended source-field changes.
 
 ### Exact civil-day boundaries: DDBC
 
@@ -225,11 +228,11 @@ day numbers are converted to double UT Julian Days at UTC+8 midnight. Matching
 is deliberately conservative: ambiguous or insufficiently supported matches
 remain `null` rather than receiving a falsely precise boundary.
 
-For a `null` eighth field, Shou Xing supplies only the nominal start year and
-duration. The runtime marks the boundary as year precision and computes the
-corresponding historical lunar-year start JD as a documented fallback. The
-known 1912 and 1949 modern civil boundaries are maintained separately in
-`src/chinese-era.js`; they are not attributed to DDBC.
+For a `null` eighth field, the source table supplies only the nominal start
+year and duration. The runtime marks the boundary as year precision and
+computes the corresponding historical lunar-year start JD as a documented
+fallback. The known 1912 and 1949 modern civil boundaries are maintained
+separately in `src/chinese-era.js`; they are not attributed to DDBC.
 
 The DDBC archive's included `README` and `COPYING` files state CC BY-SA 3.0
 Unported. The February 2012 download page also labels the database CC BY-SA
@@ -242,8 +245,8 @@ relicense those boundary data under MPL-2.0.
 
 ### Era transition boundaries: manakai/data-locale
 
-For Shou Xing records that can be matched conservatively by era name, nominal
-start year, polity, ruler, and ruler title, the eighth field can also contain
+For upstream `JNB` records that can be matched conservatively by era name,
+nominal start year, polity, ruler, and ruler title, the eighth field can also contain
 the first and last applicable civil days from **manakai/data-locale**'s merged
 `calendar-era-defs.json`. Supplemental ruler labels are resolved by tag ID
 through the merged `tags.json`, using `name_cn`/`label_cn` for simplified
@@ -264,8 +267,8 @@ the era name or its year count. East Dan's Ganlu interval is currently split
 at Yelü Bei's recorded departure and Yelü Anduan's investiture; the uncertain
 middle interval intentionally carries no personal ruler label.
 
-A conservative manakai-only subset supplements polities absent from the Shou
-Xing table, including Shu Han and Sun Wu, the seven major Warring States,
+A conservative manakai-only subset supplements polities absent from the
+upstream `JNB` table, including Shu Han and Sun Wu, the seven major Warring States,
 selected Five Dynasties and Ten Kingdoms, Khitan/Liao, Western Xia, Jin,
 Balhae, and related short-lived regimes. The Warring States layer imports
 reviewed ruler-accession chronologies as year-precision labels; synthetic

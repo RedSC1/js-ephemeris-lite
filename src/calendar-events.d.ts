@@ -29,7 +29,7 @@ export interface LowElongationOptions {
 }
 
 export const DEFAULT_NEW_MOON_LATITUDE_TERMS: 10;
-/** Full L/B and 30-term Earth R for solar aberration; rate in radians/day. */
+/** Full L/B and 30-frequency-envelope Earth R for solar aberration; rate in radians/day. */
 export function solarLongitudeState(jdTT: number): ScalarState;
 export function moonLongitudeState(
   jdTT: number,
@@ -70,8 +70,8 @@ export function solarLongitudeTimeAccurate(longitude: number, options?: EventTim
 export function lunarPhaseTimeAccurate(elongation: number, options?: EventTimeOptions): number;
 
 export const LOW_MODEL_INFO: Readonly<{
-  earthLongitudeTerms: readonly Readonly<{ power: number; serial: number }>[];
+  earthLongitudeTerms: readonly Readonly<{ frequency: number; powers: readonly number[]; serial: number }>[];
   moonLongitudeTerms: readonly Readonly<{ power: number; serial: number }>[];
-  earthRadiusTerms: readonly Readonly<{ power: number; serial: number }>[];
+  earthRadiusTerms: readonly Readonly<{ frequency: number; powers: readonly number[]; serial: number }>[];
   nutationTerms: number;
 }>;

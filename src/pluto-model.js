@@ -1,12 +1,16 @@
-import { createDirectPlanetModel } from './direct-planet-model.js';
+import { createDirectPlanetModel, legendreBasis } from './direct-planet-model.js';
 import {
   PLUTO_FALLBACK_L, PLUTO_FALLBACK_B, PLUTO_FALLBACK_R,
+  PLUTO_FALLBACK_SCALE_DAYS,
   PLUTO_NEAR_L, PLUTO_NEAR_B, PLUTO_NEAR_R,
   PLUTO_NEAR_EPOCH_JD, PLUTO_NEAR_SCALE_DAYS, PLUTO_NEAR_MOTION, PLUTO_NEAR_PHASE,
 } from './planet-series.js';
 import { planetTheoryToJ2000 } from './planet-frame.js';
 
-const fallback = createDirectPlanetModel(PLUTO_FALLBACK_L, PLUTO_FALLBACK_B, PLUTO_FALLBACK_R);
+const fallback = createDirectPlanetModel(PLUTO_FALLBACK_L, PLUTO_FALLBACK_B, PLUTO_FALLBACK_R, {
+  evaluateBasis: legendreBasis,
+  scaleDays: PLUTO_FALLBACK_SCALE_DAYS,
+});
 const YEAR_DAYS = 365.25;
 
 /** Pluto is a separate approximate model, not another TOP2013 giant planet.

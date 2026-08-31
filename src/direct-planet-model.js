@@ -1,60 +1,56 @@
-import { PLANET_EPOCH_JD, PLANET_SCALE_DAYS, PLANET_PHASE_DAYS } from './planet-series.js';
+import { PLANET_EPOCH_JD, PLANET_PHASE_DAYS } from './planet-series.js';
 import { planetTheoryToJ2000 } from './planet-frame.js';
 
-function legendreBasis(x, degree) {
-  const basis = new Float64Array(degree + 1), derivative = new Float64Array(degree + 1);
+export function legendreBasis(x, degree, scaleDays) {
+  const basis = new Float64Array(degree + 1);
+  const derivative = new Float64Array(degree + 1);
   basis[0] = 1;
-  if (degree > 0) { basis[1] = x; derivative[1] = 1 / PLANET_SCALE_DAYS; }
+  if (degree > 0) {
+    basis[1] = x;
+    derivative[1] = 1 / scaleDays;
+  }
   for (let n = 2; n <= degree; n++) {
     basis[n] = ((2 * n - 1) * x * basis[n - 1] - (n - 1) * basis[n - 2]) / n;
-    derivative[n] = ((2 * n - 1) * (basis[n - 1] / PLANET_SCALE_DAYS + x * derivative[n - 1])
+    derivative[n] = ((2 * n - 1) * (basis[n - 1] / scaleDays + x * derivative[n - 1])
       - (n - 1) * derivative[n - 2]) / n;
   }
   return { basis, derivative };
 }
 
-export function chebyshevBasis(x, degree) {
-  const basis = new Float64Array(degree + 1), derivative = new Float64Array(degree + 1);
+export function monomialBasis(x, degree, scaleDays) {
+  const basis = new Float64Array(degree + 1);
+  const derivative = new Float64Array(degree + 1);
   basis[0] = 1;
-  if (degree > 0) { basis[1] = x; derivative[1] = 1 / PLANET_SCALE_DAYS; }
-  for (let n = 2; n <= degree; n++) {
-    basis[n] = 2 * x * basis[n - 1] - basis[n - 2];
-    derivative[n] = 2 * basis[n - 1] / PLANET_SCALE_DAYS + 2 * x * derivative[n - 1] - derivative[n - 2];
+  for (let n = 1; n <= degree; n++) {
+    basis[n] = basis[n - 1] * x;
+    derivative[n] = n * basis[n - 1] / scaleDays;
   }
   return { basis, derivative };
 }
 
-export function anchoredChebyshevBasis(x, degree) {
-  const result = chebyshevBasis(x, degree);
-  for (let n = 2; n <= degree; n += 2) result.basis[n] -= (-1) ** (n / 2);
-  return result;
-}
-
-/** Bare Fourier/polynomial LBR arrays; basis selection is fixed by the caller. */
-export function createDirectPlanetModel(L, B, R, evaluateBasis = legendreBasis) {
-  const groups = [L, B, R].flatMap((axis, coordinate) => axis.map((coefficients, degree) => ({ coordinate, degree, coefficients })));
+/** Bare Fourier/polynomial LBR arrays; basis and time scale are fixed by the caller. */
+export function createDirectPlanetModel(L, B, R, {
+  evaluateBasis = monomialBasis,
+  prefixCounts,
+  scaleDays = PLANET_PHASE_DAYS,
+} = {}) {
+  const coordinateGroups = [L, B, R].map((axis, coordinate) =>
+    axis.map((coefficients, degree) => ({ coordinate, degree, coefficients })));
+  const groups = coordinateGroups.flat();
   const degree = Math.max(L.length, B.length, R.length) - 1;
-  const ranked = [[], [], []];
-  let serial = 0;
-  for (const g of groups) {
-    for (let index = 0; index < g.coefficients.length; index += 3) {
-      const bound = evaluateBasis === anchoredChebyshevBasis && g.degree > 0 && g.degree % 2 === 0 ? 2 : 1;
-      ranked[g.coordinate].push({ degree: g.degree, index, serial: serial++, coefficients: g.coefficients,
-        score: Math.abs(g.coefficients[index]) * bound });
-    }
-  }
-  for (const terms of ranked) terms.sort((a, b) => b.score - a.score || a.serial - b.serial);
   const MILLENNIUM_DAYS = PLANET_PHASE_DAYS;
 
   /** Direct LBR series, without orbital-element conversion at runtime. */
   function nativeState(jd, coordinates, limits) {
     const tau = (jd - PLANET_EPOCH_JD) / MILLENNIUM_DAYS;
-    const x = (jd - PLANET_EPOCH_JD) / PLANET_SCALE_DAYS;
-    const { basis, derivative } = evaluateBasis(x, degree);
-    const values = [0, 0, 0], rates = [0, 0, 0];
+    const x = (jd - PLANET_EPOCH_JD) / scaleDays;
+    const { basis, derivative } = evaluateBasis(x, degree, scaleDays);
+    const values = [0, 0, 0];
+    const rates = [0, 0, 0];
     for (const group of groups) {
       if (!coordinates.includes(group.coordinate) || limits?.[group.coordinate] !== undefined) continue;
-      let value = 0, rate = 0;
+      let value = 0;
+      let rate = 0;
       const coefficients = group.coefficients;
       for (let i = 0; i < coefficients.length; i += 3) {
         const amplitude = coefficients[i];
@@ -69,15 +65,19 @@ export function createDirectPlanetModel(L, B, R, evaluateBasis = legendreBasis) 
     if (limits) {
       for (const coordinate of coordinates) {
         if (limits[coordinate] === undefined) continue;
-        for (const term of ranked[coordinate].slice(0, limits[coordinate] ?? Infinity)) {
-          const { degree, index, coefficients } = term;
-          const amplitude = coefficients[index];
-          const frequency = coefficients[index + 2];
-          const argument = coefficients[index + 1] + frequency * tau;
-          const value = amplitude * Math.cos(argument);
-          values[coordinate] += basis[degree] * value;
-          rates[coordinate] += derivative[degree] * value
-            - basis[degree] * amplitude * frequency * Math.sin(argument) / MILLENNIUM_DAYS;
+        const counts = prefixCounts?.[coordinate]?.[limits[coordinate]];
+        if (!counts) throw new RangeError(`Unsupported coordinate ${coordinate} prefix ${limits[coordinate]}`);
+        for (const { degree, coefficients } of coordinateGroups[coordinate]) {
+          const end = Math.min((counts[degree] ?? 0) * 3, coefficients.length);
+          for (let index = 0; index < end; index += 3) {
+            const amplitude = coefficients[index];
+            const frequency = coefficients[index + 2];
+            const argument = coefficients[index + 1] + frequency * tau;
+            const value = amplitude * Math.cos(argument);
+            values[coordinate] += basis[degree] * value;
+            rates[coordinate] += derivative[degree] * value
+              - basis[degree] * amplitude * frequency * Math.sin(argument) / MILLENNIUM_DAYS;
+          }
         }
       }
     }
@@ -88,10 +88,16 @@ export function createDirectPlanetModel(L, B, R, evaluateBasis = legendreBasis) 
   function cartesian(values, rates) {
     const [longitude, latitude, radius] = values;
     const [dl, db, dr] = rates;
-    const cl = Math.cos(longitude), sl = Math.sin(longitude), cb = Math.cos(latitude), sb = Math.sin(latitude);
+    const cl = Math.cos(longitude);
+    const sl = Math.sin(longitude);
+    const cb = Math.cos(latitude);
+    const sb = Math.sin(latitude);
     const position = [radius * cb * cl, radius * cb * sl, radius * sb];
-    const velocity = [dr * cb * cl - radius * sb * db * cl - radius * cb * sl * dl,
-      dr * cb * sl - radius * sb * db * sl + radius * cb * cl * dl, dr * sb + radius * cb * db];
+    const velocity = [
+      dr * cb * cl - radius * sb * db * cl - radius * cb * sl * dl,
+      dr * cb * sl - radius * sb * db * sl + radius * cb * cl * dl,
+      dr * sb + radius * cb * db,
+    ];
     // Convert native theory axes to the library's mean J2000 ecliptic frame.
     return { position: planetTheoryToJ2000(position), velocity: planetTheoryToJ2000(velocity) };
   }
@@ -114,5 +120,5 @@ export function createDirectPlanetModel(L, B, R, evaluateBasis = legendreBasis) 
     };
   }
 
-  return { state, direction, ranked };
+  return { state, direction };
 }

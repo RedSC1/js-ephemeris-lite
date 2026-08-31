@@ -51,7 +51,7 @@ console.log(getChineseEraNames(time));
 
 ## 数据来源
 
-历史归日与月份制度参考寿星天文历的古历数据和规则。
-纪年数据综合寿星天文历、DDBC 时间规范数据库及 manakai/data-locale 的资料。
+历史归日、月份制度和部分纪年记录参考寿星天文历；纪年数据还综合了 DDBC
+时间规范数据库及 manakai/data-locale 的资料。
 历史历表和纪年数据随包提供，查询时不需要联网。
 各来源的处理方式与许可见[第三方声明](../THIRD_PARTY_NOTICES.md)。

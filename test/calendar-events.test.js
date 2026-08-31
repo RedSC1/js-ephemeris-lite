@@ -164,6 +164,11 @@ test('low event model is independently selected and compact', () => {
   assert.equal(LOW_MODEL_INFO.moonLongitudeTerms.length, 10);
   assert.equal(LOW_MODEL_INFO.earthRadiusTerms.length, 3);
   assert.equal(LOW_MODEL_INFO.nutationTerms, 10);
+  for (const envelope of [...LOW_MODEL_INFO.earthLongitudeTerms, ...LOW_MODEL_INFO.earthRadiusTerms]) {
+    assert.ok(Number.isFinite(envelope.frequency));
+    assert.ok(envelope.powers.length > 0);
+    assert.ok(envelope.powers.every(Number.isInteger));
+  }
 });
 
 test('event angular rates agree with centered numerical diagnostics', () => {
@@ -197,9 +202,9 @@ test('J2000-era spring equinox and new moon converge from low estimators', () =>
   // The fixture below checks sub-millisecond residuals; request that precision
   // explicitly rather than relying on over-convergence at the 10 ms default.
   const newMoon = solveNewMoon(2451550, { toleranceSeconds: 0.0001 });
-  near(equinox.jdTT, 2451623.816885155, 2e-8);
+  near(equinox.jdTT, 2451623.816885044, 2e-8);
   // Frozen global lunar model; independent DE441 checks are below.
-  near(newMoon.jdTT, 2451550.2602140703, 2e-8);
+  near(newMoon.jdTT, 2451550.260214151, 2e-8);
   assert.ok(equinox.jdUT1 < equinox.jdTT);
   assert.ok(newMoon.jdUT1 < newMoon.jdTT);
   near((equinox.jdTT - equinox.jdUT1) * 86400, equinox.deltaTSeconds, 3e-5);

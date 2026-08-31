@@ -8,9 +8,15 @@ import {
   URANUS_L, URANUS_B, URANUS_R,
   NEPTUNE_L, NEPTUNE_B, NEPTUNE_R,
 } from './planet-series.js';
-import { createDirectPlanetModel, chebyshevBasis, anchoredChebyshevBasis } from './direct-planet-model.js';
+import { EARTH_L_PREFIX_COUNTS, EARTH_B_PREFIX_COUNTS, EARTH_R_PREFIX_COUNTS } from './earth-prefix-counts.js';
+import { createDirectPlanetModel } from './direct-planet-model.js';
 
-export const earthModel = createDirectPlanetModel(EARTH_L, EARTH_B, EARTH_R, anchoredChebyshevBasis);
+export const earthModel = createDirectPlanetModel(
+  EARTH_L,
+  EARTH_B,
+  EARTH_R,
+  { prefixCounts: [EARTH_L_PREFIX_COUNTS, EARTH_B_PREFIX_COUNTS, EARTH_R_PREFIX_COUNTS] },
+);
 export const planetModels = {
   mercury: createDirectPlanetModel(MERCURY_L, MERCURY_B, MERCURY_R),
   venus: createDirectPlanetModel(VENUS_L, VENUS_B, VENUS_R),
@@ -18,6 +24,6 @@ export const planetModels = {
   mars: createDirectPlanetModel(MARS_L, MARS_B, MARS_R),
   jupiter: createDirectPlanetModel(JUPITER_L, JUPITER_B, JUPITER_R),
   saturn: createDirectPlanetModel(SATURN_L, SATURN_B, SATURN_R),
-  uranus: createDirectPlanetModel(URANUS_L, URANUS_B, URANUS_R, chebyshevBasis),
+  uranus: createDirectPlanetModel(URANUS_L, URANUS_B, URANUS_R),
   neptune: createDirectPlanetModel(NEPTUNE_L, NEPTUNE_B, NEPTUNE_R),
 };

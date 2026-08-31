@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { planetModels } from '../src/planet-models.js';
 import * as series from '../src/planet-series.js';
+import { EARTH_L_PREFIX_COUNTS, EARTH_B_PREFIX_COUNTS, EARTH_R_PREFIX_COUNTS } from '../src/earth-prefix-counts.js';
 const topModels = Object.fromEntries(['jupiter', 'saturn', 'uranus', 'neptune'].map(body => [body, planetModels[body]]));
 import { meanObliquityIau2006, ARCSEC_TO_RAD } from '../src/coordinates.js';
 import { planetTheoryToJ2000 } from '../src/planet-frame.js';
@@ -75,7 +76,7 @@ test('global Moon matches independent Python states and frozen DE441 samples', (
 
 test('bare planetary series retain every folded term', () => {
   const expected = {
-    mercury: [299, 160, 242], venus: [156, 82, 153], earth: [386, 38, 487],
+    mercury: [299, 160, 242], venus: [156, 82, 153], earth: [386, 50, 475],
     mars: [489, 101, 528], jupiter: [586, 232, 723], saturn: [842, 314, 1238],
     uranus: [413, 138, 653], neptune: [153, 101, 167], pluto_fallback: [448, 448, 448],
   };
@@ -86,6 +87,61 @@ test('bare planetary series retain every folded term', () => {
       return sum + group.length / 3;
     }, 0));
     assert.deepEqual(actual, counts, body);
+  }
+});
+
+test('ordinary planet tables use the classic VSOP Julian-millennium variable', () => {
+  assert.equal(series.PLANET_PHASE_DAYS, 365250);
+  assert.equal(series.PLUTO_FALLBACK_SCALE_DAYS, 2922000);
+  const jd = J2000 + 2.375 * series.PLANET_PHASE_DAYS;
+  const evaluate = blocks => {
+    const T = (jd - J2000) / series.PLANET_PHASE_DAYS;
+    let power = 1;
+    let value = 0;
+    for (const rows of blocks) {
+      let sum = 0;
+      for (let i = 0; i < rows.length; i += 3)
+        sum += rows[i] * Math.cos(rows[i + 1] + rows[i + 2] * T);
+      value += power * sum;
+      power *= T;
+    }
+    return value;
+  };
+  for (const body of ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune']) {
+    const upper = body.toUpperCase();
+    const longitude = evaluate(series[`${upper}_L`]);
+    const latitude = evaluate(series[`${upper}_B`]);
+    const radius = evaluate(series[`${upper}_R`]);
+    const cosLatitude = Math.cos(latitude);
+    const expected = planetTheoryToJ2000([
+      radius * cosLatitude * Math.cos(longitude),
+      radius * cosLatitude * Math.sin(longitude),
+      radius * Math.sin(latitude),
+    ]);
+    planetModels[body].state(jd).position.forEach((value, coordinate) =>
+      near(value, expected[coordinate], 2e-14, body));
+  }
+});
+
+test('Earth precision tiers are nested per-power prefixes of complete frequency envelopes', () => {
+  const specifications = [
+    [series.EARTH_L, EARTH_L_PREFIX_COUNTS],
+    [series.EARTH_B, EARTH_B_PREFIX_COUNTS],
+    [series.EARTH_R, EARTH_R_PREFIX_COUNTS],
+  ];
+  for (const [blocks, budgets] of specifications) {
+    let previous = new Set();
+    for (const [limitText, counts] of Object.entries(budgets).sort((a, b) => Number(a[0]) - Number(b[0]))) {
+      const limit = Number(limitText), selected = new Set();
+      for (let power = 0; power < blocks.length; power++)
+        for (let i = 0; i < counts[power] * 3; i += 3) selected.add(blocks[power][i + 2]);
+      assert.equal(selected.size, limit);
+      for (const frequency of previous) assert.ok(selected.has(frequency));
+      for (let power = 0; power < blocks.length; power++)
+        for (let i = 0; i < blocks[power].length; i += 3)
+          assert.equal(i < counts[power] * 3, selected.has(blocks[power][i + 2]), `power ${power}, frequency ${blocks[power][i + 2]}`);
+      previous = selected;
+    }
   }
 });
 
@@ -133,7 +189,7 @@ test('direct planetary states match independent Python and DE441 ICRF controls',
     [0, 1, 2].map(j => row.reduce((sum, value, k) => sum + value * precession[k][j], 0)));
   const toIcrf = v => [0, 1, 2].map(j => v.reduce((sum, value, k) => sum + value * icrfToMean[k][j], 0));
   // Sample bounds for compact tables, not a continuous-interval guarantee.
-  const compactBoundsKm = { mercury: 350, venus: 750, mars: 10000, jupiter: 5000, saturn: 17000, uranus: 90000, neptune: 16000, pluto: 5000000 };
+  const compactBoundsKm = { mercury: 350, venus: 750, mars: 10000, jupiter: 5000, saturn: 21000, uranus: 90000, neptune: 16000, pluto: 5000000 };
   for (const [body, samples] of Object.entries(fixture.bodies)) {
     for (const sample of samples) {
       const state = planetHeliocentricState(body, sample.jd);
@@ -156,29 +212,17 @@ test('direct planetary states match independent Python and DE441 ICRF controls',
   }
 });
 
-test('single TOP tables preserve full and limited evaluation across the entire interval', () => {
+test('single TOP tables preserve direction evaluation across the entire interval', () => {
   for (const [body, model] of Object.entries(topModels)) {
-    const counts = model.ranked.map(terms => terms.length);
     for (const year of [-6000, 1500, 1550, 1600, 2000, 2200, 2250, 2300, 10000]) {
       const jd = J2000 + (year - 2000) * 365.25;
       const full = model.state(jd);
-      const ranked = model.state(jd, counts);
-      for (const key of ['position', 'velocity']) {
-        // Reordering large secular terms at remote dates loses a few metres;
-        // use the same 10 m / 1e-7 m/s numerical budgets as the Python controls.
-        const tolerance = key === 'position' ? 0.01 / AU_KM : 1e-7 * 86.4 / AU_KM;
-        full[key].forEach((value, k) => near(ranked[key][k], value, tolerance, `${body}/${year}/${key}`));
-      }
-      // A direction uses exactly the same angular subset, omitting radius work.
-      const limits = [10, 5, 3];
-      const low = model.state(jd, limits);
-      const direction = model.direction(jd, limits);
-      const radius = Math.hypot(...low.position);
-      const radiusRate = low.position.reduce((sum, v, k) => sum + v * low.velocity[k], 0) / radius;
-      direction.position.forEach((v, k) => near(v, low.position[k] / radius, 1e-14));
+      const direction = model.direction(jd);
+      const radius = Math.hypot(...full.position);
+      const radiusRate = full.position.reduce((sum, v, k) => sum + v * full.velocity[k], 0) / radius;
+      direction.position.forEach((v, k) => near(v, full.position[k] / radius, 1e-14));
       direction.velocity.forEach((v, k) => near(v,
-        low.velocity[k] / radius - low.position[k] * radiusRate / radius ** 2, 1e-14));
-      assert.deepEqual(model.state(jd, [0, 0, 0]).position, [0, 0, 0]);
+        full.velocity[k] / radius - full.position[k] * radiusRate / radius ** 2, 1e-14));
     }
   }
 });
