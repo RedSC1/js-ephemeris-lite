@@ -1,6 +1,6 @@
 {
   "name": "huangli-lite",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "Chinese almanac for JavaScript with daily Yi/Ji, Shen Sha, festivals, flying stars, feng shui, and Simplified or Traditional Chinese output",
   "type": "module",
   "license": "MIT",
@@ -9,26 +9,64 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "exports": {
-    ".": { "types": "./src/index.d.ts", "default": "./src/index.js" },
-    "./locale": { "types": "./src/locale.d.ts", "default": "./src/locale.js" },
-    "./rules": { "types": "./src/rules.d.ts", "default": "./src/rules.js" },
-    "./feng-shui": { "types": "./src/feng-shui.d.ts", "default": "./src/feng-shui.js" }
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./locale": {
+      "types": "./src/locale.d.ts",
+      "default": "./src/locale.js"
+    },
+    "./rules": {
+      "types": "./src/rules.d.ts",
+      "default": "./src/rules.js"
+    },
+    "./feng-shui": {
+      "types": "./src/feng-shui.d.ts",
+      "default": "./src/feng-shui.js"
+    }
   },
-  "files": ["src", "docs", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.zh-CN.md"],
-  "engines": { "node": ">=18" },
-  "publishConfig": { "access": "public" },
+  "files": [
+    "src",
+    "docs",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "THIRD_PARTY_NOTICES.zh-CN.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/RedSC1/js-ephemeris-lite.git",
     "directory": "packages/huangli"
   },
-  "bugs": { "url": "https://github.com/RedSC1/js-ephemeris-lite/issues" },
+  "bugs": {
+    "url": "https://github.com/RedSC1/js-ephemeris-lite/issues"
+  },
   "homepage": "https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/huangli#readme",
-  "dependencies": { "js-ephemeris-lite": "^1.0.0-beta.1" },
+  "dependencies": {
+    "js-ephemeris-lite": "^1.0.0-beta.2"
+  },
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "test:exhaustive": "node audit/replay-dart-rules.mjs",
     "prepack": "npm test"
   },
-  "keywords": ["huangli", "almanac", "chinese-calendar", "ganzhi", "yi-ji", "shen-sha", "festivals", "flying-stars", "feng-shui", "traditional-chinese"]
+  "keywords": [
+    "huangli",
+    "almanac",
+    "chinese-calendar",
+    "ganzhi",
+    "yi-ji",
+    "shen-sha",
+    "festivals",
+    "flying-stars",
+    "feng-shui",
+    "traditional-chinese"
+  ]
 }

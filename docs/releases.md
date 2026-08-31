@@ -23,11 +23,11 @@
 也可以在已登录 npm CLI 的环境中为每个包执行：
 
 ```sh
-npm trust github js-ephemeris-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --yes
-npm trust github bazi-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --yes
-npm trust github ziwei-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --yes
-npm trust github huangli-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --yes
-npm trust github taiyin-star-catalog-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --yes
+npm trust github js-ephemeris-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
+npm trust github bazi-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
+npm trust github ziwei-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
+npm trust github huangli-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
+npm trust github taiyin-star-catalog-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
 ```
 
 ## 发布新版本

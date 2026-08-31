@@ -1,6 +1,6 @@
 {
   "name": "taiyin-star-catalog-lite",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "TSC1 bright-star catalog with complete Chinese-asterism and western-zodiac line coverage",
   "type": "module",
   "license": "MPL-2.0",
@@ -26,16 +26,34 @@
     "THIRD_PARTY_NOTICES.md",
     "THIRD_PARTY_NOTICES.zh-CN.md"
   ],
-  "engines": { "node": ">=18" },
-  "publishConfig": { "access": "public" },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/RedSC1/js-ephemeris-lite.git",
     "directory": "packages/star-catalog"
   },
-  "bugs": { "url": "https://github.com/RedSC1/js-ephemeris-lite/issues" },
+  "bugs": {
+    "url": "https://github.com/RedSC1/js-ephemeris-lite/issues"
+  },
   "homepage": "https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/star-catalog#readme",
-  "dependencies": { "js-ephemeris-lite": "^1.0.0-beta.1" },
-  "scripts": { "test": "node --test test/*.test.mjs", "prepack": "npm test" },
-  "keywords": ["astronomy", "fixed-stars", "star-catalog", "gaia", "hipparcos", "tsc1"]
+  "dependencies": {
+    "js-ephemeris-lite": "^1.0.0-beta.2"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "prepack": "npm test"
+  },
+  "keywords": [
+    "astronomy",
+    "fixed-stars",
+    "star-catalog",
+    "gaia",
+    "hipparcos",
+    "tsc1"
+  ]
 }
