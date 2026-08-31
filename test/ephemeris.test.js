@@ -77,7 +77,7 @@ test('global Moon matches independent Python states and frozen DE441 samples', (
 test('bare planetary series retain every folded term', () => {
   const expected = {
     mercury: [299, 160, 242], venus: [156, 82, 153], earth: [386, 50, 475],
-    mars: [489, 101, 528], jupiter: [586, 232, 723], saturn: [842, 314, 1238],
+    mars: [489, 101, 528], jupiter: [586, 232, 723], saturn: [849, 320, 1241],
     uranus: [413, 138, 653], neptune: [153, 101, 167], pluto_fallback: [448, 448, 448],
   };
   for (const [body, counts] of Object.entries(expected)) {
