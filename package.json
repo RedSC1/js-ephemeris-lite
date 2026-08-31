@@ -13,6 +13,7 @@
     "docs",
     "src",
     "README.md",
+    "README.en.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
     "THIRD_PARTY_NOTICES.zh-CN.md"
@@ -123,6 +124,9 @@
     "build:workspaces": "npm run build --workspaces --if-present",
     "generate:historical-calendar-data": "node tools/generate-calendar-data.mjs",
     "generate:huangli-zh-hant": "node scripts/build-huangli-zh-hant.mjs",
+    "release:set-version": "node scripts/set-release-version.mjs",
+    "release:verify-tag": "node scripts/verify-release-tag.mjs",
+    "release:check-unpublished": "node scripts/check-release-unpublished.mjs",
     "verify:chinese-era-data": "node tools/verify-chinese-era-data.mjs",
     "test": "node --test",
     "test:types": "tsc -p tsconfig.types.json",

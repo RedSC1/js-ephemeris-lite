@@ -1,0 +1,64 @@
+name: Publish npm packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'RedSC1/js-ephemeris-lite'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag commit belongs to main
+        run: git merge-base --is-ancestor "${GITHUB_SHA}" origin/main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+
+      - name: Use an npm CLI with trusted publishing support
+        run: npm install --global npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify tag and package versions
+        run: npm run release:verify-tag -- "${GITHUB_REF_NAME}"
+
+      - name: Run core tests and type checks
+        run: |
+          npm test
+          npm run test:types
+
+      - name: Run workspace tests
+        run: npm run test:workspaces
+
+      - name: Confirm that every version is unpublished
+        run: npm run release:check-unpublished
+
+      - name: Publish core package
+        run: npm publish --ignore-scripts --access public --tag latest
+
+      - name: Publish workspace packages
+        run: |
+          npm publish --workspace=bazi-lite --ignore-scripts --access public --tag latest
+          npm publish --workspace=ziwei-lite --ignore-scripts --access public --tag latest
+          npm publish --workspace=huangli-lite --ignore-scripts --access public --tag latest
+          npm publish --workspace=taiyin-star-catalog-lite --ignore-scripts --access public --tag latest

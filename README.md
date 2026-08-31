@@ -1,5 +1,7 @@
 # js-ephemeris-lite
 
+[简体中文](./README.md) · [English](./README.en.md)
+
 用于浏览器和 Node.js 的天文与中国历法库。提供天体位置、节气与月相、
 农历转换、干支和太阳时计算，采用纯 JavaScript 实现，附带 TypeScript 类型声明，
 无运行时依赖。
@@ -162,6 +164,7 @@ npm run demo:fixed-stars -- 角宿一 2460000.5
 - [日月食](./docs/eclipses.md)
 - [精度与模型限制](./docs/accuracy.md)
 - [架构](./docs/architecture.md)、[模型修正](./docs/model-corrections.md)、[开发与测试](./docs/development.md)
+- [npm 自动发布流程](./docs/releases.md)
 
 代码采用 [MPL-2.0](./LICENSE)。科学模型与历史数据的来源、许可和适用范围见
 [中文第三方声明](./THIRD_PARTY_NOTICES.zh-CN.md)及
