@@ -128,7 +128,7 @@
     "release:verify-tag": "node scripts/verify-release-tag.mjs",
     "release:check-unpublished": "node scripts/check-release-unpublished.mjs",
     "verify:chinese-era-data": "node tools/verify-chinese-era-data.mjs",
-    "test": "node --test",
+    "test": "node --test test/*.test.js",
     "test:types": "tsc -p tsconfig.types.json",
     "test:workspaces": "npm run test --workspaces --if-present",
     "prepack": "npm test && npm run test:types"
