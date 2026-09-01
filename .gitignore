@@ -4,6 +4,7 @@ coverage/
 packages/*/dist/
 out/
 private/
+/designs/
 tools/*
 !tools/build-chinese-era-data.mjs
 !tools/generate-calendar-data.mjs
