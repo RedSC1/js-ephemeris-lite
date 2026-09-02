@@ -1,6 +1,6 @@
 {
   "name": "js-ephemeris-lite",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Long-range JavaScript ephemeris and Chinese calendar toolkit with positions, sky events, eclipses, solar terms, lunar phases, Ganzhi, and solar time",
   "type": "module",
   "license": "MPL-2.0",

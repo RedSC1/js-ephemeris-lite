@@ -1,6 +1,6 @@
 {
   "name": "huangli-lite",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Chinese almanac for JavaScript with daily Yi/Ji, Shen Sha, festivals, flying stars, feng shui, and Simplified or Traditional Chinese output",
   "type": "module",
   "license": "MIT",
@@ -50,7 +50,7 @@
   },
   "homepage": "https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/huangli#readme",
   "dependencies": {
-    "js-ephemeris-lite": "^1.0.0-beta.3"
+    "js-ephemeris-lite": "^1.0.0-beta.4"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
