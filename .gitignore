@@ -10,6 +10,13 @@ tools/*
 !tools/generate-calendar-data.mjs
 !tools/chinese-era-ruler-names.js
 !tools/verify-chinese-era-data.mjs
+!tools/build-planet-position-tiers.mjs
+!tools/build-moon-position-tiers.mjs
+!tools/benchmark-full-models.py
+!tools/benchmark-elp82-driver.f90
+!tools/benchmarks/
+tools/benchmarks/*
+!tools/benchmarks/model-accuracy.json
 !packages/ziwei/tools/
 !packages/ziwei/tools/*.mjs
 !packages/bazi/tools/

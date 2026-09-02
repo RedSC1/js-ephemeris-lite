@@ -1,3 +1,4 @@
+export * from './accuracy.js';
 export * from './apparent.js';
 export * from './body-visibility.js';
 export * from './event-search.js';

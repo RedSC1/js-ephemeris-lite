@@ -26,9 +26,14 @@ export const PLUTO_MODEL_INFO = Object.freeze({
   warning: 'Outside 1600..2200 results remain computable but are low accuracy, including event times. No accuracy claim outside -6000..10000.',
 });
 
-function chebyshev(coefficients, x) {
+// The near fit is a high-degree minimax-style approximation: unlike the
+// Poisson tables, its tail cannot be cut aggressively without damaging the
+// interval edges. These conservative degrees still form real nested tiers.
+const NEAR_TERMS = Object.freeze({ fast: 336, mid: 368, accurate: Infinity });
+
+function chebyshev(coefficients, x, limit = Infinity) {
   let b1 = 0, b2 = 0, d1 = 0, d2 = 0;
-  for (let i = coefficients.length - 1; i > 0; i--) {
+  for (let i = Math.min(coefficients.length, limit) - 1; i > 0; i--) {
     const b = 2 * x * b1 - b2 + coefficients[i];
     const d = 2 * b1 + 2 * x * d1 - d2;
     b2 = b1; b1 = b; d2 = d1; d1 = d;
@@ -36,9 +41,11 @@ function chebyshev(coefficients, x) {
   return [x * b1 - b2 + coefficients[0], (b1 + x * d1 - d2) / PLUTO_NEAR_SCALE_DAYS];
 }
 
-function nearState(jd) {
+function nearState(jd, accuracy) {
   const x = (jd - PLUTO_NEAR_EPOCH_JD) / PLUTO_NEAR_SCALE_DAYS;
-  const [[residual, dl0], [b, db], [r, dr]] = [PLUTO_NEAR_L, PLUTO_NEAR_B, PLUTO_NEAR_R].map(c => chebyshev(c, x));
+  const terms = NEAR_TERMS[accuracy];
+  const [[residual, dl0], [b, db], [r, dr]] = [PLUTO_NEAR_L, PLUTO_NEAR_B, PLUTO_NEAR_R]
+    .map(c => chebyshev(c, x, terms));
   const l = residual + PLUTO_NEAR_PHASE + PLUTO_NEAR_MOTION * (jd - 2451545) / 365250;
   const dl = dl0 + PLUTO_NEAR_MOTION / 365250;
   const cl = Math.cos(l), sl = Math.sin(l), cb = Math.cos(b), sb = Math.sin(b);
@@ -48,11 +55,11 @@ function nearState(jd) {
   return { position: planetTheoryToJ2000(p), velocity: planetTheoryToJ2000(v) };
 }
 
-function state(jd) {
+function state(jd, accuracy = 'accurate') {
   const year = 2000 + (jd - 2451545) / YEAR_DAYS;
-  if (year >= 1600 && year <= 2200) return nearState(jd);
+  if (year >= 1600 && year <= 2200) return nearState(jd, accuracy);
   if (year <= 1590 || year >= 2210) return fallback.state(jd);
-  const near = nearState(jd), far = fallback.state(jd);
+  const near = nearState(jd, accuracy), far = fallback.state(jd);
   const x = year < 1600 ? (year - 1590) / 10 : (2210 - year) / 10;
   const weight = x ** 3 * (10 - 15 * x + 6 * x * x);
   const rate = 30 * x * x * (1 - x) ** 2 * (year < 1600 ? 1 : -1) / (10 * YEAR_DAYS);
@@ -63,4 +70,4 @@ function state(jd) {
   };
 }
 
-export const plutoModel = { state };
+export const plutoModel = { state, accuracyState: state };

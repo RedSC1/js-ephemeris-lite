@@ -1,5 +1,5 @@
 import type { CivilDate, JulianTime, Ut1Input } from './time.js';
-import type { EventAccuracy } from './calendar-events.js';
+import type { Accuracy } from './accuracy.js';
 
 export const CALENDAR_MODE: Readonly<{
   HISTORICAL: 'historical';
@@ -31,7 +31,7 @@ export type LunarMonthName = typeof MONTH_NAME[keyof typeof MONTH_NAME];
 export interface CalendarOptions {
   mode?: CalendarMode;
   /** Event solver used only for this calendar query; default mid. */
-  eventAccuracy?: EventAccuracy;
+  eventAccuracy?: Accuracy;
   /** Civil-day boundary used outside the fixed China-standard calendar structure. */
   dayBoundaryMode?: CalendarDayBoundaryMode;
   /** Clock offset used by fixed-utc-offset boundaries and civil-time conversion. */

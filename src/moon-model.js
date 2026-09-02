@@ -1,6 +1,19 @@
 import { MOON_L, MOON_B, MOON_R, MOON_W1, MOON_PRECESSION_P, MOON_PRECESSION_Q, MOON_SCALE_DAYS, MOON_ARGUMENTS } from './moon-series.js';
+import { checkedAccuracy } from './accuracy.js';
+import { MOON_PREFIX_COUNTS } from './moon-prefix-counts.js';
 const SERIES = [MOON_L, MOON_B, MOON_R];
-const ranked = SERIES.map(blocks => blocks.flatMap((rows, power) => Array.from({ length: rows.length / 3 }, (_, i) => ({ rows, index: i * 3, power, score: Math.hypot(rows[i * 3], rows[i * 3 + 1]) }))).sort((a, b) => b.score - a.score));
+const ACCURACY_TERMS = Object.freeze({
+    fast: Object.freeze(['fast', 'fast', 'fast']),
+    mid: Object.freeze(['mid', 'mid', 'mid']),
+    accurate: Object.freeze(['full', 'full', 'full']),
+});
+const ranked = new Array(3);
+function rankedTerms(coordinateIndex) {
+    if (!ranked[coordinateIndex]) {
+        ranked[coordinateIndex] = SERIES[coordinateIndex].flatMap((rows, power) => Array.from({ length: rows.length / 3 }, (_, i) => ({ rows, index: i * 3, power, score: Math.hypot(rows[i * 3], rows[i * 3 + 1]) }))).sort((a, b) => b.score - a.score);
+    }
+    return ranked[coordinateIndex];
+}
 // Synchronous evaluator scratch storage, refreshed per call. No date memoization.
 const sine = new Float64Array(MOON_ARGUMENTS.length), cosine = new Float64Array(MOON_ARGUMENTS.length), speed = new Float64Array(MOON_ARGUMENTS.length), stamps = new Uint32Array(MOON_ARGUMENTS.length);
 let serial = 0;
@@ -58,11 +71,29 @@ function coordinate(c, x, limit = 'full') {
             rate += derivative * env + sum * dr;
         }
     }
+    else if (limit === 'fast' || limit === 'mid') {
+        const counts = MOON_PREFIX_COUNTS[c][limit];
+        for (let power = 0; power < SERIES[c].length; ++power) {
+            const rows = SERIES[c][power];
+            const end = Math.min((counts[power] ?? 0) * 3, rows.length);
+            let sum = 0, derivative = 0;
+            for (let i = 0; i < end; i += 3) {
+                const k = rows[i + 2];
+                argument(k, x);
+                sum += rows[i] * sine[k] + rows[i + 1] * cosine[k];
+                derivative += (rows[i] * cosine[k] - rows[i + 1] * sine[k]) * speed[k];
+            }
+            const env = x ** power, dr = power === 0 ? 0 : power * x ** (power - 1) / MOON_SCALE_DAYS;
+            value += sum * env;
+            rate += derivative * env + sum * dr;
+        }
+    }
     else {
-        if (!Number.isInteger(limit) || limit < 0 || limit > ranked[c].length)
+        const selected = rankedTerms(c);
+        if (!Number.isInteger(limit) || limit < 0 || limit > selected.length)
             throw new RangeError('Invalid lunar term limit');
         for (let i = 0; i < limit; ++i) {
-            const { rows, index, power } = ranked[c][i], k = rows[index + 2];
+            const { rows, index, power } = selected[i], k = rows[index + 2];
             argument(k, x);
             const v = rows[index] * sine[k] + rows[index + 1] * cosine[k], dv = (rows[index] * cosine[k] - rows[index + 1] * sine[k]) * speed[k];
             const env = x ** power, dr = power === 0 ? 0 : power * x ** (power - 1) / MOON_SCALE_DAYS;
@@ -93,12 +124,15 @@ function precession(t) {
     return { matrix: [[1 - 2 * p * p, 2 * p * q, p * r], [2 * p * q, 1 - 2 * q * q, -q * r], [-p * r, q * r, 1 - 2 * p * p - 2 * q * q]],
         rate: [[-4 * p * dp, 2 * (dp * q + p * dq), dp * r + p * dr], [2 * (dp * q + p * dq), -4 * q * dq, -dq * r - q * dr], [-dp * r - p * dr, dq * r + q * dr, -4 * p * dp - 4 * q * dq]] };
 }
-function state(jd, latitudeTerms, direction) {
+function state(jd, { accuracy = 'accurate', latitudeTerms } = {}, direction) {
     if (!Number.isFinite(jd))
         throw new TypeError('jdTT must be finite');
+    const limits = ACCURACY_TERMS[checkedAccuracy(accuracy)];
     begin();
     const x = (jd - 2451545) / MOON_SCALE_DAYS;
-    const l = coordinate(0, x), b = coordinate(1, x, latitudeTerms), r = direction ? { value: 1, rate: 0 } : coordinate(2, x);
+    const l = coordinate(0, x, limits[0]);
+    const b = coordinate(1, x, latitudeTerms ?? limits[1]);
+    const r = direction ? { value: 1, rate: 0 } : coordinate(2, x, limits[2]);
     const cl = Math.cos(l.value), sl = Math.sin(l.value), cb = Math.cos(b.value), sb = Math.sin(b.value), rc = r.value * cb;
     const drc = r.rate * cb - r.value * sb * b.rate;
     const p = [rc * cl, rc * sl, r.value * sb], v = [drc * cl - rc * sl * l.rate, drc * sl + rc * cl * l.rate, r.rate * sb + r.value * cb * b.rate];
@@ -107,8 +141,12 @@ function state(jd, latitudeTerms, direction) {
     const position = apply(frame.matrix, p), sv = apply(frame.matrix, v), fv = apply(frame.rate, p);
     return { position, velocity: sv.map((v, i) => v + fv[i]) };
 }
-export function moonState(jd) { return state(jd, 'full', false); }
-export function moonDirectionState(jd, { latitudeTerms = 'full' } = {}) { return state(jd, latitudeTerms, true); }
-export function moonPosition(jd) { return moonState(jd).position; }
+export function moonState(jd, accuracy = 'accurate') { return state(jd, { accuracy }, false); }
+export function moonDirectionState(jd, accuracyOrOptions = 'accurate') {
+    return state(jd, typeof accuracyOrOptions === 'string'
+        ? { accuracy: accuracyOrOptions }
+        : accuracyOrOptions, true);
+}
+export function moonPosition(jd, accuracy = 'accurate') { return moonState(jd, accuracy).position; }
 /** Native ELP-frame longitude and rate; global calibration is part of the table. */
 export function moonElpLongitudeState(jd) { return moonSeriesLongitudeState(jd); }

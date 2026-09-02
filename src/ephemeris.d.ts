@@ -1,4 +1,5 @@
 export { J2000, iau2000bNutation, vondrak2011PrecessionMatrix } from './coordinates.js';
+import type { Accuracy } from './accuracy.js';
 
 export type EphemerisVector3 = [number, number, number];
 export type MoonLatitudeTerms = number | 'full';
@@ -15,6 +16,7 @@ export interface CartesianState {
 }
 
 export interface MoonDirectionOptions {
+  accuracy?: Accuracy;
   latitudeTerms?: MoonLatitudeTerms;
 }
 
@@ -31,49 +33,50 @@ export const PLANET: Readonly<{
   NEPTUNE: 'neptune';
   PLUTO: 'pluto';
 }>;
-export function moonPosition(jdTT: number): EphemerisVector3;
+export function moonPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
 export function moonElpLongitudeState(jdTT: number): ScalarState;
+export function moonDirectionState(jdTT: number, accuracy?: Accuracy): CartesianState;
 export function moonDirectionState(jdTT: number, options?: MoonDirectionOptions): CartesianState;
-export function moonState(jdTT: number): CartesianState;
-export function earthPosition(jdTT: number): EphemerisVector3;
-export function earthState(jdTT: number): CartesianState;
-export function earthDirectionState(jdTT: number): CartesianState;
-export function embPosition(jdTT: number): EphemerisVector3;
-export function embState(jdTT: number): CartesianState;
+export function moonState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function earthPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function earthState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function earthDirectionState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function embPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function embState(jdTT: number, accuracy?: Accuracy): CartesianState;
 
-export function earthHeliocentricPosition(jdTT: number): EphemerisVector3;
-export function earthHeliocentricState(jdTT: number): CartesianState;
-export function planetHeliocentricPosition(planet: Planet, jdTT: number): EphemerisVector3;
+export function earthHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function earthHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function planetHeliocentricPosition(planet: Planet, jdTT: number, accuracy?: Accuracy): EphemerisVector3;
 /** Pluto is recommended for 1600..2200; other dates still compute with low accuracy. */
-export function planetHeliocentricState(planet: Planet, jdTT: number): CartesianState;
-export function planetGeocentricPosition(planet: Planet, jdTT: number): EphemerisVector3;
-export function planetGeocentricState(planet: Planet, jdTT: number): CartesianState;
-export function mercuryHeliocentricPosition(jdTT: number): EphemerisVector3;
-export function mercuryHeliocentricState(jdTT: number): CartesianState;
-export function venusHeliocentricPosition(jdTT: number): EphemerisVector3;
-export function venusHeliocentricState(jdTT: number): CartesianState;
-export function marsHeliocentricPosition(jdTT: number): EphemerisVector3;
-export function marsHeliocentricState(jdTT: number): CartesianState;
-export function jupiterHeliocentricPosition(jdTT: number): EphemerisVector3;
-export function jupiterHeliocentricState(jdTT: number): CartesianState;
-export function saturnHeliocentricPosition(jdTT: number): EphemerisVector3;
-export function saturnHeliocentricState(jdTT: number): CartesianState;
-export function uranusHeliocentricPosition(jdTT: number): EphemerisVector3;
-export function uranusHeliocentricState(jdTT: number): CartesianState;
-export function neptuneHeliocentricPosition(jdTT: number): EphemerisVector3;
-export function neptuneHeliocentricState(jdTT: number): CartesianState;
+export function planetHeliocentricState(planet: Planet, jdTT: number, accuracy?: Accuracy): CartesianState;
+export function planetGeocentricPosition(planet: Planet, jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function planetGeocentricState(planet: Planet, jdTT: number, accuracy?: Accuracy): CartesianState;
+export function mercuryHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function mercuryHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function venusHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function venusHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function marsHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function marsHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function jupiterHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function jupiterHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function saturnHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function saturnHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function uranusHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function uranusHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function neptuneHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function neptuneHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
 /** Warning: outside 1600..2200 Pluto remains computable but uses a coarse fallback. */
-export function plutoHeliocentricPosition(jdTT: number): EphemerisVector3;
+export function plutoHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
 /** Warning: outside 1600..2200 Pluto remains computable but uses a coarse fallback. */
-export function plutoHeliocentricState(jdTT: number): CartesianState;
-export function sunGeocentricPosition(jdTT: number): EphemerisVector3;
-export function sunGeocentricState(jdTT: number): CartesianState;
-export function moonGeocentricPosition(jdTT: number): EphemerisVector3;
-export function moonGeocentricState(jdTT: number): CartesianState;
-export function moonHeliocentricPosition(jdTT: number): EphemerisVector3;
-export function moonHeliocentricState(jdTT: number): CartesianState;
-export function embHeliocentricPosition(jdTT: number): EphemerisVector3;
-export function embHeliocentricState(jdTT: number): CartesianState;
+export function plutoHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function sunGeocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function sunGeocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function moonGeocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function moonGeocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function moonHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function moonHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
+export function embHeliocentricPosition(jdTT: number, accuracy?: Accuracy): EphemerisVector3;
+export function embHeliocentricState(jdTT: number, accuracy?: Accuracy): CartesianState;
 
 export const PLUTO_MODEL_INFO: Readonly<{
   recommendedIntervalYears: readonly [1600, 2200];

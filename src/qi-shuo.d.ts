@@ -1,6 +1,6 @@
 import type { CalendarDayBoundaryMode, CalendarMode } from './chinese-calendar.js';
 import type { JulianTime, CivilDate, CivilDateTime } from './time.js';
-import type { EventAccuracy } from './calendar-events.js';
+import type { Accuracy } from './accuracy.js';
 
 export const SOLAR_TERM_NAMES: readonly string[];
 export const LUNAR_PHASE_NAMES: Readonly<Record<number, string>>;
@@ -9,7 +9,7 @@ export interface QiShuoYearOptions {
   utcOffsetMinutes?: number;
   mode?: CalendarMode;
   /** Event solver used only for this query; default mid. */
-  eventAccuracy?: EventAccuracy;
+  eventAccuracy?: Accuracy;
   dayBoundaryMode?: CalendarDayBoundaryMode;
   meridianDeg?: number;
   includeSolarTerms?: boolean;
@@ -53,7 +53,7 @@ export interface QiShuoYear {
   civilYear: number;
   utcOffsetMinutes: number;
   mode: CalendarMode;
-  eventAccuracy: EventAccuracy;
+  eventAccuracy: Accuracy;
   dayBoundaryMode: CalendarDayBoundaryMode;
   meridianDeg?: number;
   startJdUT1: number;

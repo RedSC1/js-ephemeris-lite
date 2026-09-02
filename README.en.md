@@ -112,17 +112,63 @@ Asteroids are not currently supported. Eclipse search APIs do not include maps o
 
 Solver tolerance is not an absolute statement of astronomical accuracy. Accuracy varies by body, epoch, model, and time-scale inputs. See the Chinese [accuracy notes](./docs/accuracy.md) for current measurements and limitations.
 
+Geometric position calls accept a direct optional accuracy argument, for example
+`planetHeliocentricState('mars', jdTT, 'fast')`. Apparent positions use
+`{ accuracy: 'fast' }` because that options object also selects the frame and physical
+corrections. Both default to `accurate`; the tiers share one offline-ordered coefficient
+table and do not use global accuracy state.
+
 ## Solar-term and lunar-phase accuracy modes
 
-The calendar solvers expose three per-call or per-instance modes:
+The calendar solvers expose three per-call or per-instance modes. These modes do more
+than truncate coefficient counts: they select different event models, physical correction
+chains, and root-solving routes.
 
-| Mode | Intended use |
-| --- | --- |
-| `fast` | Large batches and previews |
-| `mid` | Default for calendars and applications |
-| `accurate` | Validation and accuracy-sensitive work |
+| Mode | Calculation route | Intended use |
+| --- | --- | --- |
+| `fast` | Dedicated value-only model, simplified light-time/aberration, fixed-stage correction | Large batches and previews |
+| `mid` | Dedicated event model with analytic angular rates and tolerance-driven iteration | Default for calendars and applications |
+| `accurate` | Complete apparent-position chain with light-time, aberration, frame transforms, and applicable deflection | Validation and accuracy-sensitive work |
 
 There is no module-level mutable accuracy setting. Direct `solve…` calls accept `{ accuracy }`; Chinese-calendar and higher-level packages keep the setting in their own query or instance options.
+
+## Geometric positions versus full theories
+
+The table reports **3D geometric position RMS against DE441, in km**, on the same
+**2,050 dates in 1600–2200**. Lower values mean closer agreement on these samples.
+The library uses its position `accurate` tier; full theories retain all supplied terms
+and do not receive this library's DE441 corrections.
+
+| Body | Library accurate | Full VSOP87A | Full VSOP2013 | Full TOP2013 |
+| --- | ---: | ---: | ---: | ---: |
+| Mercury | 6.05 | 14.8 | 5.71 | — |
+| Venus | 10.5 | 23.5 | 4.47 | — |
+| Earth–Moon barycentre¹ | 14.8 | 46.6 | 3.04 | — |
+| Mars | 40.6 | 242 | 12.3 | — |
+| Jupiter | 80.7 | 1,100 | 32.6 | 32.8 |
+| Saturn | 91.2 | 2,012 | 8.83 | 13.1 |
+| Uranus | 373 | 17,345 | 16,825 | 16,855 |
+| Neptune | 791 | 55,682 | 5,152 | 5,096 |
+
+¹ The Earth row compares the **Earth–Moon barycentre**, using `embPosition()`,
+VSOP87A's `.emb` table, and body 3 of VSOP2013. It is not a physical-Earth-centre
+error measurement. TOP2013 uses its full L/B/R tables and has no inner-planet entries here.
+
+The Moon is measured separately relative to the Earth, also as 3D RMS in km,
+with 2,050 dates per interval:
+
+| Model | 1600–2200 | −1000–3000 | −6000–10000 |
+| --- | ---: | ---: | ---: |
+| Library accurate | 0.275 | 0.468 | 2.28 |
+| Full ELP/MPP02 (DE405 parameters) | 0.058 | 50.7 | 1,290 |
+| Full ELP2000-82B | 9.49 | 666 | 5,327 |
+
+The library is calibrated against DE441; the original theories were fitted to different
+references and epochs. This is not a ranking of intrinsic theory accuracy, an equal-budget
+benchmark, or a speed comparison. Wide-range results include extrapolation of the original
+theories and are not validity guarantees. Sample statistics are not continuous error bounds
+and cannot be directly converted to seconds of event-time error.
+See the [full results, accuracy tiers, frame conventions, and reproduction guide](./docs/model-comparison.md).
 
 ## Related packages
 

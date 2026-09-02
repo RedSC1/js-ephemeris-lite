@@ -5,7 +5,7 @@ import {
   RAT_HOUR_MODE,
   type CalendarDayBoundaryMode,
   type CalendarMode,
-  type EventAccuracy,
+  type Accuracy,
   type PillarHistoricalMode,
   type RatHourMode,
 } from 'js-ephemeris-lite';
@@ -75,7 +75,7 @@ export interface ZiweiOptionsInput {
   utcOffsetMinutes?: number;
   meridianDeg?: number;
   /** Accuracy tier used when solving solar terms and new moons. Defaults to `mid`. */
-  eventAccuracy?: EventAccuracy;
+  eventAccuracy?: Accuracy;
   pillarHistoricalMode?: PillarHistoricalMode;
   ratHourMode?: RatHourMode;
   clockMode?: ZiweiClockMode;
@@ -141,7 +141,7 @@ export class ZiweiOptions {
   readonly dayBoundaryMode: CalendarDayBoundaryMode;
   readonly utcOffsetMinutes: number;
   readonly meridianDeg: number | undefined;
-  readonly eventAccuracy: EventAccuracy;
+  readonly eventAccuracy: Accuracy;
   readonly pillarHistoricalMode: PillarHistoricalMode;
   readonly ratHourMode: RatHourMode;
   readonly clockMode: ZiweiClockMode;
@@ -255,7 +255,7 @@ export class ZiweiOptions {
     dayBoundaryMode: CalendarDayBoundaryMode;
     utcOffsetMinutes: number;
     meridianDeg: number | undefined;
-    eventAccuracy: EventAccuracy;
+    eventAccuracy: Accuracy;
   } {
     return Object.freeze({
       mode: this.mode,

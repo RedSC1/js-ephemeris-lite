@@ -5,6 +5,10 @@ import { spawnSync } from 'node:child_process';
 import { planetModels } from '../src/planet-models.js';
 import * as series from '../src/planet-series.js';
 import { EARTH_L_PREFIX_COUNTS, EARTH_B_PREFIX_COUNTS, EARTH_R_PREFIX_COUNTS } from '../src/earth-prefix-counts.js';
+import * as planetPrefixes from '../src/planet-prefix-counts.js';
+import { MOON_PREFIX_COUNTS } from '../src/moon-prefix-counts.js';
+import { MOON_L, MOON_B, MOON_R } from '../src/moon-series.js';
+import { ACCURACY } from '../src/accuracy.js';
 const topModels = Object.fromEntries(['jupiter', 'saturn', 'uranus', 'neptune'].map(body => [body, planetModels[body]]));
 import { meanObliquityIau2006, ARCSEC_TO_RAD } from '../src/coordinates.js';
 import { planetTheoryToJ2000 } from '../src/planet-frame.js';
@@ -143,6 +147,60 @@ test('Earth precision tiers are nested per-power prefixes of complete frequency 
       previous = selected;
     }
   }
+});
+
+test('planet and Moon position tiers are offline-ordered nested prefixes', () => {
+  for (const body of ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune']) {
+    const upper = body.toUpperCase();
+    const budgets = planetPrefixes[`${upper}_PREFIX_COUNTS`];
+    for (let coordinate = 0; coordinate < 3; coordinate++) {
+      const blocks = series[`${upper}_${['L', 'B', 'R'][coordinate]}`];
+      const fast = budgets[coordinate].fast;
+      const mid = budgets[coordinate].mid;
+      for (let power = 0; power < blocks.length; power++) {
+        assert.ok(fast[power] <= mid[power]);
+        assert.ok(mid[power] <= blocks[power].length / 3);
+      }
+    }
+  }
+  for (const [coordinate, blocks] of [MOON_L, MOON_B, MOON_R].entries()) {
+    const { fast, mid } = MOON_PREFIX_COUNTS[coordinate];
+    for (let power = 0; power < blocks.length; power++) {
+      assert.ok(fast[power] <= mid[power]);
+      assert.ok(mid[power] <= blocks[power].length / 3);
+    }
+  }
+});
+
+test('direct positions share fast, mid and accurate call-local accuracy', () => {
+  assert.deepEqual(Object.values(ACCURACY), ['fast', 'mid', 'accurate']);
+  const dates = [2451545 - 123456, 2451545, 2451545 + 234567];
+  for (const body of Object.values(PLANET)) {
+    let fastDelta = 0;
+    let midDelta = 0;
+    for (const jd of dates) {
+      const accurate = planetHeliocentricState(body, jd, 'accurate');
+      assert.deepEqual(planetHeliocentricState(body, jd), accurate);
+      const fast = planetHeliocentricState(body, jd, 'fast');
+      const mid = planetHeliocentricState(body, jd, 'mid');
+      fastDelta += Math.hypot(...fast.position.map((value, axis) => value - accurate.position[axis]));
+      midDelta += Math.hypot(...mid.position.map((value, axis) => value - accurate.position[axis]));
+      assert.ok([...fast.position, ...fast.velocity, ...mid.position, ...mid.velocity].every(Number.isFinite));
+    }
+    assert.ok(fastDelta >= midDelta, body);
+    assert.ok(fastDelta > 0, body);
+  }
+  for (const jd of dates) {
+    const accurate = moonGeocentricState(jd, 'accurate');
+    assert.deepEqual(moonGeocentricState(jd), accurate);
+    const fast = moonGeocentricState(jd, 'fast');
+    const mid = moonGeocentricState(jd, 'mid');
+    const error = state => Math.hypot(...state.position.map((value, axis) => value - accurate.position[axis]));
+    assert.ok(error(fast) >= error(mid));
+  }
+  assert.throws(() => earthPosition(J2000, 'turbo'), /accuracy/u);
+  assert.throws(() => planetHeliocentricState('mars', J2000, null), /accuracy/u);
+  assert.throws(() => moonGeocentricState(J2000, 'low'), /accuracy/u);
 });
 
 test('truncated planets stay close to the official VSOP87B J2000 position checks', () => {

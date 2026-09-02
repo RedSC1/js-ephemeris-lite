@@ -1,11 +1,14 @@
 import type { MoonLatitudeTerms, ScalarState } from './ephemeris.js';
 import type { JulianTime } from './time.js';
 
-export type EventAccuracy = 'fast' | 'mid' | 'accurate';
+import type { Accuracy } from './accuracy.js';
+
+/** @deprecated Use the shared Accuracy type. */
+export type EventAccuracy = Accuracy;
 
 export interface EventSolveOptions {
   /** Event model used for this call; default mid. */
-  accuracy?: EventAccuracy;
+  accuracy?: Accuracy;
   /** Mid/accurate only; specifying this in fast mode throws. */
   toleranceSeconds?: number;
   /** Safeguarded is available only in mid/accurate mode. */

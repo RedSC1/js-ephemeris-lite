@@ -1,4 +1,4 @@
-import type { JulianTime, CalendarMode, CalendarInput, CivilDate, CivilDateTime, ResolvedLunarDate, FourPillars, RatHourMode, EventAccuracy } from 'js-ephemeris-lite';
+import type { JulianTime, CalendarMode, CalendarInput, CivilDate, CivilDateTime, ResolvedLunarDate, FourPillars, RatHourMode, Accuracy } from 'js-ephemeris-lite';
 import type { AlmanacRuleInput, AlmanacRulesResult } from './rules.js';
 import type { HuangliLocale } from './locale.js';
 export * from './locale.js';
@@ -17,7 +17,7 @@ export interface HuangliOptions {
   /** Default china-astronomical. Historical uses China-assigned civil dates. */
   mode?: CalendarMode;
   /** Event solver owned by this calendar instance; default mid. */
-  eventAccuracy?: EventAccuracy;
+  eventAccuracy?: Accuracy;
   /** Nearest Jiazi anchor (default), or the assigned solstice day itself. */
   flyingStarMethod?: 'consecutive' | 'discontinuous';
   /** Year/month stars only; default solar. Day/hour stars still use solstices. */
