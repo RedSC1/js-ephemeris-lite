@@ -152,7 +152,8 @@ if (chart.hasTransform(ziweiId, STAR_TRANSFORM_MARK.BIRTH_YEAR_QUAN)) {
 
 ## 统一设置
 
-所有持续影响命盘的口径集中在不可变的 `ZiweiOptions` 中：
+所有持续影响命盘的口径集中在不可变的 `ZiweiOptions` 中。`eventAccuracy`
+控制定气、定朔精度，可选 `fast`、`mid`、`accurate`，默认 `mid`。
 
 ```ts
 import {
@@ -170,6 +171,7 @@ import {
 const options = new ZiweiOptions({
   gender: ZIWEI_GENDER.FEMALE,
   mode: CALENDAR_MODE.HISTORICAL,
+  eventAccuracy: 'accurate',
   utcOffsetMinutes: 480,
   ratHourMode: RAT_HOUR_MODE.NEXT_DAY,
   clockMode: ZIWEI_CLOCK_MODE.TRUE_SOLAR,

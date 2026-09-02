@@ -105,6 +105,7 @@ export function selectZiweiRules(selection: ZiweiRuleSelection): SelectedZiweiRu
   let masters = selectedOption('masters', 'life/body', selection.masters, GENERATED_MASTER_VARIANTS);
 
   const catalog = [...STAR_CATALOG];
+  const stableCatalogStarCount = catalog.length;
   const starIds = new Map(catalog.map((star) => [star.key, star.id]));
   const natalPlacements = new Map(initialNatalPlacements.map((rule) => [rule.starId, rule]));
   const flowPlacements = new Map(initialFlowPlacements.map((rule) => [rule.starId, rule]));
@@ -112,6 +113,11 @@ export function selectZiweiRules(selection: ZiweiRuleSelection): SelectedZiweiRu
     '-1': '', '0': '陷', '1': '不', '2': '平', '3': '利', '4': '得', '5': '旺', '6': '庙',
   };
   const starId = (reference: number | string, label: string): number => {
+    if (typeof reference === 'number' && reference >= stableCatalogStarCount) {
+      throw new RangeError(
+        `${label} uses an unstable numeric id for a user-added star; use its star key instead`,
+      );
+    }
     const id = typeof reference === 'number' ? reference : starIds.get(reference);
     if (id === undefined || catalog[id] === undefined) throw new RangeError(`${label} references unknown star: ${reference}`);
     return id;
@@ -127,7 +133,7 @@ export function selectZiweiRules(selection: ZiweiRuleSelection): SelectedZiweiRu
           throw new RangeError(`${module.label}.${definition.key} cannot change natal/flow scope`);
         }
         if (definition.category !== undefined && definition.category !== existing.category) {
-          catalog[existingId] = Object.freeze({ ...existing, category: definition.category });
+          throw new RangeError(`${module.label}.${definition.key} cannot change a catalog star category`);
         }
         continue;
       }
@@ -140,7 +146,7 @@ export function selectZiweiRules(selection: ZiweiRuleSelection): SelectedZiweiRu
       });
       catalog.push(added);
       starIds.set(added.key, id);
-      brightness[id] = Object.freeze(Array<number>(12).fill(0));
+      brightness[id] = Object.freeze(Array<number>(12).fill(-1));
     }
     for (const [key, rule] of Object.entries(patch.natalPlacements ?? {})) {
       const id = starId(key, `${module.label}.natalPlacements`);

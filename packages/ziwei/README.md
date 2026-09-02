@@ -66,6 +66,7 @@ console.log(chart.birthYearTransformations);
 五虎遁、生年四化和身主默认采用农历年界。
 
 使用 `ZiweiOptions` 调整太阳时、闰月和规则选项，
+并通过 `eventAccuracy` 选择 `fast`、`mid` 或 `accurate` 定气定朔精度；
 使用 `options.with(...)` 派生新的配置。
 详见[命盘与设置指南](./docs/guide.md)。
 

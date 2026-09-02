@@ -10,6 +10,7 @@ import {
   ZiweiChart,
   ZiweiConfigLoader,
   ZiweiOptions,
+  compileZiweiJsonPlacement,
   computeZiweiAnchors,
   findStarId,
   selectZiweiRules,
@@ -83,6 +84,77 @@ test('runtime rulesets patch former Dart JSON profiles without mutating defaults
   assert.equal(chart.birthYearTransformations.lu, ziwei);
   assert.equal(chart.birthYearTransformations.quan, baseChart.birthYearTransformations.quan);
   assert.equal(selectZiweiRules(new ZiweiOptions({ gender: 0 }).rules).natalPlacements[ziwei].positions.length > 1, true);
+});
+
+test('legacy JSON rules preserve offsets, branch lookups, categories and empty brightness', () => {
+  const branchLookup = compileZiweiJsonPlacement({
+    type: 'lookup',
+    anchor: 'ziwei',
+    table: Object.fromEntries(
+      ['zi', 'chou', 'yin', 'mao', 'chen', 'si', 'wu', 'wei', 'shen', 'you', 'xu', 'hai']
+        .map((key, index) => [key, index]),
+    ),
+  });
+  assert.deepEqual(branchLookup.positions, Array.from({ length: 12 }, (_, index) => index));
+
+  const offsetLookup = compileZiweiJsonPlacement({
+    type: 'lookup_offset',
+    anchor: 'year_branch',
+    shift_anchor: 'hour',
+    offset: 5,
+    table: Object.fromEntries(
+      ['zi', 'chou', 'yin', 'mao', 'chen', 'si', 'wu', 'wei', 'shen', 'you', 'xu', 'hai']
+        .map((key) => [key, 1]),
+    ),
+  });
+  assert.equal(offsetLookup.positions[0], 6);
+  assert.throws(
+    () => compileZiweiJsonPlacement({ type: 'anchor_offset', anchor: 'ziwei', direction: 'shnu' }),
+    /direction/,
+  );
+
+  const ruleset = ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), {
+    label: 'legacy-cycle-star',
+    starsJson: JSON.stringify([{
+      key: 'legacy_cycle_star',
+      type: 'boshi12',
+      rule: { type: 'constant', value: 0 },
+    }]),
+    brightnessJson: JSON.stringify({ brightness_labels: ['陷', '不', '平', '利', '得', '旺', '庙'] }),
+  });
+  const chart = ZiweiChart.fromZonedTime(
+    new ZonedTime({
+      year: 2004, month: 8, day: 1, hour: 12, minute: 0, second: 0, offsetMinutes: 480,
+    }),
+    new ZiweiOptions({ gender: ZIWEI_GENDER.MALE, rules: { ruleset } }),
+  );
+  const id = chart.findStarId('legacy_cycle_star');
+  assert.equal(chart.starCatalog[id].category, 'cycle');
+  assert.equal(chart.getStarPosition(id).brightness, -1);
+  assert.equal(chart.getBrightnessLabel(6), '庙');
+
+  assert.throws(
+    () => ZiweiConfigLoader.compileJson({
+      label: 'malformed-brightness',
+      brightnessJson: JSON.stringify({ static_stars: { ziwei: '6,6,6' } }),
+    }),
+    /brightness must be an array/,
+  );
+  const categoryOverride = ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), {
+    label: 'catalog-category-override',
+    starsJson: JSON.stringify([{
+      key: 'ziwei',
+      type: 'minor',
+      rule: { type: 'constant', value: 0 },
+    }]),
+  });
+  assert.throws(
+    () => selectZiweiRules(new ZiweiOptions({
+      gender: ZIWEI_GENDER.MALE,
+      rules: { ruleset: categoryOverride },
+    }).rules),
+    /cannot change a catalog star category/,
+  );
 });
 
 test('labelled compiled modules merge in explicit order and reject duplicate labels', () => {
@@ -171,6 +243,40 @@ test('custom natal stars receive ruleset-local ids and participate in BigInt pal
   assert.ok(chart.palaces[11].starIds.includes(id));
 });
 
+test('numeric references cannot target ruleset-local stars whose ids may be reassigned', () => {
+  const customStar = ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), {
+    label: 'numeric-reference-star',
+    starsJson: JSON.stringify([{
+      key: 'numeric_reference_star',
+      type: 'minor',
+      rule: { type: 'constant', value: 0 },
+    }]),
+  });
+  const unstableReference = ZiweiConfigLoader.overrideWith(customStar, {
+    label: 'numeric-reference-user',
+    sihuaJson: JSON.stringify({ jia: { lu: 159 } }),
+  });
+  assert.throws(
+    () => selectZiweiRules(new ZiweiOptions({
+      gender: ZIWEI_GENDER.MALE,
+      rules: { ruleset: unstableReference },
+    }).rules),
+    /unstable numeric id.*use its star key/i,
+  );
+
+  const stableReference = ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), {
+    label: 'numeric-reference-builtin',
+    sihuaJson: JSON.stringify({ jia: { lu: 0 } }),
+  });
+  assert.equal(
+    selectZiweiRules(new ZiweiOptions({
+      gender: ZIWEI_GENDER.MALE,
+      rules: { ruleset: stableReference },
+    }).rules).sihua[0].lu,
+    0,
+  );
+});
+
 test('calendar-backed chart matches the native 2003 historical-China fixture', () => {
   const birth = new ZonedTime({
     year: 2003, month: 1, day: 1, hour: 0, minute: 30, second: 0, offsetMinutes: 480,
@@ -227,6 +333,13 @@ test('ZiweiOptions validates gender and solar-clock longitude', () => {
   const updated = original.with({ clockMode: ZIWEI_CLOCK_MODE.CIVIL });
   assert.notEqual(updated, original);
   assert.equal(updated.gender, ZIWEI_GENDER.FEMALE);
+  assert.equal(original.eventAccuracy, 'mid');
+  assert.equal(original.toCalendarOptions().eventAccuracy, 'mid');
+  assert.equal(original.with({ eventAccuracy: 'accurate' }).eventAccuracy, 'accurate');
+  assert.throws(
+    () => new ZiweiOptions({ gender: ZIWEI_GENDER.FEMALE, eventAccuracy: 'unknown' }),
+    /eventAccuracy/,
+  );
 
   const meridian = new ZiweiOptions({
     gender: ZIWEI_GENDER.FEMALE,

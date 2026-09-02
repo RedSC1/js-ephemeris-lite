@@ -71,6 +71,8 @@ export interface ZiweiBuiltinRuleModuleInput {
 const STEM_KEYS = ['jia', 'yi', 'bing', 'ding', 'wu', 'ji', 'geng', 'xin', 'ren', 'gui'];
 const BRANCH_KEYS = ['zi', 'chou', 'yin', 'mao', 'chen', 'si', 'wu', 'wei', 'shen', 'you', 'xu', 'hai'];
 const BUREAU_KEYS = ['water2', 'wood3', 'metal4', 'earth5', 'fire6'];
+const LEGACY_CYCLE_CATEGORIES = new Set(['cycle', 'boshi12', 'jiangqian12', 'suijian12', 'changsheng12']);
+const MAX_RULE_NESTING_DEPTH = 128;
 const INPUT_DOMAINS: Readonly<Record<string, number>> = Object.freeze({
   'anchor.bureau': 5,
   'anchor.ziwei': 12,
@@ -121,6 +123,14 @@ function parseJson(source: string, label: string): unknown {
 
 function mod12(value: number): number { return ((value % 12) + 12) % 12; }
 
+function ruleInteger(value: unknown, label: string, fallback?: number): number {
+  const resolved = value === undefined ? fallback : value;
+  if (!Number.isInteger(resolved) || (resolved as number) < -2147483648 || (resolved as number) > 2147483647) {
+    throw new RangeError(`${label} must be a 32-bit integer`);
+  }
+  return resolved as number;
+}
+
 function boundaryOf(rule: JsonObject, inherited = 'lunar'): 'lunar' | 'solar' {
   const value = rule.boundary ?? inherited;
   if (value !== 'lunar' && value !== 'solar') throw new RangeError(`unknown rule boundary: ${String(value)}`);
@@ -151,22 +161,40 @@ function sourceFor(raw: string, boundary: 'lunar' | 'solar'): string {
 
 function lookupKey(source: string, value: number): string {
   if (source.endsWith('_stem')) return STEM_KEYS[value] ?? String(value);
-  if (source.endsWith('_branch')) return BRANCH_KEYS[value] ?? String(value);
+  if (source.endsWith('_branch') || [
+    'anchor.ziwei',
+    'anchor.tianfu',
+    'anchor.life',
+    'anchor.body',
+    'lunar.zheng_kong',
+    'lunar.fu_kong',
+    'solar.zheng_kong',
+    'solar.fu_kong',
+  ].includes(source)) return BRANCH_KEYS[value] ?? String(value);
   if (source === 'anchor.bureau') return BUREAU_KEYS[value] ?? String(value);
   return String(value);
 }
 
 function direction(rule: JsonObject, values: Readonly<Record<string, number>>, boundary: 'lunar' | 'solar'): number {
   const value = rule.direction;
+  if (value === undefined || value === 1) return 1;
   if (value === -1 || value === 'ni') return -1;
-  if (value !== 'gender_shun_ni') return 1;
+  if (value !== 'gender_shun_ni') {
+    throw new RangeError("direction must be 1, -1, 'ni', or 'gender_shun_ni'");
+  }
   const gender = values['birth.gender'];
   const stem = values[`${boundary}.year_stem`];
   if (gender === undefined || stem === undefined) throw new Error('gender_shun_ni inputs were not compiled');
   return (stem & 1) === gender ? 1 : -1;
 }
 
-function collectRuleInputs(ruleValue: unknown, inherited: 'lunar' | 'solar', result: string[]): void {
+function collectRuleInputs(
+  ruleValue: unknown,
+  inherited: 'lunar' | 'solar',
+  result: string[],
+  depth = 0,
+): void {
+  if (depth > MAX_RULE_NESTING_DEPTH) throw new RangeError('maximum rule nesting depth exceeded');
   const rule = asObject(ruleValue, 'star rule');
   const boundary = boundaryOf(rule, inherited);
   const add = (source: string): void => { if (!result.includes(source)) result.push(source); };
@@ -174,7 +202,7 @@ function collectRuleInputs(ruleValue: unknown, inherited: 'lunar' | 'solar', res
   if (type === 'pipeline') {
     const steps = rule.steps;
     if (!Array.isArray(steps)) throw new TypeError('pipeline.steps must be an array');
-    for (const step of steps) collectRuleInputs(step, boundary, result);
+    for (const step of steps) collectRuleInputs(step, boundary, result, depth + 1);
     return;
   }
   if (type === 'constant') return;
@@ -195,14 +223,19 @@ function evaluateJsonRule(
   ruleValue: unknown,
   inherited: 'lunar' | 'solar',
   values: Readonly<Record<string, number>>,
+  depth = 0,
 ): number {
+  if (depth > MAX_RULE_NESTING_DEPTH) throw new RangeError('maximum rule nesting depth exceeded');
   const rule = asObject(ruleValue, 'star rule');
   const boundary = boundaryOf(rule, inherited);
   const type = String(rule.type ?? '');
-  if (type === 'constant') return Number(rule.value ?? 0);
+  if (type === 'constant') return ruleInteger(rule.value, 'constant.value', 0);
   if (type === 'pipeline') {
     if (!Array.isArray(rule.steps)) throw new TypeError('pipeline.steps must be an array');
-    return rule.steps.reduce((sum: number, step) => sum + evaluateJsonRule(step, boundary, values), 0);
+    return rule.steps.reduce(
+      (sum: number, step) => mod12(sum + evaluateJsonRule(step, boundary, values, depth + 1)),
+      0,
+    );
   }
   if (typeof rule.anchor !== 'string') throw new TypeError(`${type}.anchor must be a string`);
   const source = sourceFor(rule.anchor, boundary);
@@ -210,20 +243,21 @@ function evaluateJsonRule(
   if (anchorValue === undefined) throw new Error(`missing compiled input ${source}`);
   const dir = direction(rule, values, boundary);
   if (type === 'anchor_offset') {
-    const offset = Number(rule.offset ?? 0);
+    const offset = ruleInteger(rule.offset, 'anchor_offset.offset', 0);
     const isTime = ['month', 'day', 'day_number', 'hour', 'year'].includes(rule.anchor);
     return isTime ? offset + anchorValue * dir : anchorValue + offset * dir;
   }
   const table = asObject(rule.table, `${type}.table`);
-  const base = table[lookupKey(source, anchorValue)];
-  if (typeof base !== 'number') throw new RangeError(`${type} table has no value for ${lookupKey(source, anchorValue)}`);
-  if (type === 'lookup') return base + Number(rule.offset ?? 0) * dir;
+  const key = lookupKey(source, anchorValue);
+  if (table[key] === undefined) throw new RangeError(`${type} table has no value for ${key}`);
+  const base = ruleInteger(table[key], `${type}.table.${key}`);
+  if (type === 'lookup') return base + ruleInteger(rule.offset, 'lookup.offset', 0) * dir;
   if (type === 'lookup_offset') {
     if (typeof rule.shift_anchor !== 'string') throw new TypeError('lookup_offset.shift_anchor must be a string');
     const shiftSource = sourceFor(rule.shift_anchor, boundary);
     const shift = values[shiftSource];
     if (shift === undefined) throw new Error(`missing compiled input ${shiftSource}`);
-    return base + shift * dir;
+    return base + shift * dir + ruleInteger(rule.offset, 'lookup_offset.offset', 0);
   }
   throw new RangeError(`unsupported runtime rule type: ${type}`);
 }
@@ -418,16 +452,26 @@ function parseBrightnessJson(source: string): {
   const labels: Record<string, string> = {};
   const read = (value: unknown): void => {
     const table = asObject(value, 'brightness table');
-    for (const [key, entry] of Object.entries(table)) if (Array.isArray(entry)) result[key] = entry.map(Number);
+    for (const [key, entry] of Object.entries(table)) {
+      if (!Array.isArray(entry)) throw new TypeError(`${key} brightness must be an array`);
+      result[key] = entry.map(Number);
+    }
   };
   if (raw.static_stars !== undefined) read(raw.static_stars);
   if (raw.flow_stars !== undefined) read(raw.flow_stars);
   if (raw.brightness_labels !== undefined) {
-    for (const [key, value] of Object.entries(asObject(raw.brightness_labels, 'brightness_labels'))) {
+    const labelEntries = Array.isArray(raw.brightness_labels)
+      ? raw.brightness_labels.entries()
+      : Object.entries(asObject(raw.brightness_labels, 'brightness_labels'));
+    for (const [key, value] of labelEntries) {
       labels[key] = String(value);
     }
   }
-  for (const [key, entry] of Object.entries(raw)) if (Array.isArray(entry)) result[key] = entry.map(Number);
+  for (const [key, entry] of Object.entries(raw)) {
+    if (['_comment', 'static_stars', 'flow_stars', 'brightness_labels'].includes(key)) continue;
+    if (!Array.isArray(entry)) throw new TypeError(`${key} brightness must be an array`);
+    result[key] = entry.map(Number);
+  }
   return { brightness: result, labels };
 }
 
@@ -451,7 +495,10 @@ function starDefinitionFromJson(star: JsonObject, natal: boolean, index: number)
   if (typeof star.key !== 'string' || star.key.trim().length === 0) {
     throw new TypeError(`star[${index}].key must be a non-empty string`);
   }
-  const category = star.type ?? star.category;
+  const rawCategory = star.type ?? star.category;
+  const category = typeof rawCategory === 'string' && LEGACY_CYCLE_CATEGORIES.has(rawCategory)
+    ? 'cycle'
+    : rawCategory;
   if (category !== undefined && (typeof category !== 'string' || category.trim().length === 0)) {
     throw new TypeError(`star[${index}].type must be a non-empty string`);
   }
@@ -501,7 +548,10 @@ function parseFlowJson(source: string): {
     stars.push(definition);
     if (star.rule === undefined) throw new TypeError(`flow[${index}].rule is required`);
     placements[definition.key] = compileZiweiJsonPlacement(star.rule);
-    if (Array.isArray(star.brightness)) brightness[definition.key] = star.brightness.map(Number);
+    if (star.brightness !== undefined) {
+      if (!Array.isArray(star.brightness)) throw new TypeError(`flow[${index}].brightness must be an array`);
+      brightness[definition.key] = star.brightness.map(Number);
+    }
   });
   return { placements, brightness, stars: Object.freeze(stars) };
 }

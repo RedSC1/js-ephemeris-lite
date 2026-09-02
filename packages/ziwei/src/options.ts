@@ -5,6 +5,7 @@ import {
   RAT_HOUR_MODE,
   type CalendarDayBoundaryMode,
   type CalendarMode,
+  type EventAccuracy,
   type PillarHistoricalMode,
   type RatHourMode,
 } from 'js-ephemeris-lite';
@@ -73,6 +74,8 @@ export interface ZiweiOptionsInput {
   dayBoundaryMode?: CalendarDayBoundaryMode;
   utcOffsetMinutes?: number;
   meridianDeg?: number;
+  /** Accuracy tier used when solving solar terms and new moons. Defaults to `mid`. */
+  eventAccuracy?: EventAccuracy;
   pillarHistoricalMode?: PillarHistoricalMode;
   ratHourMode?: RatHourMode;
   clockMode?: ZiweiClockMode;
@@ -138,6 +141,7 @@ export class ZiweiOptions {
   readonly dayBoundaryMode: CalendarDayBoundaryMode;
   readonly utcOffsetMinutes: number;
   readonly meridianDeg: number | undefined;
+  readonly eventAccuracy: EventAccuracy;
   readonly pillarHistoricalMode: PillarHistoricalMode;
   readonly ratHourMode: RatHourMode;
   readonly clockMode: ZiweiClockMode;
@@ -159,6 +163,7 @@ export class ZiweiOptions {
       ?? CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET;
     this.utcOffsetMinutes = input.utcOffsetMinutes ?? 480;
     this.meridianDeg = input.meridianDeg;
+    this.eventAccuracy = input.eventAccuracy ?? 'mid';
     this.pillarHistoricalMode = input.pillarHistoricalMode
       ?? PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR;
     this.ratHourMode = input.ratHourMode ?? RAT_HOUR_MODE.NEXT_DAY;
@@ -195,6 +200,9 @@ export class ZiweiOptions {
     if (this.dayBoundaryMode === CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET
       && this.meridianDeg !== undefined) {
       throw new RangeError('meridianDeg is only valid with mean-solar-meridian day boundaries');
+    }
+    if (!includes(['fast', 'mid', 'accurate'] as const, this.eventAccuracy)) {
+      throw new RangeError("eventAccuracy must be 'fast', 'mid', or 'accurate'");
     }
     if (!includes(Object.values(PILLAR_HISTORICAL_MODE), this.pillarHistoricalMode)) {
       throw new RangeError('unknown pillar historical mode');
@@ -247,12 +255,14 @@ export class ZiweiOptions {
     dayBoundaryMode: CalendarDayBoundaryMode;
     utcOffsetMinutes: number;
     meridianDeg: number | undefined;
+    eventAccuracy: EventAccuracy;
   } {
     return Object.freeze({
       mode: this.mode,
       dayBoundaryMode: this.dayBoundaryMode,
       utcOffsetMinutes: this.utcOffsetMinutes,
       meridianDeg: this.meridianDeg,
+      eventAccuracy: this.eventAccuracy,
     });
   }
 
@@ -263,6 +273,7 @@ export class ZiweiOptions {
       dayBoundaryMode: this.dayBoundaryMode,
       utcOffsetMinutes: this.utcOffsetMinutes,
       meridianDeg: this.meridianDeg,
+      eventAccuracy: this.eventAccuracy,
       pillarHistoricalMode: this.pillarHistoricalMode,
       ratHourMode: this.ratHourMode,
       clockMode: this.clockMode,
