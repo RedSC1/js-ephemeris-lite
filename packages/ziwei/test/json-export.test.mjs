@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ZonedTime } from 'js-ephemeris-lite';
-import { ZiweiChart, ZiweiConfigLoader, ZiweiOptions, ZiweiRuleset, ZiweiRuleModule,
+import { ZiweiCastingChart, ZiweiChart, ZiweiConfigLoader, ZiweiOptions, ZiweiRuleset, ZiweiRuleModule,
   resolveZiweiBirth, resolveZiweiBirthFromInstant } from '../dist/index.js';
 
 test('JSON preserves source clock, solar clock and late-zi logical date separately', () => {
@@ -55,4 +55,37 @@ test('custom stars, brightness and labelled rule order survive JSON export', () 
   });
   assert.deepEqual(restored.starPositions, chart.starPositions);
   assert.deepEqual(restored.toJSON().palaces, chart.toJSON().palaces);
+});
+
+
+test('casting JSON preserves its source, custom rules and omitted placements without birth placeholders', () => {
+  const ruleset = ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), {
+    label: 'casting-custom',
+    starsJson: JSON.stringify([{ key: 'casting_star', category: 'minor', rule: { type: 'constant', value: 11 } }]),
+    brightnessJson: JSON.stringify({ brightness_labels: { 6: '自定亮度' }, static_stars: { casting_star: Array(12).fill(6) } }),
+    sihuaJson: JSON.stringify({ jia: { lu: 'casting_star' } }),
+  }).with(new ZiweiRuleModule({ label: 'requires-real-day', patch: {
+    natalPlacements: { ziwei: { inputs: ['lunar.day_stem'], shape: [10], positions: Array.from({ length: 10 }, (_, i) => i) } },
+  } }));
+  const original = ZiweiCastingChart.fromInput({ yearGanIndex: 0, yearZhiIndex: 0, month: 2, day: 30, hourZhiIndex: 0 },
+    { gender: 1, rules: { ruleset } });
+  const chart = original.modify({ month: 5, updateBureau: true }).shiftLifePalace(1);
+  const json = JSON.parse(JSON.stringify(chart));
+  assert.equal(json.schemaVersion, 'ziwei-casting-chart-v1');
+  assert.equal(json.kind, 'ziwei-casting');
+  for (const absent of ['birth', 'facts', 'jdUT1', 'birthYearTransformations']) assert.equal(absent in json, false);
+  assert.deepEqual(json.casting, { method: 'manual' });
+  assert.deepEqual(json.originalInput, original.placementInput);
+  assert.deepEqual(json.placementInput, chart.placementInput);
+  assert.equal(json.omittedPlacements.some(x => x.missingInputs.includes('lunar.day_stem')), true);
+  assert.equal(chart.getStarPosition(chart.findStarId('ziwei')), null);
+  const custom = json.palaces.flatMap(p => p.stars).find(star => star.key === 'casting_star');
+  assert.equal(custom.brightnessLabel, '自定亮度');
+  assert.ok(custom.transformations.some(x => x.scope === 'year' && x.kind === 'lu'));
+  const restoredRules = new ZiweiRuleset(json.options.rules.ruleset.modules.map(m => new ZiweiRuleModule(m)));
+  const restored = ZiweiCastingChart.fromInput(json.originalInput,
+    { ...json.options, rules: { ...json.options.rules, ruleset: restoredRules } }, json.originalBureau)
+    .modify({ ...json.modification.overrides, updateBureau: json.modification.updateBureau })
+    .shiftLifePalace(json.modification.lifePalaceShift);
+  assert.deepEqual(restored.toJSON(), chart.toJSON());
 });

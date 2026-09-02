@@ -1,7 +1,6 @@
 import {
   ganzhiBranch,
   ganzhiStem,
-  makeGanzhi,
   type FourPillars,
 } from 'js-ephemeris-lite';
 import type { ZiweiOptions } from './options.js';
@@ -87,34 +86,48 @@ export function resolveEffectiveLunarMonth(
   return Object.freeze({ year, month });
 }
 
+/** Calendar-independent anchor calculation shared by normal and manual placement. */
+export function computePlacementAnchors(
+  month: number, day: number, hourBranch: number, yearStem: number,
+  options: ZiweiOptions, retainedBureau?: Bureau,
+) {
+  for (const [name, value, min, max] of [
+    ['month', month, 1, 12], ['day', day, 1, 30], ['hourBranch', hourBranch, 0, 11],
+    ['yearStem', yearStem, 0, 9],
+  ] as const) {
+    if (!Number.isInteger(value) || value < min || value > max) {
+      throw new RangeError(`${name} must be ${min}..${max}`);
+    }
+  }
+  if (retainedBureau !== undefined && (!Number.isInteger(retainedBureau) || retainedBureau < 0 || retainedBureau > 4)) {
+    throw new RangeError('bureau must be a BUREAU value (0..4)');
+  }
+  const originalLife = advanceBranch(1 + month - hourBranch, 0);
+  const bodyPalace = advanceBranch(1 + month + hourBranch, 0);
+  const life = options.chartMode === ZIWEI_CHART_MODE.DI_PAN
+    ? bodyPalace
+    : options.chartMode === ZIWEI_CHART_MODE.REN_PAN
+      ? advanceBranch(originalLife, 2) : originalLife;
+  const palacePositions = Object.freeze(Array.from(
+    { length: 12 }, (_, palace) => advanceBranch(life, -palace),
+  ));
+  const palaceStems = computePalaceStems(yearStem);
+  const bureau = retainedBureau ?? bureauFromPalaceGanzhi(palaceStems[life]!, life);
+  const ziwei = ziweiPosition(day, bureau);
+  return Object.freeze({ bureau, ziwei, tianfu: advanceBranch(4 - ziwei, 0),
+    palacePositions, palaceStems, bodyPalace });
+}
+
 export function computeZiweiAnchors(
   facts: ZiweiCalendarFacts,
   options: ZiweiOptions,
 ): ResolvedZiweiAnchors {
-  const monthOffset = facts.effectiveLunarMonth - 1;
-  const hourBranch = ganzhiBranch(facts.lunarPillars.hour);
-  const originalLife = advanceBranch(2 + monthOffset - hourBranch, 0);
-  const bodyPalace = advanceBranch(2 + monthOffset + hourBranch, 0);
-  const life = options.chartMode === ZIWEI_CHART_MODE.DI_PAN
-    ? bodyPalace
-    : options.chartMode === ZIWEI_CHART_MODE.REN_PAN
-      ? advanceBranch(originalLife, 2)
-      : originalLife;
-  const palacePositions = Object.freeze(Array.from(
-    { length: 12 },
-    (_, palace) => advanceBranch(life, -palace),
-  ));
-
   const yearPillar = options.wuHuDunYearBoundary === PILLAR_BOUNDARY.SOLAR_TERM
-    ? facts.solarTermPillars.year
-    : facts.lunarPillars.year;
-  const yearStem = ganzhiStem(yearPillar);
-  const palaceStems = computePalaceStems(yearStem);
-  const lifeStem = palaceStems[life]!;
-  makeGanzhi(lifeStem, life);
-  const bureau = bureauFromPalaceGanzhi(lifeStem, life);
-  const ziwei = ziweiPosition(facts.lunarDate.day, bureau);
-  const tianfu = advanceBranch(4 - ziwei, 0);
+    ? facts.solarTermPillars.year : facts.lunarPillars.year;
+  const { bureau, ziwei, tianfu, palacePositions, bodyPalace } = computePlacementAnchors(
+    facts.effectiveLunarMonth, facts.lunarDate.day, ganzhiBranch(facts.lunarPillars.hour),
+    ganzhiStem(yearPillar), options,
+  );
 
   return Object.freeze({
     anchors: Object.freeze({

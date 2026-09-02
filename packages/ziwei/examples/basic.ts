@@ -1,9 +1,11 @@
 import { ZonedTime } from 'js-ephemeris-lite';
 import {
   PALACE,
+  arrangeZiweiStars,
   PALACE_NAMES,
   ZIWEI_GENDER,
   ZiweiChart,
+  ZiweiCastingChart,
   ZiweiOptions,
   brightnessName,
   getStar,
@@ -40,3 +42,28 @@ for (const palace of chart.palaces) {
     });
   }
 }
+
+
+// Manual placement changes the calculation inputs, not the recorded birthday.
+const modified = chart.modify({
+  yearGanIndex: 9,
+  yearZhiIndex: 7,
+  month: 3,
+  updateBureau: true,
+});
+console.log(modified.placementInput, modified.anchors.bureau);
+const shifted = modified.shiftLifePalace(1);
+console.log(shifted.getPalace(PALACE.LIFE), shifted.reset() === chart);
+const direct = arrangeZiweiStars({
+  yearGanIndex: 9, yearZhiIndex: 7, month: 2, day: 30, hourZhiIndex: 6,
+}, chart.options);
+console.log(direct.starPositions, direct.omittedPlacements);
+
+
+const casting = ZiweiCastingChart.fromInput({
+  yearGanIndex: 9, yearZhiIndex: 7, month: 2, day: 30, hourZhiIndex: 6,
+}, { gender: ZIWEI_GENDER.MALE });
+const reported = ZiweiCastingChart.fromNumber('123456', casting.options);
+const random = ZiweiCastingChart.random(casting.options);
+console.log(casting.getPalace(PALACE.LIFE), reported.casting, random.casting);
+console.log(casting.modify({ month: 3 }).reset() === casting);

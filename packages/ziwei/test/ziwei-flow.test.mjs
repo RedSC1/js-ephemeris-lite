@@ -6,11 +6,13 @@ import {
 } from 'js-ephemeris-lite';
 import {
   FLOW_LEVEL,
+  arrangeZiweiStars,
   FLOW_MONTH_PALACE_STRATEGY,
   LEAP_MONTH_STRATEGY,
   RAT_HOUR_SEGMENT,
   ZIWEI_GENDER,
   ZiweiChart,
+  ZiweiCastingChart,
   ZiweiConfigLoader,
   ZiweiLimitManager,
   ZiweiOptions,
@@ -44,6 +46,17 @@ test('C++ natal and flow fixtures cover five levels, all 120 coordinates and bot
     };
     const options = new ZiweiOptions({ gender });
     const chart = ZiweiChart.fromResolvedBirth({ facts, ...computeZiweiAnchors(facts, options), options });
+    const direct = arrangeZiweiStars({
+      yearGanIndex: y % 10, yearZhiIndex: y % 12, month: m, day: d, hourZhiIndex: h,
+    }, options);
+    assert.deepEqual(direct.starPositions, chart.starPositions, `direct placement / C++ row ${i}`);
+    assert.deepEqual(direct.yearTransformations, chart.birthYearTransformations);
+    const casting = ZiweiCastingChart.fromInput(direct.input, options);
+    assert.deepEqual(casting.starPositions, chart.starPositions);
+    assert.deepEqual(casting.transformationMasks, chart.transformationMasks);
+    assert.deepEqual(casting.palaces, chart.palaces);
+    assert.equal(casting.lifeMaster, chart.lifeMaster);
+    assert.equal(casting.bodyMaster, chart.bodyMaster);
     const flow = makeFlowLayer(chart, level, { stem, branch });
     const positions = a => a.map(p => p < 0 ? 255 : p);
     assert.deepEqual([

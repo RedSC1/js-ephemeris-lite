@@ -58,6 +58,8 @@ console.log(chart.birthYearTransformations);
 - 含闰月和历史月份的时间线，以及适合应用导航的流运管理器。
 - 独立的安星、亮度、四化等规则选项，以及带标签的 JSON 自定义规则。
 - 指定范围的星曜条件反查与 JSON 命盘导出。
+- 直接输入干支与月日时安星、`chart.modify()` 选择性覆盖，以及保留起限时间的命宫平移。
+- 独立的 `ZiweiCastingChart`：手动拼盘、报数映射与随机起盘，不虚构出生日期。
 
 ## 常用设置
 
@@ -86,7 +88,31 @@ console.log(JSON.stringify(chart, null, 2));
 ```
 
 JSON 为本命盘快照，包含出生时间、计算设置和自定义规则。
+
+```ts
+const modified = chart.modify({ yearGanIndex: 9, yearZhiIndex: 7, updateBureau: false });
+const shifted = modified.shiftLifePalace(1);
+const original = shifted.reset();
+```
+
+修改不改变原始生日。保留五行局时起限时间不变；重算后若五行局变化，起限岁数和大限年份也随新局更新。命宫平移独立执行，不改变当前起限时间。
+详见[直接安星与修改已有命盘](./docs/guide.md#直接安星与修改已有命盘)。
 流运查询、时间线及反查示例见[使用指南](./docs/guide.md)。
+
+无出生时间的盘使用独立类型：
+
+```ts
+import { ZiweiCastingChart } from 'ziwei-lite';
+
+const casting = ZiweiCastingChart.fromInput({
+  yearGanIndex: 9, yearZhiIndex: 7, month: 2, day: 30, hourZhiIndex: 6,
+}, { gender: ZIWEI_GENDER.MALE });
+const reported = ZiweiCastingChart.fromNumber('123456', casting.options);
+const random = ZiweiCastingChart.random(casting.options);
+```
+
+详见[手动拼盘、报数与随机盘](./docs/guide.md#手动拼盘报数与随机盘)，包括随机空间、映射版本与运行环境要求。
+
 
 ## 文档与许可
 

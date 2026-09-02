@@ -254,7 +254,7 @@ function kongWang(ganzhi: Ganzhi, secondary: boolean): number {
     : firstIsZheng ? first : second;
 }
 
-function readRuleInput(
+export function readNatalRuleInput(
   source: string,
   facts: ZiweiCalendarFacts,
   anchors: ZiweiAnchors,
@@ -301,12 +301,20 @@ export function evaluateNatalPlacement(
   anchors: ZiweiAnchors,
   bodyPalace: number,
 ): number {
+  return evaluatePlacementInputs(rule, (source) => readNatalRuleInput(source, facts, anchors, bodyPalace));
+}
+
+/** Evaluate the same finite rule table with calendar or manual input values. */
+export function evaluatePlacementInputs(
+  rule: GeneratedPlacement,
+  read: (source: string) => number,
+): number {
   if (rule.inputs.length !== rule.shape.length) {
     throw new Error(`invalid placement rule for star ${rule.starId}`);
   }
   let index = 0;
   for (let input = 0; input < rule.inputs.length; input += 1) {
-    const value = readRuleInput(rule.inputs[input]!, facts, anchors, bodyPalace);
+    const value = read(rule.inputs[input]!);
     const domain = rule.shape[input]!;
     if (!Number.isInteger(value) || value < 0 || value >= domain) {
       throw new Error(`rule input ${rule.inputs[input]} is outside 0..${domain - 1}`);

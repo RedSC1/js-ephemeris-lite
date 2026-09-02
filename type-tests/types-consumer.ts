@@ -272,3 +272,25 @@ createFengShuiChart({period:9,sitting:180});
 // @ts-expect-error only explicit TuWang modes are supported
 new HuangliCalendar({tuWangMethod:'unknown'});
 void [earthChart,hourlyPeriods,soilPeriods,traditionalAlmanac];
+
+
+// Casting plates share display queries without weakening birth-chart contracts.
+import { ZiweiChart, ZiweiCastingChart, ZiweiPlate } from '../packages/ziwei/src/index.js';
+const ziweiBirth = ZiweiChart.fromZonedTime(new ZonedTime({
+  year: 2000, month: 1, day: 1, hour: 12, offsetMinutes: 480,
+}), { gender: 0 });
+const birthJd: number = ziweiBirth.facts.jdUT1;
+const ziweiCasting = ZiweiCastingChart.fromInput({
+  yearGanIndex: 9, yearZhiIndex: 7, month: 2, day: 30, hourZhiIndex: 6,
+}, { gender: 0 });
+const displayPlate: ZiweiPlate = ziweiCasting;
+displayPlate.getPalace(0);
+const modifiedCasting: ZiweiCastingChart = ziweiCasting.modify({ month: 3 }).shiftLifePalace(1).reset();
+ZiweiCastingChart.random({ gender: 1 }, () => 42);
+ZiweiCastingChart.fromNumber(123456n, { gender: 0 });
+// @ts-expect-error no birth facts exist on a casting plate
+ziweiCasting.facts;
+// @ts-expect-error no birth-based timeline exists on a casting plate
+ziweiCasting.timeline();
+// @ts-expect-error shared display queries do not make casting plates valid birth charts
+const invalidBirthChart: ZiweiChart = ziweiCasting;

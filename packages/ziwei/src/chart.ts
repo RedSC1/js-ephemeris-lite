@@ -1,9 +1,8 @@
-import { EARTHLY_BRANCHES, HEAVENLY_STEMS, ZonedTime, ganzhiBranch, ganzhiStem, lunarToSolar, type LunarDate } from 'js-ephemeris-lite';
+import { ZonedTime, ganzhiBranch, ganzhiStem, lunarToSolar, type LunarDate } from 'js-ephemeris-lite';
 import { computePalaceStems, type ZiweiAnchors } from './anchors.js';
 import { resolveZiweiBirth, type ResolvedZiweiBirth } from './calendar.js';
 import { ZiweiOptions, type ZiweiOptionsInput } from './options.js';
 import {
-  brightnessAt,
   evaluateNatalPlacement,
   selectZiweiRules,
   type SelectedZiweiRules,
@@ -11,11 +10,7 @@ import {
 import type { StarInfo } from './stars.js';
 import {
   PALACE,
-  PALACE_NAMES,
   PILLAR_BOUNDARY,
-  type Brightness,
-  type PalaceId,
-  type StarTransformMark,
   type TransformSet,
   type ZiweiCalendarFacts,
 } from './types.js';
@@ -24,26 +19,10 @@ import type { ZiweiDynamicChart } from './flow.js';
 import { ZiweiLimitManager } from './limit-manager.js';
 import { ZiweiTimelineProvider } from './timeline.js';
 import type { FlowLevel } from './types.js';
+import { arrangeModifiedStars, placementOverrides, type ZiweiPlacementInput,
+  type ZiweiModifyInput, type ZiweiModification } from './placement.js';
 
-export interface ZiweiPalaceState {
-  readonly branch: number;
-  readonly stem: number;
-  readonly palaceId: PalaceId;
-  readonly starBitset: bigint;
-  readonly starIds: readonly number[];
-}
-
-export interface ZiweiStarPlacement extends StarInfo {
-  readonly branch: number;
-  readonly palaceId: PalaceId;
-  readonly brightness: Brightness;
-  readonly transformMask: number;
-}
-
-function addTransformSet(masks: number[], transforms: TransformSet, startMark: number): void {
-  const ids = [transforms.lu, transforms.quan, transforms.ke, transforms.ji];
-  for (let kind = 0; kind < 4; kind += 1) masks[ids[kind]!]! |= 1 << (startMark + kind);
-}
+import { ZiweiPlate, buildZiweiPlate, type ZiweiPalaceState } from './plate.js';
 
 function masterLookupBranch(
   input: SelectedZiweiRules['masters']['life']['input'],
@@ -59,7 +38,9 @@ function masterLookupBranch(
   }
 }
 
-export class ZiweiChart {
+export type { ZiweiPalaceState, ZiweiStarPlacement } from './plate.js';
+
+export class ZiweiChart extends ZiweiPlate {
   readonly birthClockTime: Readonly<ReturnType<ZonedTime['toJSON']>> | null;
   readonly lunarInput: Readonly<LunarDate & { hour?: number; minute?: number; second?: number }> | null;
   readonly options: ZiweiOptions;
@@ -75,16 +56,46 @@ export class ZiweiChart {
   readonly starCatalog: readonly StarInfo[];
   readonly starPositions: readonly number[];
   readonly transformationMasks: readonly number[];
-  private readonly ruleTables: SelectedZiweiRules;
+  protected readonly ruleTables: SelectedZiweiRules;
+  private readonly originalChart: ZiweiChart | null;
+  readonly modification: ZiweiModification | null;
+  readonly placementInput: Readonly<ZiweiPlacementInput>;
+  readonly omittedPlacements: readonly { readonly starId: number; readonly missingInputs: readonly string[] }[];
 
-  private constructor(birth: ResolvedZiweiBirth, lunarInput: ZiweiChart['lunarInput'] = null) {
+  private constructor(
+    birth: ResolvedZiweiBirth, lunarInput: ZiweiChart['lunarInput'] = null,
+    adjustment?: { original: ZiweiChart; modification: ZiweiModification; placementSource?: ZiweiChart },
+  ) {
+    super();
     this.birthClockTime = birth.clockTime ? Object.freeze({ ...birth.clockTime }) : null;
     this.lunarInput = lunarInput ? Object.freeze({ ...lunarInput }) : null;
     this.options = birth.options;
     this.ruleTables = selectZiweiRules(this.options.rules);
     this.starCatalog = this.ruleTables.catalog;
     this.facts = birth.facts;
-    this.anchors = birth.anchors;
+    this.originalChart = adjustment?.original ?? null;
+    this.modification = adjustment?.modification ?? null;
+    const preserved = adjustment?.placementSource;
+    const placement = adjustment && !preserved ? arrangeModifiedStars(
+      adjustment.modification.overrides, this.options, birth,
+      adjustment.modification.updateBureau ? undefined : birth.anchors.bureau,
+    ) : null;
+    this.placementInput = preserved?.placementInput ?? placement?.input ?? Object.freeze({
+      yearGanIndex: ganzhiStem(birth.anchors.lunar.year),
+      yearZhiIndex: ganzhiBranch(birth.anchors.lunar.year),
+      month: birth.facts.effectiveLunarMonth, day: birth.facts.lunarDate.day,
+      hourZhiIndex: ganzhiBranch(birth.anchors.lunar.hour),
+    });
+    this.omittedPlacements = preserved?.omittedPlacements ?? placement?.omittedPlacements ?? Object.freeze([]);
+    this.anchors = adjustment ? Object.freeze({
+      ...birth.anchors,
+      bureau: preserved?.anchors.bureau ?? placement!.bureau,
+      ziwei: preserved?.anchors.ziwei ?? placement!.ziwei,
+      tianfu: preserved?.anchors.tianfu ?? placement!.tianfu,
+      palacePositions: Object.freeze(birth.anchors.palacePositions.map(
+        (branch) => (branch + adjustment.modification.lifePalaceShift) % 12,
+      )),
+    }) : birth.anchors;
     this.bodyPalace = birth.bodyPalace;
     const palaceYear = this.options.wuHuDunYearBoundary === PILLAR_BOUNDARY.SOLAR_TERM
       ? this.anchors.solarTerm.year
@@ -92,50 +103,20 @@ export class ZiweiChart {
     this.palaceStems = computePalaceStems(ganzhiStem(palaceYear));
 
     const positions = Array<number>(this.starCatalog.length).fill(-1);
-    const bitsets = Array<bigint>(12).fill(0n);
     for (const rule of this.ruleTables.natalPlacements) {
-      const branch = evaluateNatalPlacement(rule, this.facts, this.anchors, this.bodyPalace);
-      positions[rule.starId] = branch;
-      bitsets[branch] |= 1n << BigInt(rule.starId);
+      positions[rule.starId] = preserved?.starPositions[rule.starId] ?? placement?.starPositions[rule.starId]
+        ?? evaluateNatalPlacement(rule, this.facts, this.anchors, this.bodyPalace);
     }
-    this.starPositions = Object.freeze(positions);
-
-    const roleByBranch = Array<number>(12);
-    for (let palace = 0; palace < 12; palace += 1) {
-      roleByBranch[this.anchors.palacePositions[palace]!] = palace;
-    }
-    this.palaces = Object.freeze(Array.from({ length: 12 }, (_, branch) => {
-      const starIds: number[] = [];
-      for (const star of this.starCatalog) {
-        if (star.natal && positions[star.id] === branch) starIds.push(star.id);
-      }
-      return Object.freeze({
-        branch,
-        stem: this.palaceStems[branch]!,
-        palaceId: roleByBranch[branch]! as PalaceId,
-        starBitset: bitsets[branch]!,
-        starIds: Object.freeze(starIds),
-      });
-    }));
 
     const sihuaYear = this.options.sihuaYearBoundary === PILLAR_BOUNDARY.SOLAR_TERM
       ? this.anchors.solarTerm.year
       : this.anchors.lunar.year;
-    this.birthYearTransformations = this.ruleTables.sihua[ganzhiStem(sihuaYear)]!;
-    const masks = Array<number>(this.starCatalog.length).fill(0);
-    addTransformSet(masks, this.birthYearTransformations, 0);
-    for (let branch = 0; branch < 12; branch += 1) {
-      const opposite = (branch + 6) % 12;
-      const own = this.ruleTables.sihua[this.palaceStems[branch]!]!;
-      const inward = this.ruleTables.sihua[this.palaceStems[opposite]!]!;
-      const ownIds = [own.lu, own.quan, own.ke, own.ji];
-      const inwardIds = [inward.lu, inward.quan, inward.ke, inward.ji];
-      for (let kind = 0; kind < 4; kind += 1) {
-        if (positions[ownIds[kind]!] === branch) masks[ownIds[kind]!]! |= 1 << (4 + kind);
-        if (positions[inwardIds[kind]!] === branch) masks[inwardIds[kind]!]! |= 1 << (8 + kind);
-      }
-    }
-    this.transformationMasks = Object.freeze(masks);
+    this.birthYearTransformations = preserved?.birthYearTransformations ?? placement?.yearTransformations ?? this.ruleTables.sihua[ganzhiStem(sihuaYear)]!;
+    const plate = buildZiweiPlate(this.ruleTables, this.anchors, this.palaceStems,
+      positions, this.birthYearTransformations);
+    this.starPositions = plate.starPositions;
+    this.palaces = plate.palaces;
+    this.transformationMasks = plate.transformationMasks;
 
     const lifeBranch = this.anchors.palacePositions[PALACE.LIFE]!;
     const bodyMasterYear = this.options.bodyMasterYearBoundary === PILLAR_BOUNDARY.SOLAR_TERM
@@ -153,8 +134,8 @@ export class ZiweiChart {
       this.anchors,
       bodyMasterYear,
     );
-    this.lifeMaster = this.ruleTables.masters.life.stars[lifeMasterBranch]!;
-    this.bodyMaster = this.ruleTables.masters.body.stars[bodyMasterBranch]!;
+    this.lifeMaster = adjustment?.original.lifeMaster ?? this.ruleTables.masters.life.stars[lifeMasterBranch]!;
+    this.bodyMaster = adjustment?.original.bodyMaster ?? this.ruleTables.masters.body.stars[bodyMasterBranch]!;
     Object.freeze(this);
   }
 
@@ -186,58 +167,46 @@ export class ZiweiChart {
     return new ZiweiChart(birth);
   }
 
-  getPalace(palaceId: PalaceId): ZiweiPalaceState {
-    if (!Number.isInteger(palaceId) || palaceId < 0 || palaceId >= 12) {
-      throw new RangeError('palaceId must be 0..11');
+  /** Re-place stars with selective overrides; birth remains unchanged; a new bureau also reschedules limits. */
+  modify(input: ZiweiModifyInput): ZiweiChart {
+    const changes = placementOverrides(input);
+    if (input.updateBureau !== undefined && typeof input.updateBureau !== 'boolean') {
+      throw new TypeError('updateBureau must be boolean');
     }
-    return this.palaces[this.anchors.palacePositions[palaceId]!]!;
+    return this.withModification(Object.freeze({
+      overrides: Object.freeze({ ...this.modification?.overrides, ...changes }),
+      updateBureau: input.updateBureau ?? this.modification?.updateBureau ?? false,
+      lifePalaceShift: this.modification?.lifePalaceShift ?? 0,
+    }));
   }
 
-  getStarPosition(starId: number): ZiweiStarPlacement | null {
-    const star = this.getStarInfo(starId);
-    const branch = this.starPositions[starId]!;
-    if (branch < 0) return null;
-    return Object.freeze({
-      ...star,
-      branch,
-      palaceId: this.palaces[branch]!.palaceId,
-      brightness: brightnessAt(this.ruleTables, starId, branch),
-      transformMask: this.transformationMasks[starId]!,
-    });
+  /** Shift palace roles and decade locations by branches; stars and body palace stay fixed. */
+  shiftLifePalace(steps: number): ZiweiChart {
+    if (!Number.isSafeInteger(steps)) throw new RangeError('steps must be a safe integer');
+    const shift = ((this.modification?.lifePalaceShift ?? 0) + steps % 12 + 12) % 12;
+    return this.withModification(Object.freeze({
+      overrides: this.modification?.overrides ?? Object.freeze({}),
+      updateBureau: this.modification?.updateBureau ?? false,
+      lifePalaceShift: shift,
+    }), this);
   }
 
-  findStarId(key: string): number | undefined {
-    return this.starCatalog.find((star) => star.key === key)?.id;
+  /** Restore the original chart, including any manually shifted palace roles. */
+  reset(): ZiweiChart {
+    return this.originalChart ?? this;
   }
 
-  getStarInfo(starId: number): StarInfo {
-    const star = this.starCatalog[starId];
-    if (star === undefined) throw new RangeError(`unknown star id in this chart: ${starId}`);
-    return star;
+  /** Descriptive alias for reset(). */
+  resetModification(): ZiweiChart {
+    return this.reset();
   }
 
-  getStarsAtBranch(branch: number): readonly ZiweiStarPlacement[] {
-    if (!Number.isInteger(branch) || branch < 0 || branch >= 12) {
-      throw new RangeError('branch must be 0..11');
-    }
-    return Object.freeze(this.palaces[branch]!.starIds.map(
-      (starId) => this.getStarPosition(starId)!,
-    ));
-  }
-
-  getStarsInPalace(palaceId: PalaceId): readonly ZiweiStarPlacement[] {
-    return this.getStarsAtBranch(this.getPalace(palaceId).branch);
-  }
-
-  getBrightnessLabel(value: Brightness): string | null {
-    if (value < -1 || value > 6) throw new RangeError('brightness must be -1..6');
-    const label = this.ruleTables.brightnessLabels[String(value)];
-    return value === -1 || label === undefined || label.length === 0 ? null : label;
-  }
-
-  hasTransform(starId: number, mark: StarTransformMark): boolean {
-    if (!Number.isInteger(mark) || mark < 0 || mark >= 12) return false;
-    return (((this.transformationMasks[starId] ?? 0) >>> mark) & 1) === 1;
+  private withModification(modification: ZiweiModification, placementSource?: ZiweiChart): ZiweiChart {
+    const original = this.originalChart ?? this;
+    return new ZiweiChart({
+      facts: original.facts, anchors: original.anchors, bodyPalace: original.bodyPalace,
+      options: original.options, clockTime: original.birthClockTime ?? undefined,
+    }, original.lunarInput, { original, modification, placementSource });
   }
 
   timeline(): ZiweiTimelineProvider {
@@ -274,6 +243,9 @@ export class ZiweiChart {
         lunarInput: this.lunarInput,
         logicalLunarDate: this.facts.lunarDate,
       },
+      modification: this.modification,
+      placementInput: this.placementInput,
+      omittedPlacements: this.omittedPlacements,
       facts: this.facts,
       anchors: this.anchors,
       bodyPalace: this.bodyPalace,
@@ -285,25 +257,7 @@ export class ZiweiChart {
       birthYearTransformations: this.birthYearTransformations,
       transformationMasks: this.transformationMasks,
       brightnessLabels: this.ruleTables.brightnessLabels,
-      palaces: this.palaces.map((palace) => ({
-        branch: palace.branch,
-        branchName: EARTHLY_BRANCHES[palace.branch]!,
-        stem: palace.stem,
-        stemName: HEAVENLY_STEMS[palace.stem]!,
-        palaceId: palace.palaceId,
-        name: PALACE_NAMES[palace.palaceId],
-        isBodyPalace: palace.branch === this.bodyPalace,
-        starIds: palace.starIds,
-        stars: this.getStarsAtBranch(palace.branch).map((star) => ({
-          ...star,
-          brightnessLabel: this.getBrightnessLabel(star.brightness),
-          transformations: (['birthYear', 'self', 'centripetal'] as const).flatMap((scope, index) => (
-            (['lu', 'quan', 'ke', 'ji'] as const).flatMap((kind, kindIndex) => (
-              (star.transformMask & (1 << (index * 4 + kindIndex))) !== 0 ? [{ scope, kind }] : []
-            ))
-          )),
-        })),
-      })),
+      palaces: this.serializePalaces('birthYear'),
       options: {
         ...this.options.toJSON(),
         rules: {
