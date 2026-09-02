@@ -165,7 +165,12 @@ indices = {k:np.searchsorted(all_year,y) for k,y in years.items()}
 np.savez(HERE/'dates.npz',year=all_year,jd=jd,**indices)
 
 def sha(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    # DE441 can be several GB; hash it without reading the whole kernel into RAM.
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(block)
+    return digest.hexdigest()
 
 def cached(name, fn):
     path=HERE/(name+'.npy')
@@ -219,6 +224,8 @@ np.savez(HERE/'reference.npz',**oracle)
 
 # Official VSOP87 notice gives a dynamical-ecliptic -> FK5 rotation, NOT ICRF.
 # SOFA/ERFA FK5-Hipparcos orientation completes the fixed J2000 frame tie.
+# ERFA fk5hip Note 2: P_Hipparcos = r5h @ P_FK5 (column vectors).
+# Do not transpose r5h here; full87() transposes the composed matrix for row vectors.
 VSOP87_TO_FK5 = np.array([[1.,.000000440360,-.000000190919],[-.000000479966,.917482137087,-.397776982902],[0.,.397776982902,.917482137087]])
 ROT87=erfa.fk5hip()[0]@VSOP87_TO_FK5
 HEADER=re.compile(r'VARIABLE\s+(\d+).*?\*T\*\*(\d+)\s+(\d+)\s+TERMS')
@@ -281,6 +288,8 @@ for k in ['ELP2000-82B Full native','ELP-MPP02 Full native']:
     np.save(HERE/(k.split()[0]+'-native.npy'),native)
 
 sources=list(ROOT.glob('src/*.js'))+[Path(__file__).resolve(),ELP,ELP.with_name('elpmpp02_data.js')]+list(VSOP87.glob('VSOP87A.*'))+list(V13_DATA.glob('VSOP2013p*.dat'))+[TOP_DATA/'TOP2013LBR.dat',ELP82_DATA/'elp82b.f']+[ELP82_DATA/f'ELP{i}' for i in range(1,37)]
+sources += [args.de441.resolve(), V13_DATA/'VSOP2013.f',
+            ROOT/'tools/benchmark-elp82-driver.f90', ELP82_BINARY]
 report=dict(benchmark_date="2026-09-02",seed=SEED,count_per_window=COUNT+2,windows=WINDOWS,jd_sha256=hashlib.sha256(jd.tobytes()).hexdigest(),source_hashes={str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else p.name:sha(p) for p in sources},runtime_to_icrf=runtime['runtimeToIcrf'],vsop87_to_icrf=ROT87.tolist(),lunar_rotations={k:v.tolist() for k,v in LUNAR_ROTATIONS.items()},metrics={})
 for b,values in models.items():
     report['metrics'][b]={name:{w:stats(p,oracle[b],ix) for w,ix in indices.items()} for name,p in values.items()}

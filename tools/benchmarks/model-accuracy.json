@@ -56,7 +56,7 @@
     "src/event-series.js": "672bdffa04de096745debe5d897e352354eb7789ef06c2cc8eb2fb76947b8403",
     "src/planet-prefix-counts.js": "4c2f4f308d4c8213ab7c4c05316e496cd28cd6d24ec0f8bd5918dd429f59faee",
     "src/solar-eclipses.js": "889361b8f87f322b358b2164d676483a3d09e06c83dc0e6e484053255d41ca66",
-    "tools/benchmark-full-models.py": "d4444c424866ada39b6d095e88ca8c22f9c13c8a24cf9957e84f901c1b0ed51f",
+    "tools/benchmark-full-models.py": "ead6d5f5ea3a7317ddc3f158f96cceaf53c7dc9a18d48dfd9738c910ae5a804c",
     "elpmpp02.js": "fbe6bccb6ac01c9c429db19edf4d7ff629b01327a2caa47906c6c42db1bfd940",
     "elpmpp02_data.js": "e1fe9e6f9487d05a7dd70eb01edf74d59334147aa253a62d9ec1f2676a12248d",
     "VSOP87A.mar": "2c1e9b5cd68276138c2f99506d348e626abe0a5c600b4e50bb588d568b0d13fe",
@@ -114,7 +114,11 @@
     "private/benchmarks/model-comparison/elp2000/ELP33": "459ea9eff9a9d7b5c224245f5edb113060174b4991d3adf7d27079719bcf2339",
     "private/benchmarks/model-comparison/elp2000/ELP34": "b83178e98bd33e8f26ef6662e03455761ffac7dae399ad1ccb4bf028c5f0e774",
     "private/benchmarks/model-comparison/elp2000/ELP35": "692d1752a7ea28c7157dbf694750af6ea2cbf74c744c4b792a7e8bf1bb5ad7d7",
-    "private/benchmarks/model-comparison/elp2000/ELP36": "1f8eec292def5ceb4fff9a09ca678bd81e9cdc23ff7bdc802f2281c837357bda"
+    "private/benchmarks/model-comparison/elp2000/ELP36": "1f8eec292def5ceb4fff9a09ca678bd81e9cdc23ff7bdc802f2281c837357bda",
+    "de441.bsp": "9a824e6a8ce3d39f8a513b17278ff7b7ad226f964c76d2019b0a51d8808d6ff5",
+    "private/data/vsop2013/solution/VSOP2013.f": "58b972ad10ed8e9b24957d9b3a4d61d7069b1617585e0eacd7d52e152ba4ae8e",
+    "tools/benchmark-elp82-driver.f90": "e41ad27dfb10861822697c006b28364e2ff00ba5dd00447273e87572853e5aad",
+    "private/benchmarks/model-comparison/elp-official": "0efff4cf647f0b9b8f66408f8081edc095dcf5e971433ab2ba539d4ec6a19426"
   },
   "runtime_to_icrf": [
     [

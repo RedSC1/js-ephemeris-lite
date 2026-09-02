@@ -129,4 +129,4 @@ for (const [body, radiusAu] of Object.entries(BODIES)) {
 }
 
 fs.writeFileSync(seriesPath, source);
-fs.writeFileSync(outputPath, `${generated.join('\n')}\n`);
+fs.writeFileSync(outputPath, generated.join('\n'));
