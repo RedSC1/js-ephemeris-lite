@@ -32,6 +32,7 @@ export function monomialBasis(x, degree, scaleDays) {
 export function createDirectPlanetModel(L, B, R, {
   evaluateBasis = monomialBasis,
   prefixCounts,
+  accuracyLimits,
   scaleDays = PLANET_PHASE_DAYS,
 } = {}) {
   const coordinateGroups = [L, B, R].map((axis, coordinate) =>
@@ -120,5 +121,13 @@ export function createDirectPlanetModel(L, B, R, {
     };
   }
 
-  return { state, direction };
+  function accuracyState(jd, accuracy) {
+    return state(jd, accuracy === 'accurate' ? undefined : accuracyLimits?.[accuracy]);
+  }
+
+  function accuracyDirection(jd, accuracy) {
+    return direction(jd, accuracy === 'accurate' ? undefined : accuracyLimits?.[accuracy]);
+  }
+
+  return { state, direction, accuracyState, accuracyDirection };
 }

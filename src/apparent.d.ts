@@ -1,8 +1,11 @@
 import type { EphemerisVector3 } from './ephemeris.js';
+import type { Accuracy } from './accuracy.js';
 /** Pluto uses a coarse fallback outside the recommended 1600..2200 interval. */
 export type SkyBody = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn' | 'uranus' | 'neptune' | 'pluto';
 export type SkyFrame = 'j2000' | 'mean-of-date' | 'true-of-date';
 export interface ApparentOptions {
+  /** Ephemeris model tier for this call; omitted means accurate. */
+  accuracy?: Accuracy;
   frame?: SkyFrame;
   lightTime?: boolean;
   aberration?: boolean;

@@ -28,6 +28,7 @@ import {
 
 const time = JulianTime.fromDate(new Date());
 const jupiter = planetHeliocentricState(PLANET.JUPITER, time.jdTT);
+const quickJupiter = planetHeliocentricState(PLANET.JUPITER, time.jdTT, 'fast');
 const marsFromEarth = planetGeocentricPosition(PLANET.MARS, time.jdTT);
 const earth = earthHeliocentricState(time.jdTT);
 const sunFromEarthAu = sunGeocentricPosition(time.jdTT);
@@ -37,6 +38,20 @@ const moonFromSunAu = moonHeliocentricPosition(time.jdTT);
 console.log(jupiter.position, jupiter.velocity, marsFromEarth);
 console.log(earth.position, earth.velocity);
 ```
+
+所有几何位置／状态 API 都接受可选的第三个（具名快捷函数为第二个）`accuracy`
+参数：`'fast' | 'mid' | 'accurate'`。
+省略时默认为 `accurate`，因此现有调用不会在升级后降低精度。太阳档位控制地球模型；
+地心行星和日心月球会把同一档位同时用于目标与地球。视位置 API 使用同名选项，
+见[视位置与恒星时](./sky-events.md#视位置与恒星时)。
+`moonDirectionState()` 需要自定义 `latitudeTerms` 时仍可传对象；仅选择精度时直接
+传字符串即可。
+
+水星至海王星和月球的 fast／mid 都使用生成阶段排好的完整频率／相位包络；
+旁边的小型档位计数表只记录每个 `Lₙ/Bₙ/Rₙ` 应保留前多少项，不重复保存系数。
+运行时不排序、不复制 full 表，也不会拆开同一频率跨时间幂的系数。冥王星近代
+Chebyshev 表使用保守的嵌套阶数；范围外的后备模型三档均使用同一表。
+各档相对完整模型的测量差异见[精度说明](./accuracy.md#位置计算档位)。
 
 `PLANET` 覆盖八大行星及冥王星；也提供 `mercuryHeliocentricState()`、`plutoHeliocentricState()` 等具名日心快捷函数。
 冥王星推荐范围为 1600..2200 年，范围外仍可计算，但使用低精度后备模型，不保证位置或事件时刻精度。

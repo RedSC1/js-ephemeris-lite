@@ -18,6 +18,7 @@ import { JulianTime } from './time.js';
 import { solarLongitude as solarValue, elongation as phaseValue, lowSolarValue, lowPhaseValue, mediumElongation } from './event-values.js';
 import { fastSolarLongitude, fastElongation, wrap as fastWrap } from './event-fast-values.js';
 import { apparentBodyState } from './apparent.js';
+import { checkedAccuracy } from './accuracy.js';
 import { solarRate2, elongationRate2, elongationRefineRate } from './event-rates.js';
 
 const SOLAR_ABERRATION_RAD = 20.4898 * ARCSEC_TO_RAD;
@@ -28,11 +29,6 @@ const LUNAR_LIGHT_TIME_LONGITUDE_RAD = -3.4e-6;
 const LOW_INTERVAL_YEARS = 8000;
 export const DEFAULT_NEW_MOON_LATITUDE_TERMS = 10;
 
-function checkedEventAccuracy(accuracy) {
-  if (accuracy !== 'fast' && accuracy !== 'mid' && accuracy !== 'accurate')
-    throw new RangeError("accuracy must be 'fast', 'mid', or 'accurate'");
-  return accuracy;
-}
 // Low-estimator fits include the difference between the native lunar frame
 // and the explicit frame-of-date event model. They are not geometric corrections.
 
@@ -392,7 +388,7 @@ export function solveNewMoon(nearJdTT, options = {}) {
 }
 
 function routeEvent(target, nearJdTT, lunar, options) {
-  const accuracy = checkedEventAccuracy(options.accuracy === undefined ? 'mid' : options.accuracy);
+  const accuracy = checkedAccuracy(options.accuracy, 'mid');
   if (accuracy === 'mid') return (lunar ? solveLunarPhaseMid : solveSolarLongitudeMid)(target, nearJdTT, options);
   return solveTierEvent(target, nearJdTT, lunar, accuracy, options);
 }

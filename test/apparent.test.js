@@ -100,9 +100,23 @@ test('bad body, nonfinite time, invalid frame and sidereal input fail explicitly
   assert.throws(() => apparentBodyPosition('ceres', 2451545), /unsupported/);
   assert.throws(() => apparentBodyPosition('mars', NaN), /finite/);
   assert.throws(() => apparentBodyPosition('mars', 2451545, { frame: 'ICRS' }), /frame/);
+  assert.throws(() => apparentBodyPosition('mars', 2451545, { accuracy: 'turbo' }), /accuracy/);
   assert.throws(() => greenwichSiderealTime(Infinity), /finite/);
   const sidereal = greenwichSiderealTime(2451545);
   assert.ok(sidereal > 280 && sidereal < 281);
+});
+
+test('apparent positions pass the selected ephemeris accuracy through the complete light-time chain', () => {
+  const jd = 2460409.25;
+  for (const body of ['sun', 'moon', 'mercury', 'saturn']) {
+    const accurate = apparentBodyPosition(body, jd, { accuracy: 'accurate' });
+    assert.deepEqual(apparentBodyPosition(body, jd), accurate);
+    const fast = apparentBodyPosition(body, jd, { accuracy: 'fast' });
+    const mid = apparentBodyPosition(body, jd, { accuracy: 'mid' });
+    assert.ok([fast, mid].every(value => [value.longitudeDeg, value.latitudeDeg,
+      value.distanceAu, value.lightTimeDays].every(Number.isFinite)));
+    assert.notDeepEqual(fast.eclipticPositionAu, accurate.eclipticPositionAu);
+  }
 });
 
 test('new sky chain remains finite across the lite model span and correction bridges', () => {

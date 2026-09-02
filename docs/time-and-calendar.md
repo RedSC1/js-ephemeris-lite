@@ -166,7 +166,8 @@ const calendar = calculateChineseCalendarYear(2461212, { eventAccuracy: 'fast' }
 ```
 
 精度选项属于本次调用或上层对象，不会改变其他求解器、日历实例或并发请求。
-它也不切换通用星体坐标、视位置、真太阳时等其他算法。
+它不会改写通用星体坐标或视位置的默认档位；这些接口需要在自己的调用中选择
+`accuracy`。真太阳时等其他算法也不会被事件档位全局改写。
 
 三档的 `solve…` 都直接返回 `JulianTime`，它实现共享结构类型 `AstroTime`：
 `{ jdTT, jdUT1, deltaTSeconds }`。

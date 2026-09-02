@@ -28,6 +28,7 @@ import {
   type LocalSolarEclipseEvent,
   type LocalLunarEclipseEvent,
   type EventAccuracy,
+  type Accuracy,
   solarLongitudeTimeFast, lunarPhaseTimeFast, solarLongitudeTimeAccurate, lunarPhaseTimeAccurate,
   sunGeocentricPosition,
   trueSolarTime,
@@ -137,6 +138,10 @@ void angleEventDates;
 solveSolarLongitude(0, instant.jdTT, { solver: 'auto', toleranceSeconds: 0.01 });
 solveSolarLongitude(0, instant.jdTT, { solver: 'safeguarded' });
 const accuracy: EventAccuracy = 'fast';
+const positionAccuracy: Accuracy = 'mid';
+earthHeliocentricState(instant.jdTT, positionAccuracy);
+moonGeocentricPosition(instant.jdTT, 'fast');
+plutoHeliocentricState(instant.jdTT, 'accurate');
 // @ts-expect-error default event results do not carry diagnostics
 solveNewMoon(instant.jdTT).residualRadians;
 // @ts-expect-error latitude budgets belong to options, not event times

@@ -5,9 +5,10 @@
 视位置、通用天体观测及轨道事件接口属于 1.0.0 beta 公共 API。
 日出日落的专用接口见本文后半部分；正式版发布前接口仍可能调整。
 
-`fast / mid / accurate` 是定气、定朔及指定月相求解器的模型档位，不是通用
-天象设置。大距、留、近远点、交点、合冲和日月食沿用各自接口签名与模型；
-搜索步长、求根容差、参考面和视位置修正仍由对应选项独立控制。
+视位置 API 接受 `{ accuracy: 'fast' | 'mid' | 'accurate' }`，省略时使用
+`accurate`。它控制底层日、月和行星星历；参考系、光行时、光行差与引力偏折
+开关仍由各自选项独立控制。天象搜索可在 `apparent` 中传入同一选项，例如
+`{ apparent: { accuracy: 'fast' } }`。日月食接口仍沿用各自固定模型。
 
 冥王星也可用于通用视位置、黄经／赤经事件与出没接口。
 **1600..2200 之外仍可求解，但后备星历精度较低；求根收敛不代表天象时刻准确。**
@@ -25,6 +26,7 @@ const jdTT = 2460409.25;
 const fixed = apparentBodyPosition('mars', jdTT, { frame: 'j2000' });
 const mean = apparentBodyPosition('mars', jdTT, { frame: 'mean-of-date' });
 const date = apparentBodyState('mars', jdTT, { frame: 'true-of-date' });
+const quick = apparentBodyPosition('mars', jdTT, { accuracy: 'fast' });
 console.table([
   { frame: fixed.frame, longitude: fixed.longitudeDeg, rightAscension: fixed.rightAscensionDeg },
   { frame: mean.frame, longitude: mean.longitudeDeg, rightAscension: mean.rightAscensionDeg },
