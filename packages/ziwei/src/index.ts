@@ -20,3 +20,9 @@ export const ZIWEI_LITE_INFO = Object.freeze({
   natalStarCount: 115,
   flowStarCount: 44,
 });
+
+export { arrangeZiweiStars } from './placement.js';
+export type { ZiweiPlacementInput, ZiweiModifyInput, ZiweiModification } from './placement.js';
+
+export { ZiweiPlate, type ZiweiPlateAnchors } from './plate.js';
+export * from './casting-chart.js';
