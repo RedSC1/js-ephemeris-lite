@@ -51,7 +51,8 @@ export interface FestivalDetail {
    * detail remains available in the selected day's full festival list. */
   calendarDisplay: FestivalCalendarDisplay;
   source: FestivalSource;
-  isPublicHoliday: boolean;
+  /** Source-table statutory festival marker; not an annual day-off or workday status. */
+  isStatutoryFestival: boolean;
   /** Alternative and source-table names. */
   aliases: string[];
 }

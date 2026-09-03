@@ -29,7 +29,8 @@ function parseFestival(text) {
     name,
     source: value('source')?.split('.').at(-1),
     level: value('level')?.split('.').at(-1),
-    isPublicHoliday: value('isPublicHoliday') === 'true',
+    // Preserve the upstream field lookup; expose a festival marker, not a day-off flag.
+    isStatutoryFestival: value('isPublicHoliday') === 'true',
     startYear: Number(value('startYear') ?? 0),
     endYear: Number(value('endYear') ?? 9999),
   };

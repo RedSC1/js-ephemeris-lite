@@ -241,6 +241,9 @@ const almanacDay: HuangliDay = almanac.getDay(2026,3,16,{activityMask:ACTIVITY_M
 const festivalDetails: FestivalDetail[] = almanacDay.festivalDetails;
 const festivalLevels: FestivalLevel[] = festivalDetails.map(f=>f.level);
 const festivalSources: FestivalSource[] = festivalDetails.map(f=>f.source);
+const statutoryFestivalFlags: boolean[] = festivalDetails.map(f=>f.isStatutoryFestival);
+// @ts-expect-error Renamed: festival classification is not an actual day-off status.
+festivalDetails[0].isPublicHoliday;
 const traditionalFestivalNames: string[] = festivalDetails.filter(f=>f.level==='traditional').map(f=>f.name);
 const festivalShortNames: string[] = festivalDetails.map(f=>f.shortName);
 new HuangliCalendar({festivalMode:'all'}).getYear(2026);

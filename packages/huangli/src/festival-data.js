@@ -8,7 +8,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国庆节",
       "source": "solar",
       "level": "statutory",
-      "isPublicHoliday": true,
+      "isStatutoryFestival": true,
       "startYear": 1949,
       "endYear": 9999
     },
@@ -16,7 +16,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界音乐日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -24,7 +24,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际老人节",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -34,7 +34,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际和平与民主自由斗争日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -45,7 +45,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界动物日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -55,7 +55,7 @@ export const SOLAR_FESTIVALS = {
       "name": "老人节",
       "source": "solar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -65,7 +65,7 @@ export const SOLAR_FESTIVALS = {
       "name": "全国高血压日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -73,7 +73,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界视觉日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -83,7 +83,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界邮政日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -91,7 +91,7 @@ export const SOLAR_FESTIVALS = {
       "name": "万国邮联日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -101,7 +101,7 @@ export const SOLAR_FESTIVALS = {
       "name": "辛亥革命纪念日",
       "source": "solar",
       "level": "historical",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1911,
       "endYear": 9999
     },
@@ -109,7 +109,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界精神卫生日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -119,7 +119,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界保健日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -127,7 +127,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际教师节",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -137,7 +137,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界标准日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -147,7 +147,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际盲人节",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -157,7 +157,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界粮食日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -167,7 +167,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界消除贫困日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -177,7 +177,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界传统医药日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -187,7 +187,7 @@ export const SOLAR_FESTIVALS = {
       "name": "联合国日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -197,7 +197,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界勤俭日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -207,7 +207,7 @@ export const SOLAR_FESTIVALS = {
       "name": "十月社会主义革命纪念日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1917,
       "endYear": 9999
     }
@@ -217,7 +217,7 @@ export const SOLAR_FESTIVALS = {
       "name": "中国记者日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -227,7 +227,7 @@ export const SOLAR_FESTIVALS = {
       "name": "全国消防安全宣传日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -237,7 +237,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界青年节",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -247,7 +247,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际科学与和平周",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -257,7 +257,7 @@ export const SOLAR_FESTIVALS = {
       "name": "孙中山诞辰纪念日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1866,
       "endYear": 9999
     }
@@ -267,7 +267,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界糖尿病日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -277,7 +277,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际大学生节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -285,7 +285,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界学生节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -295,7 +295,7 @@ export const SOLAR_FESTIVALS = {
       "name": "彝族年",
       "source": "solar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -305,7 +305,7 @@ export const SOLAR_FESTIVALS = {
       "name": "彝族年",
       "source": "solar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -313,7 +313,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界问候日",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -321,7 +321,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界电视日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -331,7 +331,7 @@ export const SOLAR_FESTIVALS = {
       "name": "彝族年",
       "source": "solar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -341,7 +341,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际声援巴勒斯坦人民日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -351,7 +351,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界艾滋病日",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1988,
       "endYear": 9999
     }
@@ -361,7 +361,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界残疾人日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -371,7 +371,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际志愿人员日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -381,7 +381,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际儿童电视日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -391,7 +391,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界足球日",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -401,7 +401,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界人权日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -411,7 +411,7 @@ export const SOLAR_FESTIVALS = {
       "name": "西安事变纪念日",
       "source": "solar",
       "level": "historical",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1936,
       "endYear": 9999
     }
@@ -421,7 +421,7 @@ export const SOLAR_FESTIVALS = {
       "name": "南京大屠杀纪念日",
       "source": "solar",
       "level": "historical",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1937,
       "endYear": 9999
     }
@@ -431,7 +431,7 @@ export const SOLAR_FESTIVALS = {
       "name": "澳门回归纪念",
       "source": "solar",
       "level": "historical",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1999,
       "endYear": 9999
     }
@@ -441,7 +441,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际篮球日",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -451,7 +451,7 @@ export const SOLAR_FESTIVALS = {
       "name": "平安夜",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -461,7 +461,7 @@ export const SOLAR_FESTIVALS = {
       "name": "圣诞节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -471,7 +471,7 @@ export const SOLAR_FESTIVALS = {
       "name": "毛泽东诞辰纪念",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1893,
       "endYear": 9999
     }
@@ -481,7 +481,7 @@ export const SOLAR_FESTIVALS = {
       "name": "元旦",
       "source": "solar",
       "level": "statutory",
-      "isPublicHoliday": true,
+      "isStatutoryFestival": true,
       "startYear": 0,
       "endYear": 9999
     }
@@ -491,7 +491,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界湿地日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -501,7 +501,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际气象节",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -511,7 +511,7 @@ export const SOLAR_FESTIVALS = {
       "name": "情人节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -521,7 +521,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际海豹日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -531,7 +531,7 @@ export const SOLAR_FESTIVALS = {
       "name": "全国爱耳日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -541,7 +541,7 @@ export const SOLAR_FESTIVALS = {
       "name": "学雷锋纪念日",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1963,
       "endYear": 9999
     }
@@ -551,7 +551,7 @@ export const SOLAR_FESTIVALS = {
       "name": "妇女节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -561,7 +561,7 @@ export const SOLAR_FESTIVALS = {
       "name": "植树节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -569,7 +569,7 @@ export const SOLAR_FESTIVALS = {
       "name": "孙中山逝世纪念日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1925,
       "endYear": 9999
     }
@@ -579,7 +579,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际警察日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -589,7 +589,7 @@ export const SOLAR_FESTIVALS = {
       "name": "消费者权益日",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1983,
       "endYear": 9999
     }
@@ -599,7 +599,7 @@ export const SOLAR_FESTIVALS = {
       "name": "中国国医节",
       "source": "solar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -607,7 +607,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际航海日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -617,7 +617,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界森林日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -625,7 +625,7 @@ export const SOLAR_FESTIVALS = {
       "name": "消除种族歧视国际日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -633,7 +633,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界儿歌日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -643,7 +643,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界水日",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -653,7 +653,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界气象日",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -663,7 +663,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界防治结核病日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1982,
       "endYear": 9999
     }
@@ -673,7 +673,7 @@ export const SOLAR_FESTIVALS = {
       "name": "全国中小学生安全教育日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -683,7 +683,7 @@ export const SOLAR_FESTIVALS = {
       "name": "巴勒斯坦国土日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -693,7 +693,7 @@ export const SOLAR_FESTIVALS = {
       "name": "愚人节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1564,
       "endYear": 9999
     },
@@ -701,7 +701,7 @@ export const SOLAR_FESTIVALS = {
       "name": "全国爱国卫生运动月",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -709,7 +709,7 @@ export const SOLAR_FESTIVALS = {
       "name": "税收宣传月",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -719,7 +719,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界卫生日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -729,7 +729,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界地球日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -739,7 +739,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界图书和版权日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -749,7 +749,7 @@ export const SOLAR_FESTIVALS = {
       "name": "亚非新闻工作者日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -759,7 +759,7 @@ export const SOLAR_FESTIVALS = {
       "name": "劳动节",
       "source": "solar",
       "level": "statutory",
-      "isPublicHoliday": true,
+      "isStatutoryFestival": true,
       "startYear": 1889,
       "endYear": 9999
     }
@@ -769,7 +769,7 @@ export const SOLAR_FESTIVALS = {
       "name": "青年节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -779,7 +779,7 @@ export const SOLAR_FESTIVALS = {
       "name": "碘缺乏病防治日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -789,7 +789,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界红十字日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -799,7 +799,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际护士节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -809,7 +809,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际家庭日",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -819,7 +819,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界电信日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -829,7 +829,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际博物馆日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -839,7 +839,7 @@ export const SOLAR_FESTIVALS = {
       "name": "全国学生营养日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -849,7 +849,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际牛奶日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -859,7 +859,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界无烟日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -869,7 +869,7 @@ export const SOLAR_FESTIVALS = {
       "name": "儿童节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1949,
       "endYear": 9999
     }
@@ -879,7 +879,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界环境日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -889,7 +889,7 @@ export const SOLAR_FESTIVALS = {
       "name": "全国爱眼日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -899,7 +899,7 @@ export const SOLAR_FESTIVALS = {
       "name": "防治荒漠化和干旱日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -909,7 +909,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际奥林匹克日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -919,7 +919,7 @@ export const SOLAR_FESTIVALS = {
       "name": "全国土地日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -929,7 +929,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际禁毒日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -939,7 +939,7 @@ export const SOLAR_FESTIVALS = {
       "name": "中共诞辰",
       "source": "solar",
       "level": "historical",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1921,
       "endYear": 9999
     },
@@ -947,7 +947,7 @@ export const SOLAR_FESTIVALS = {
       "name": "香港回归纪念日",
       "source": "solar",
       "level": "historical",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1997,
       "endYear": 9999
     },
@@ -955,7 +955,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界建筑日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -965,7 +965,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际体育记者日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -975,7 +975,7 @@ export const SOLAR_FESTIVALS = {
       "name": "抗日战争纪念日",
       "source": "solar",
       "level": "historical",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1937,
       "endYear": 9999
     }
@@ -985,7 +985,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界人口日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -995,7 +995,7 @@ export const SOLAR_FESTIVALS = {
       "name": "非洲妇女日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1005,7 +1005,7 @@ export const SOLAR_FESTIVALS = {
       "name": "建军节",
       "source": "solar",
       "level": "historical",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1927,
       "endYear": 9999
     }
@@ -1015,7 +1015,7 @@ export const SOLAR_FESTIVALS = {
       "name": "中国男子节(爸爸节)",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1025,7 +1025,7 @@ export const SOLAR_FESTIVALS = {
       "name": "抗日战争胜利纪念",
       "source": "solar",
       "level": "historical",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1945,
       "endYear": 9999
     }
@@ -1035,7 +1035,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际扫盲日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1966,
       "endYear": 9999
     },
@@ -1043,7 +1043,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际新闻工作者日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1053,7 +1053,7 @@ export const SOLAR_FESTIVALS = {
       "name": "毛泽东逝世纪念",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1976,
       "endYear": 9999
     }
@@ -1063,7 +1063,7 @@ export const SOLAR_FESTIVALS = {
       "name": "教师节",
       "source": "solar",
       "level": "popular",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1985,
       "endYear": 9999
     }
@@ -1073,7 +1073,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界清洁地球日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1083,7 +1083,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际臭氧层保护日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1093,7 +1093,7 @@ export const SOLAR_FESTIVALS = {
       "name": "九一八事变纪念日",
       "source": "solar",
       "level": "historical",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 1931,
       "endYear": 9999
     }
@@ -1103,7 +1103,7 @@ export const SOLAR_FESTIVALS = {
       "name": "国际爱牙日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1113,7 +1113,7 @@ export const SOLAR_FESTIVALS = {
       "name": "世界旅游日",
       "source": "solar",
       "level": "commemorative",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1123,7 +1123,7 @@ export const SOLAR_FESTIVALS = {
       "name": "孔子诞辰",
       "source": "solar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1136,7 +1136,7 @@ export const LUNAR_FESTIVALS = {
       "name": "祭祖节(十月朝)",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1146,7 +1146,7 @@ export const LUNAR_FESTIVALS = {
       "name": "下元节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1156,7 +1156,7 @@ export const LUNAR_FESTIVALS = {
       "name": "瑶族盘王节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1166,7 +1166,7 @@ export const LUNAR_FESTIVALS = {
       "name": "腊八节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1176,7 +1176,7 @@ export const LUNAR_FESTIVALS = {
       "name": "北方小年",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1186,7 +1186,7 @@ export const LUNAR_FESTIVALS = {
       "name": "南方小年",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1196,7 +1196,7 @@ export const LUNAR_FESTIVALS = {
       "name": "春节",
       "source": "lunar",
       "level": "statutory",
-      "isPublicHoliday": true,
+      "isStatutoryFestival": true,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1206,7 +1206,7 @@ export const LUNAR_FESTIVALS = {
       "name": "大年初二",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1216,7 +1216,7 @@ export const LUNAR_FESTIVALS = {
       "name": "元宵节",
       "source": "lunar",
       "level": "statutory",
-      "isPublicHoliday": true,
+      "isStatutoryFestival": true,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1224,7 +1224,7 @@ export const LUNAR_FESTIVALS = {
       "name": "上元节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1232,7 +1232,7 @@ export const LUNAR_FESTIVALS = {
       "name": "壮族歌墟节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1240,7 +1240,7 @@ export const LUNAR_FESTIVALS = {
       "name": "苗族踩山节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1248,7 +1248,7 @@ export const LUNAR_FESTIVALS = {
       "name": "达斡尔族卡钦",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1258,7 +1258,7 @@ export const LUNAR_FESTIVALS = {
       "name": "侗族芦笙节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1268,7 +1268,7 @@ export const LUNAR_FESTIVALS = {
       "name": "填仓节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1278,7 +1278,7 @@ export const LUNAR_FESTIVALS = {
       "name": "送穷日",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1288,7 +1288,7 @@ export const LUNAR_FESTIVALS = {
       "name": "瑶族忌鸟节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1298,7 +1298,7 @@ export const LUNAR_FESTIVALS = {
       "name": "龙抬头",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1306,7 +1306,7 @@ export const LUNAR_FESTIVALS = {
       "name": "春龙节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1314,7 +1314,7 @@ export const LUNAR_FESTIVALS = {
       "name": "畲族会亲节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1324,7 +1324,7 @@ export const LUNAR_FESTIVALS = {
       "name": "傈傈族刀杆节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1334,7 +1334,7 @@ export const LUNAR_FESTIVALS = {
       "name": "北帝诞",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1342,7 +1342,7 @@ export const LUNAR_FESTIVALS = {
       "name": "苗族黎族歌墟节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1352,7 +1352,7 @@ export const LUNAR_FESTIVALS = {
       "name": "白族三月街",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1362,7 +1362,7 @@ export const LUNAR_FESTIVALS = {
       "name": "妈祖诞辰",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1370,7 +1370,7 @@ export const LUNAR_FESTIVALS = {
       "name": "天后诞",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1380,7 +1380,7 @@ export const LUNAR_FESTIVALS = {
       "name": "牛王诞",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1390,7 +1390,7 @@ export const LUNAR_FESTIVALS = {
       "name": "锡伯族西迁节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1400,7 +1400,7 @@ export const LUNAR_FESTIVALS = {
       "name": "端午节",
       "source": "lunar",
       "level": "statutory",
-      "isPublicHoliday": true,
+      "isStatutoryFestival": true,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1410,7 +1410,7 @@ export const LUNAR_FESTIVALS = {
       "name": "关帝诞",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1418,7 +1418,7 @@ export const LUNAR_FESTIVALS = {
       "name": "阿昌族泼水节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1428,7 +1428,7 @@ export const LUNAR_FESTIVALS = {
       "name": "鄂温克族米阔鲁节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1438,7 +1438,7 @@ export const LUNAR_FESTIVALS = {
       "name": "瑶族达努节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1448,7 +1448,7 @@ export const LUNAR_FESTIVALS = {
       "name": "天贶节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1456,7 +1456,7 @@ export const LUNAR_FESTIVALS = {
       "name": "姑姑节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1464,7 +1464,7 @@ export const LUNAR_FESTIVALS = {
       "name": "壮族祭田节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1472,7 +1472,7 @@ export const LUNAR_FESTIVALS = {
       "name": "瑶族尝新节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1482,7 +1482,7 @@ export const LUNAR_FESTIVALS = {
       "name": "火把节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1492,7 +1492,7 @@ export const LUNAR_FESTIVALS = {
       "name": "七夕节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1500,7 +1500,7 @@ export const LUNAR_FESTIVALS = {
       "name": "乞巧节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1508,7 +1508,7 @@ export const LUNAR_FESTIVALS = {
       "name": "女儿节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1518,7 +1518,7 @@ export const LUNAR_FESTIVALS = {
       "name": "侗族吃新节",
       "source": "lunar",
       "level": "ethnic",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1528,7 +1528,7 @@ export const LUNAR_FESTIVALS = {
       "name": "中元节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     },
@@ -1536,7 +1536,7 @@ export const LUNAR_FESTIVALS = {
       "name": "鬼节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1546,7 +1546,7 @@ export const LUNAR_FESTIVALS = {
       "name": "中秋节",
       "source": "lunar",
       "level": "statutory",
-      "isPublicHoliday": true,
+      "isStatutoryFestival": true,
       "startYear": 0,
       "endYear": 9999
     }
@@ -1556,7 +1556,7 @@ export const LUNAR_FESTIVALS = {
       "name": "重阳节",
       "source": "lunar",
       "level": "traditional",
-      "isPublicHoliday": false,
+      "isStatutoryFestival": false,
       "startYear": 0,
       "endYear": 9999
     }

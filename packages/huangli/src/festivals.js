@@ -178,7 +178,7 @@ function dynamicFestivals(solar, context) {
       const period = names[Math.floor(diff / 9)], day = diff % 9 + 1;
       result.push({ name: day === 1 ? period : `${period}第${day}天`, source: 'custom',
         calendarDisplay: day === 1 ? 'secondary' : 'detail',
-        level: day === 1 ? 'traditional' : 'commemorative', isPublicHoliday: false, startYear: 0, endYear: 9999 });
+        level: day === 1 ? 'traditional' : 'commemorative', isStatutoryFestival: false, startYear: 0, endYear: 9999 });
     }
   }
   const summerSolstice = termInYear(terms, '夏至', solar.year);
@@ -194,15 +194,15 @@ function dynamicFestivals(solar, context) {
       const day = dayNumber - period[1] + 1;
       result.push({ name: day === 1 ? period[0] : `${period[0]}第${day}天`, source: 'custom',
         calendarDisplay: day === 1 ? 'secondary' : 'detail',
-        level: day === 1 ? 'traditional' : 'commemorative', isPublicHoliday: false, startYear: 0, endYear: 9999 });
+        level: day === 1 ? 'traditional' : 'commemorative', isStatutoryFestival: false, startYear: 0, endYear: 9999 });
     }
   }
   const grainInEar = termInYear(terms, '芒种', solar.year);
   const slightHeat = termInYear(terms, '小暑', solar.year);
   if (grainInEar && dayNumber > grainInEar.dayNumber && dayNumber < grainInEar.dayNumber + 11 && dayIndex % 10 === 2)
-    result.push({ name: '入梅', source: 'custom', calendarDisplay: 'secondary', level: 'traditional', isPublicHoliday: false, startYear: 0, endYear: 9999 });
+    result.push({ name: '入梅', source: 'custom', calendarDisplay: 'secondary', level: 'traditional', isStatutoryFestival: false, startYear: 0, endYear: 9999 });
   if (slightHeat && dayNumber > slightHeat.dayNumber && dayNumber < slightHeat.dayNumber + 13 && dayIndex % 12 === 7)
-    result.push({ name: '出梅', source: 'custom', calendarDisplay: 'secondary', level: 'traditional', isPublicHoliday: false, startYear: 0, endYear: 9999 });
+    result.push({ name: '出梅', source: 'custom', calendarDisplay: 'secondary', level: 'traditional', isStatutoryFestival: false, startYear: 0, endYear: 9999 });
   return result;
 }
 
@@ -213,14 +213,14 @@ export function getFestivalDetails(solar, lunar, term, weekday, mode = 'common',
   raw.push(...SOLAR_FESTIVALS[key(solar.month, solar.day)] ?? []);
   if (!lunar.isLeap) raw.push(...LUNAR_FESTIVALS[key(lunar.month, lunar.day)] ?? []);
   if (!lunar.isLeap && lunar.month === 12 && lunar.day === lunar.monthDays)
-    raw.push({ name: '除夕', source: 'lunar', level: 'statutory', isPublicHoliday: true, startYear: 0, endYear: 9999 });
+    raw.push({ name: '除夕', source: 'lunar', level: 'statutory', isStatutoryFestival: true, startYear: 0, endYear: 9999 });
   const nth = Math.floor((solar.day - 1) / 7) + 1;
   const last = solar.day + 7 > daysInMonth(solar.year, solar.month);
   for (const [month, occurrence, dow, name, level] of WEEK_RULES) {
     if (month === solar.month && dow === weekday && (occurrence === nth || occurrence === 'last' && last))
-      raw.push({ name, source: 'weekBased', level, isPublicHoliday: false, startYear: 0, endYear: 9999 });
+      raw.push({ name, source: 'weekBased', level, isStatutoryFestival: false, startYear: 0, endYear: 9999 });
   }
-  if (term?.name === '清明') raw.push({ name: '清明', source: 'termBased', level: 'statutory', isPublicHoliday: true, startYear: 0, endYear: 9999 });
+  if (term?.name === '清明') raw.push({ name: '清明', source: 'termBased', level: 'statutory', isStatutoryFestival: true, startYear: 0, endYear: 9999 });
   raw.push(...dynamicFestivals(solar, context));
 
   const items = new Map();
@@ -238,7 +238,7 @@ export function getFestivalDetails(solar, lunar, term, weekday, mode = 'common',
   return [...items.values()]
     .map(item => ({ name: item.name, shortName: shortName(item.name, item.aliases), level: item.level,
       calendarDisplay: item.calendarDisplay,
-      source: item.source, isPublicHoliday: item.isPublicHoliday, aliases: [...item.aliases] }))
+      source: item.source, isStatutoryFestival: item.isStatutoryFestival, aliases: [...item.aliases] }))
     .filter(item => isVisible(item, mode))
     .sort((a, b) => (LEVEL_PRIORITY.get(a.level) ?? 99) - (LEVEL_PRIORITY.get(b.level) ?? 99));
 }

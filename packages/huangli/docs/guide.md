@@ -169,7 +169,7 @@ console.log(day.festivalDetails[0]);
 //   name: '中国人民解放军建军纪念日',
 //   shortName: '建军节',
 //   level: 'historical', calendarDisplay: 'secondary', source: 'solar',
-//   isPublicHoliday: false, aliases: ['建军节']
+//   isStatutoryFestival: false, aliases: ['建军节']
 // }
 ```
 
@@ -184,8 +184,9 @@ console.log(day.festivalDetails[0]);
 
 `source` 为 `solar`、`lunar`、`weekBased`、`termBased` 或 `custom`。
 `aliases` 保存来源表名称和常用异名；例如国家公祭日保留“南京大屠杀纪念日”，
-世界图书和版权日保留“世界读书日”。`isPublicHoliday` 只复现来源表标记，
-不提供某一年度的放假、调休或补班安排。
+世界图书和版权日保留“世界读书日”。`isStatutoryFestival` 表示来源表中的法定节日标记，
+不表示当天实际休息，也不提供某一年度的放假、调休或补班安排。
+该字段由 `isPublicHoliday` 更名，原字段不再输出；标记值未作调整，也不追溯各历史年份的法规。
 来源表中固定写在 10 月 2、3 日的“国庆节假日”属于旧式放假模板，导入时不作为
 永久节日保留；年度假期应由独立的年份数据提供。
 

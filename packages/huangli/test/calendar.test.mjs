@@ -226,7 +226,7 @@ test('festival details are fresh JSON snapshots, including nested aliases and so
   day.festivals.length=0;
   const again=allFestivals.getDay(2026,8,19);
   assert.deepEqual(again.festivalDetails[0],{
-    name:'七夕节',shortName:'七夕节',level:'traditional',calendarDisplay:'secondary',source:'lunar',isPublicHoliday:false,aliases:['乞巧节','女儿节'],
+    name:'七夕节',shortName:'七夕节',level:'traditional',calendarDisplay:'secondary',source:'lunar',isStatutoryFestival:false,aliases:['乞巧节','女儿节'],
   });
   assert.deepEqual(again.festivals,['七夕节','末伏第6天']);
 });
@@ -239,7 +239,9 @@ test('festival calendar display preserves sxwnl A/B/C density independently of s
 });
 
 test('source-era National Day schedule placeholders are not recurring festivals', () => {
-  assert(allFestivals.getDay(2026,10,1).festivals.includes('国庆节'));
+  const nationalDay=allFestivals.getDay(2026,10,1).festivalDetails.find(f=>f.name==='国庆节');
+  assert.equal(nationalDay.isStatutoryFestival,true);
+  assert.equal(Object.hasOwn(nationalDay,'isPublicHoliday'),false);
   assert(!allFestivals.getDay(2026,10,2).festivals.includes('国庆节假日'));
   assert(!allFestivals.getDay(2026,10,3).festivals.includes('国庆节假日'));
 });
