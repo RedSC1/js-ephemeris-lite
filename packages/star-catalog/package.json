@@ -1,6 +1,6 @@
 {
   "name": "taiyin-star-catalog-lite",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "description": "TSC1 bright-star catalog with complete Chinese-asterism and western-zodiac line coverage",
   "type": "module",
   "license": "MPL-2.0",
@@ -42,7 +42,7 @@
   },
   "homepage": "https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/star-catalog#readme",
   "dependencies": {
-    "js-ephemeris-lite": "^1.0.0-beta.4"
+    "js-ephemeris-lite": "^1.0.0-beta.5"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
