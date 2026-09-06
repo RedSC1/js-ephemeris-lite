@@ -96,3 +96,12 @@ test('eclipse search validates intervals, locations and search size',()=>{
   longitudeDeg:181,latitudeDeg:0,
  }),/longitudeDeg/);
 });
+
+test('solar interval enumeration does not lose lunations to floating point round trips',()=>{
+ const events=searchSolarEclipses(new Date('1900-01-01'),new Date('2100-01-01'));
+ assert.equal(events.length,452);
+ assert.equal(new Set(events.map(e=>e.maximum.jdTT)).size,452);
+ for(const e of events){
+  assert.equal(getSolarEclipseDetails(e.maximum).maximum.jdTT,e.maximum.jdTT);
+ }
+});

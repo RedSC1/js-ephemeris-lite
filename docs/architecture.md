@@ -26,7 +26,7 @@
 | 气朔与历法事件 | `calendar-events`, `qi-shuo` | 定气定相、全年节气、七十二候与月相 |
 | 中国历法 | `chinese-calendar`, `chinese-era`, `ganzhi` | 农历结构、历史归日、纪年和四柱 |
 | 地平观测 | `solar-visibility`, `body-visibility` | 日出日落、天体出没、方位与高度 |
-| 日月食兼容层 | `eclipses` | `ecFast`、`ysPL`、`rsGS`、`rsPL` 兼容接口 |
+| 日月食几何 | `eclipses` | 日月视位置插值、影锥与椭球相交、地方接触时刻 |
 | 应用型日月食查询 | `eclipse-search` | 区间搜索、结构化结果及地方日月食可见性 |
 | 时间与钟表 | `time`, `solar-time` | TT/UT1、固定时区、平太阳时与真太阳时 |
 
@@ -161,15 +161,13 @@ TT 时刻。`solveSolarLongitude`、`solveLunarPhase` 和 `solveNewMoon` 接受
 
 ### 日月食
 
-日月食分为两层：
+内部几何层使用本库日月视位置：日食采用五点位置插值和影锥—椭球相交，
+月食采用三维地影与五点三次接触拟合。每场食独立持有插值数据，没有公开的
+可变单例计算器。地方日食使用观测者地心向量和日月视半径求接触，再处理地平线截断。
 
-1. `eclipses` 保留兼容函数名、字段名和 J2000.0 起算 TT 日数约定，提供快速
-   分类、月食接触、全球日食贝塞尔几何、食带界线及地方日食过程；
-2. `eclipse-search` 接受 `Date`、`JulianTime`、`ZonedTime`、`AstroTime` 或
-   UT1 JD，返回结构化全球事件、地方日食和地方月食可见性。
-
-现代查询层只处理天文事件与经纬度，不包含地图、行政区边界、地名数据库或
-政治边界数据。详见[日月食底层接口](./eclipses.md)和[日月食查询](./eclipse-search.md)。
+`eclipses` 与 `eclipse-search` 导出同一套现代 API，接受 `Date`、`JulianTime`、
+`ZonedTime`、`AstroTime` 或 UT1 JD。只处理天文事件与经纬度，不包含地图、
+行政区边界、地名或界线绘制接口。详见[日月食查询](./eclipse-search.md)。
 
 ## 时间模型
 

@@ -10,12 +10,11 @@ The runtime package contains selected numerical coefficients, JavaScript
 evaluators, fitted correction coefficients, and a compressed historical
 civil-day profile. Model and data sources are credited below.
 
-## Upstream calendar and eclipse materials
+## Upstream calendar materials
 
 The following materials originate from **Shou Xing Tian Wen Li / Shou Xing
 Wan Nian Li** (寿星天文历 / 寿星万年历), authored by Xu Jianwei (许剑伟):
 
-- the `ecFast`, `ysPL`, `rsGS`, and `rsPL` eclipse algorithms;
 - the ancient-calendar rules and civil-day assignments used to generate
   `src/generated/historical-calendar-data.js`;
 - the first seven fields of the 529 era-name records generated in
@@ -30,15 +29,6 @@ astronomical algorithms and ancient-calendar data not be arbitrarily modified,
 and does not provide a conventional SPDX license for the historical tables.
 The materials listed above remain identified as third-party material and are
 not claimed to be relicensed under MPL-2.0.
-
-### Eclipse algorithms
-
-`src/eclipses.js` and `src/solar-eclipses.js` contain `ecFast`, `ysPL`, `rsGS`
-and `rsPL`, preserving their original public names, classification/contact
-conventions and J2000-relative TT-day input. They cover fast eclipse
-classification, lunar-eclipse contacts, global solar-eclipse Bessel geometry
-and paths, and local solar-eclipse contacts and boundaries. The port uses this
-package's current apparent Sun/Moon positions, sidereal time and Delta T.
 
 ## cnlunar rules used by `huangli-lite`
 

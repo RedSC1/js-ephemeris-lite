@@ -1,0 +1,11 @@
+{
+  "sampleCount": 5,
+  "wideSamples": 800,
+  "events": 151,
+  "missing": [],
+  "kindDifferences": [],
+  "maxContactDeltaSeconds": 0.020076334476470947,
+  "maxVectorDeltaKm": 0.0010445233319485493,
+  "extraExactPairs": 0,
+  "maxDirectContactResidualSeconds": 0.009941738794511266
+}
