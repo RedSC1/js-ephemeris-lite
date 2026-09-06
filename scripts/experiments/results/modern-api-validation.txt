@@ -1,0 +1,51 @@
+{
+  "Solar": {
+    "oldCount": 437,
+    "newCount": 452,
+    "missing": 0,
+    "extra": 15,
+    "extraConfirmedByLegacyDetails": 15,
+    "oldMs": 4606.453042,
+    "newMs": 1279.7036669999998,
+    "maxSeconds": 2.3952797055244446,
+    "kinds": [
+      {
+        "date": "1909-06-17T23:18:27.971Z",
+        "old": "hybrid",
+        "new": "total"
+      },
+      {
+        "date": "1927-01-03T20:22:29.292Z",
+        "old": "annular",
+        "new": "hybrid"
+      },
+      {
+        "date": "1948-05-09T02:25:35.124Z",
+        "old": "annular",
+        "new": "hybrid"
+      },
+      {
+        "date": "1966-05-20T09:38:25.126Z",
+        "old": "annular",
+        "new": "hybrid"
+      },
+      {
+        "date": "2013-11-03T12:46:28.905Z",
+        "old": "hybrid",
+        "new": "total"
+      }
+    ]
+  },
+  "Lunar": {
+    "oldCount": 460,
+    "newCount": 460,
+    "missing": 0,
+    "extra": 0,
+    "extraConfirmedByLegacyDetails": 0,
+    "oldMs": 4799.734792,
+    "newMs": 1010.094083,
+    "maxSeconds": 13.160821795463562,
+    "kinds": []
+  }
+}
+{ wideSamples: 800, solar: 152, lunar: 163 }

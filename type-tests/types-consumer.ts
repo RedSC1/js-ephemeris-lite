@@ -44,16 +44,9 @@ import {
   parseTsc1Catalog, fixedStarPosition, fixedStarState,
   type Tsc1Catalog, type FixedStarPosition, type FixedStarState,
 } from 'js-ephemeris-lite/fixed-stars';
-import {
-  ecFast, rsGS, rsPL, ysPL, type EcFastResult, type YsPLResult,
-} from 'js-ephemeris-lite/eclipses';
-const fastEclipse: EcFastResult = ecFast(8864);
-const lunarEclipse: YsPLResult = ysPL.lecMax(8347);
-rsGS.init(8864, 7);
-const globalEclipse = rsGS.feature(8864);
-const localEclipse = rsPL.secMax(8864, globalEclipse.zxJ, globalEclipse.zxW, 0);
-const eclipseBoundary = rsPL.nbj(8864);
-void [fastEclipse, lunarEclipse, globalEclipse, localEclipse, eclipseBoundary];
+import { getSolarEclipseDetails as eclipseDetails } from 'js-ephemeris-lite/eclipses';
+const eclipseFromSubpath: SolarEclipseEvent | null = eclipseDetails(new Date('2024-04-08'));
+void eclipseFromSubpath;
 declare const tsc1Bytes: Uint8Array;
 const starCatalog: Tsc1Catalog = parseTsc1Catalog(tsc1Bytes);
 const starPosition: FixedStarPosition = fixedStarPosition(starCatalog, 'vega', 2451545);

@@ -1,5 +1,4 @@
 import type { AstroTime, JulianTime, ZonedTime } from './time.js';
-import type { EcFastType } from './eclipses.js';
 
 export type EclipseTimeInput = number | Date | JulianTime | ZonedTime | AstroTime;
 export interface ObserverLocation { longitudeDeg: number; latitudeDeg: number; heightMeters?: number; }
@@ -7,7 +6,7 @@ export interface ResolvedObserverLocation { longitudeDeg: number; latitudeDeg: n
 export interface TimedGroundPoint { time: JulianTime; longitudeDeg: number; latitudeDeg: number; }
 
 export interface SolarEclipseEvent {
-  code: Exclude<EcFastType, 'N'>;
+  code: 'P' | 'T' | 'A' | 'H';
   kind: 'partial' | 'total' | 'annular' | 'hybrid';
   conjunction: JulianTime;
   maximum: JulianTime;

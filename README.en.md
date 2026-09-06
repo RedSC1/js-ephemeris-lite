@@ -4,7 +4,7 @@
 
 A dependency-free JavaScript library for astronomy and Chinese calendars in browsers and Node.js. It provides planetary and lunar positions, sky events, eclipses, solar terms, lunar phases, Chinese calendar conversion, Ganzhi, and solar-time calculations. TypeScript declarations are included.
 
-The planetary models are derived from VSOP2013 and TOP2013, the lunar model is derived from ELP/MPP02, and their compact published series are calibrated against DE441. Eclipse algorithms, historical Chinese calendar material, and some era-name records are derived from [Shou Xing Tian Wen Li](https://github.com/sxwnl/sxwnl). See [Third-Party Notices](./THIRD_PARTY_NOTICES.md) for sources, modifications, licenses, and limitations.
+The planetary models are derived from VSOP2013 and TOP2013, the lunar model is derived from ELP/MPP02, and their compact published series are calibrated against DE441. Eclipse geometry follows this project’s C++ implementation. Historical Chinese calendar material and some era-name records are derived from [Shou Xing Tian Wen Li](https://github.com/sxwnl/sxwnl). See [Third-Party Notices](./THIRD_PARTY_NOTICES.md) for sources, modifications, licenses, and limitations.
 
 Website: [redsc1.com](https://www.redsc1.com/)  
 Online tools: [redsc1.com/tools](https://www.redsc1.com/tools)
@@ -92,7 +92,7 @@ console.log(searchSolarEclipses(
 - Position and velocity of the Sun, Moon, eight planets, and Pluto in heliocentric, geocentric, and Earth-Moon-barycentric forms.
 - Apparent coordinates, horizontal coordinates, rise/set/transit events, illumination, angular diameter, and elongation.
 - Longitude crossings, conjunctions, oppositions, stations, sign ingresses, apsides, nodes, and greatest elongations.
-- Global and local solar/lunar eclipse searches, contacts, local visibility, and compatibility APIs including `ecFast`, `ysPL`, `rsGS`, and `rsPL`.
+- Global and local solar/lunar eclipse searches, contact times, and local visibility using circular-limb shadow geometry.
 - Twenty-four solar terms, seventy-two pentads, new moons, and arbitrary principal lunar phases.
 - Chinese calendar conversion, leap months, historical calendar reforms, Chinese era names, and Ganzhi.
 - Mean solar time, apparent solar time, equation of time, sunrise/sunset, twilight, polar-day, and polar-night handling.

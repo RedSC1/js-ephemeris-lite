@@ -1,0 +1,151 @@
+{
+  "lunarReference": {
+    "contactVsDirectSeconds": {
+      "n": 198,
+      "rms": 0.002587750220953566,
+      "max": 0.007241964340209961
+    },
+    "umbralMagnitudeDeltaExcludingPenumbral": {
+      "n": 31,
+      "rms": 0.0002638119997951809,
+      "max": 0.0003649427630419838
+    },
+    "penumbralMagnitudeDelta": {
+      "n": 50,
+      "rms": 0.00019937830172039693,
+      "max": 0.00023727063248912827
+    }
+  },
+  "solarRadiusCheck": [
+    {
+      "k": -1120,
+      "old": "hybrid",
+      "cppRadii": "total",
+      "legacyCoreRadii": "hybrid"
+    },
+    {
+      "k": -903,
+      "old": "annular",
+      "cppRadii": "hybrid",
+      "legacyCoreRadii": "annular"
+    },
+    {
+      "k": -639,
+      "old": "annular",
+      "cppRadii": "hybrid",
+      "legacyCoreRadii": "annular"
+    },
+    {
+      "k": -416,
+      "old": "annular",
+      "cppRadii": "hybrid",
+      "legacyCoreRadii": "annular"
+    },
+    {
+      "k": 171,
+      "old": "hybrid",
+      "cppRadii": "total",
+      "legacyCoreRadii": "hybrid"
+    }
+  ],
+  "wide": {
+    "samples": 800,
+    "solarEvents": 151,
+    "lunarEvents": 158,
+    "missing": [
+      {
+        "k": -96383,
+        "year": -5792.58,
+        "name": "solar",
+        "old": "hybrid"
+      },
+      {
+        "k": -94652,
+        "year": -5652.58,
+        "name": "solar",
+        "old": "partial"
+      },
+      {
+        "k": -56557,
+        "year": -2572.58,
+        "name": "solar",
+        "old": "annular"
+      },
+      {
+        "k": -50372,
+        "year": -2072.58,
+        "name": "solar",
+        "old": "partial"
+      },
+      {
+        "k": 53771,
+        "year": 6347.42,
+        "name": "solar",
+        "old": "annular"
+      },
+      {
+        "k": 60450,
+        "year": 6887.42,
+        "name": "solar",
+        "old": "annular"
+      },
+      {
+        "k": 91866,
+        "year": 9427.42,
+        "name": "solar",
+        "old": "hybrid"
+      },
+      {
+        "k": 98545,
+        "year": 9967.42,
+        "name": "solar",
+        "old": "partial"
+      }
+    ],
+    "errors": [],
+    "kindDifferences": [
+      {
+        "k": -87973,
+        "year": -5112.58,
+        "name": "solar",
+        "old": "total",
+        "new": "partial"
+      },
+      {
+        "k": -68430,
+        "year": -3532.58,
+        "name": "solar",
+        "old": "annular",
+        "new": "hybrid"
+      },
+      {
+        "k": -55072,
+        "year": -2452.58,
+        "name": "solar",
+        "old": "total",
+        "new": "partial"
+      },
+      {
+        "k": 47092,
+        "year": 5807.42,
+        "name": "solar",
+        "old": "hybrid",
+        "new": "annular"
+      },
+      {
+        "k": 52286,
+        "year": 6227.42,
+        "name": "solar",
+        "old": "annular",
+        "new": "partial"
+      },
+      {
+        "k": 58965,
+        "year": 6767.42,
+        "name": "solar",
+        "old": "annular",
+        "new": "partial"
+      }
+    ]
+  }
+}

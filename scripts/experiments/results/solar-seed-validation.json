@@ -1,0 +1,40 @@
+{
+  "samples": 800,
+  "events": 151,
+  "missing": [],
+  "kindDifferences": [],
+  "seedRecoveries": [
+    {
+      "k": -96383,
+      "seedErrorHours": -23.563246361911297
+    },
+    {
+      "k": -94652,
+      "seedErrorHours": -18.408068262040615
+    },
+    {
+      "k": -56557,
+      "seedErrorHours": -20.743872268125415
+    },
+    {
+      "k": -50372,
+      "seedErrorHours": 17.354350671172142
+    },
+    {
+      "k": 53771,
+      "seedErrorHours": -20.255041541531682
+    },
+    {
+      "k": 60450,
+      "seedErrorHours": -19.436331041157246
+    },
+    {
+      "k": 91866,
+      "seedErrorHours": -20.72290237247944
+    },
+    {
+      "k": 98545,
+      "seedErrorHours": -17.42635015770793
+    }
+  ]
+}

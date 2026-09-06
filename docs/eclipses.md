@@ -1,97 +1,18 @@
-# 日月食
+# 日月食 API
 
-日月食模块从《寿星天文历》移植，并保留原作者的函数与对象名称。当前可从
-包根入口或 `js-ephemeris-lite/eclipses` 导入：
-
-```js
-import { ecFast, ysPL, rsGS, rsPL } from 'js-ephemeris-lite/eclipses';
-```
-
-## 时间约定
-
-为保持旧接口语义，本模块现有函数使用 **J2000.0 起算的 TT 日数**，不是
-绝对儒略日。绝对 JD(TT) 与该数值相差 `2451545.0`。
-
-## `ecFast(jd)`
-
-快速判断某次朔附近是否可能发生日食，并给出日食类型。`jd` 只需接近朔，
-函数会在内部修正到合朔时刻；返回的 `jd` 与 `jdSuo` 仍是 J2000.0 起算的
-TT 日数。
+`js-ephemeris-lite/eclipses` 与 `js-ephemeris-lite/eclipse-search` 导出同一套现代接口。
+完整参数、返回字段和地方见食示例见[日月食查询](./eclipse-search.md)。
 
 ```js
-const eclipse = ecFast(8864);
-console.log(eclipse.jdSuo, eclipse.lx, eclipse.ac);
+import { searchSolarEclipses, getLocalLunarEclipse } from 'js-ephemeris-lite/eclipses';
+
+const events = searchSolarEclipses(new Date('2024-01-01'), new Date('2025-01-01'));
+const local = getLocalLunarEclipse(new Date('2022-11-08'), {
+  longitudeDeg: 116.4074,
+  latitudeDeg: 39.9042,
+});
+console.log(events, local);
 ```
 
-兼容类型码保持不变：
-
-| 类型码 | 含义 |
-| --- | --- |
-| `N` | 无日食 |
-| `P` | 偏食 |
-| `T` / `A` | 全食／环食，本影或伪本影完整进入地球截面 |
-| `T0` / `A0` | 全食／环食型，但无中心食 |
-| `T1` / `A1` | 有中心食，但影锥没有完整进入地球截面 |
-| `H` | 环食－全食－环食 |
-| `H2` | 全食－全食－环食 |
-| `H3` | 环食－全食－全食 |
-
-`ac` 为 `0` 表示结果接近食限或类型分界，其余情况为 `1`。`ecFast` 的短公式
-侧重快速判断，`rsGS` 则提供更完整的几何计算，两者适合不同的使用场景。为让
-调用者在边界日期也能直接取得统一的分类结果，本移植版在 `ac === 0` 时会自动
-使用隔离的 7 根数 `rsGS` 计算器复核类型；普通结果仍走快速路径。复核不会改写
-公开 `rsGS` 对象的插值缓存，`ac` 也会保留为 `0`，以说明该日期位于分类边界
-附近。
-
-## `ysPL.lecMax(jd)`
-
-计算 `jd` 所在望附近的月食。返回字段仍采用兼容名称：
-
-- `LX`：`'全'`、`'偏'` 或空字符串；只有半影月食时保持空字符串。
-- `sf`：月食食分。
-- `lT`：依次为初亏、食甚、复圆、半影食始、半影食终、食既、生光；不存在
-  的接触时刻为 `0`。
-
-```js
-const result = ysPL.lecMax(8347);
-const [食甚, 初亏, 复圆, 半影食始, 半影食终, 食既, 生光] = result.lT;
-```
-
-`lT` 中非零时刻也是 J2000.0 起算的 TT 日数。移植版使用本包当前的日月视
-位置模型，并保留原有影半径、接触求解、字段名称和数组顺序。
-
-## 移植范围
-
-以下兼容接口均已完成：
-
-| 层次 | 接口 | 内容 |
-| --- | --- | --- |
-| 1 | `ecFast` | 快速日食搜索与类型预判 |
-| 2 | `ysPL.lineT`、`lecXY`、`lecMax` | 月食接触时刻、食分与类型 |
-| 3 | `rsGS.init`、`chazhi`、`sun`、`moon`、`bse` | 日月根数表和贝塞尔坐标基础 |
-| 4 | `rsGS.feature`、`qrd`、`jieX`、`jieX2`、`jieX3` | 全球日食特征、食带与界线 |
-| 5 | `rsPL.secXY`、`lineT`、`secMax` | 指定地点的日食过程与可见性 |
-| 6 | `rsPL.zb0`、`zbXY`、`p2p`、`pp0`、`nbj` | 地方中心及南北界 |
-
-`rsGS.init(jd, n)` 的 `n` 只接受 `2`、`3` 或 `7`，表示贝塞尔
-插值根数数量。它不是定气定朔的 `fast / mid / accurate` 档位，日月食接口不
-增加通用 `{ accuracy }` 参数。`rsPL.secMax` 与 `rsPL.nbj` 固定
-初始化 7 个根数。
-
-各层均以上游原版输出建立固定样例。当前回归覆盖全食、环食、全环食、偏食、
-无中心食与类型分界，月食和地方接触，日出、日没截断，以及完整食带界线。
-`ecFast` 在 `ac=0` 时会自动调用 `rsGS` 复核；需要
-食分、接触时刻、食带或地方情况时，仍应直接使用 `rsGS` 或 `rsPL`。
-
-### 兼容原则
-
-- 保留 `rsGS.feature`、`rsPL.secMax` 等原函数名及原结果字段。
-- 继续使用 J2000.0 起算的 TT 日数约定。
-- 日月位置、章动、恒星时和 ΔT 接入本包现有天文核心，不复制另一套隐式全局
-  星历状态。
-- 原版对象中用于缓存的数组只作为实现状态；每次公开计算返回独立结果，避免
-  调用下一次计算时悄悄改写上一次结果。
-- `jieX`、`jieX2` 返回结构化界线数组；`jieX3` 保留原有 HTML 文本
-  兼容输出，应用程序不应把它当作唯一数据格式。
-
-来源与原作者版权说明见[中文第三方声明](../THIRD_PARTY_NOTICES.zh-CN.md)。
+旧的 `ecFast`、`ysPL`、`rsGS`、`rsPL` 及界线接口已移除；不提供地图或边界线绘制。
+数值日期输入使用 **UT1 儒略日**，返回时刻为 `JulianTime`。
