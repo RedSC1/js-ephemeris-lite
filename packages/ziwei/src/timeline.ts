@@ -1,5 +1,6 @@
 import {
   MONTH_NAME,
+  ZonedTime,
   RAT_HOUR_MODE,
   calculateChineseCalendarYear,
   calculateDayPillar,
@@ -11,6 +12,7 @@ import {
   julianDay,
   type LunarMonth,
 } from 'js-ephemeris-lite';
+import { resolveZiweiVirtualTime } from './calendar.js';
 import type { ZiweiChart } from './chart.js';
 import {
   getEffectiveBirthYear,
@@ -309,11 +311,16 @@ export class ZiweiTimelineProvider {
     for (let index = 0; index < 12; index += 1) {
       starts.push(getNextJie(starts.at(-1)! + 2, this.chart.options.toCalendarOptions()).time.jdUT1);
     }
+    const logicalJd = (jd: number): number => {
+      const v = resolveZiweiVirtualTime(ZonedTime.fromJulianTime(jd, this.chart.options.utcOffsetMinutes), this.chart.options);
+      return julianDay(v) + (this.chart.options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY ? 1 / 24 : 0);
+    };
     return Object.freeze(Array.from({ length: 12 }, (_, offset) => {
       const month = offset + 1;
       const flow = makeFlowMonth(this.chart, targetYear, month);
-      const startDay = Math.floor(starts[offset]! + this.chart.options.utcOffsetMinutes / 1440 + 0.5);
-      const endDay = Math.floor(starts[offset + 1]! + this.chart.options.utcOffsetMinutes / 1440 + 0.5);
+      const startDay = Math.floor(logicalJd(starts[offset]!) + 0.5);
+      // Include a partially overlapping final civil date; the end instant remains exclusive.
+      const endDay = Math.ceil(logicalJd(starts[offset + 1]!) + 0.5);
       return Object.freeze({
         lunarYear: targetYear,
         month,

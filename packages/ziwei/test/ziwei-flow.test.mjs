@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import {
-  MONTH_NAME, RAT_HOUR_MODE, ZonedTime, makeGanzhi,
+  calendarDateFromJulianDay, MONTH_NAME, RAT_HOUR_MODE, ZonedTime, makeGanzhi,
 } from 'js-ephemeris-lite';
 import {
+  PILLAR_BOUNDARY,
   FLOW_LEVEL,
   arrangeZiweiStars,
   FLOW_MONTH_PALACE_STRATEGY,
@@ -681,4 +682,48 @@ test('a 33rd civil day after Jie remains a valid natal chart day', () => {
     new ZiweiOptions({ gender: ZIWEI_GENDER.MALE }),
   );
   assert.equal(chart.facts.solarDayFromPreviousJie, 33);
+});
+
+
+test('reverse fallback includes partially overlapping hour segments', () => {
+  for (const ratHourMode of Object.values(RAT_HOUR_MODE)) {
+    const options = new ZiweiOptions({ gender: ZIWEI_GENDER.MALE, ratHourMode });
+    const expected = ZiweiChart.fromZonedTime(zoned(2026, 3, 1, 1), options);
+    const rows = reverseLookupZiweiTier1({
+      start: zoned(2026, 3, 1, 0, 30), end: zoned(2026, 3, 1, 1, 30), options,
+      query: { wenchangBranch: expected.starPositions[findStarId('wenchang')] },
+    });
+    assert.equal(rows.length, 1, ratHourMode);
+    assert.equal(rows[0].virtualTime.hour, 1);
+    assert.equal(rows[0].virtualTime.minute, 0);
+    const midnight = reverseLookupZiweiTier1({
+      start: zoned(2026, 3, 1, 23, 30), end: zoned(2026, 3, 2, 0, 30), options,
+      query: { lucunBranch: expected.starPositions[findStarId('lucun')] },
+    });
+    assert.deepEqual(midnight.map(r => r.virtualTime.hour), ratHourMode === RAT_HOUR_MODE.NEXT_DAY ? [23] : [23, 0]);
+    const endpoint = reverseLookupZiweiTier1({
+      start: zoned(2026, 3, 1, 0, 30), end: zoned(2026, 3, 1, 1), options,
+      query: { wenchangBranch: expected.starPositions[findStarId('wenchang')] },
+    });
+    assert.equal(endpoint.length, 1);
+
+  }
+});
+
+test('solar month timeline contains both sides of a Jie civil date', () => {
+  const chart = ZiweiChart.fromZonedTime(zoned(2000, 1, 1, 12), new ZiweiOptions({
+    gender: ZIWEI_GENDER.MALE, flowLimitBoundary: PILLAR_BOUNDARY.SOLAR_TERM,
+  }));
+  const timeline = new ZiweiTimelineProvider(chart);
+  for (const month of timeline.getMonths(2026)) {
+    for (const delta of [-1 / 86400, 1 / 86400]) {
+      const instant = ZonedTime.fromJulianTime(month.solarEndJdExclusive + delta, 480);
+      const flow = resolveZiweiFlow(chart, instant);
+      const logical = calendarDateFromJulianDay(instant.toJulianTime().jdUT1 + 480 / 1440 + 1 / 24);
+      const days = timeline.getDays(flow.effectiveTargetYear, flow.targetMonth);
+      assert.ok(days.some(d => d.day === flow.targetDay && d.solarDate.year === logical.year
+        && d.solarDate.month === logical.month && d.solarDate.day === logical.day),
+        `month ${month.month}, delta ${delta}`);
+    }
+  }
 });

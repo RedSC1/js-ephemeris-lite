@@ -1,5 +1,7 @@
 import {
   calculateChineseCalendarYear,
+  calendarDateFromJulianDay,
+  RAT_HOUR_MODE,
   ganzhiBranch,
   julianDay,
   localApparentToMeanSolarTime,
@@ -11,7 +13,7 @@ import {
 import { resolveEffectiveLunarMonth } from './anchors.js';
 import { resolveZiweiBirthFromInstant, resolveZiweiVirtualTime } from './calendar.js';
 import { ZiweiChart } from './chart.js';
-import { stepZiweiFlowHourTarget, type ZiweiFlowTarget } from './flow-calendar.js';
+import { type ZiweiFlowTarget } from './flow-calendar.js';
 import { findStarId } from './stars.js';
 import { RAT_HOUR_SEGMENT, type RatHourSegment } from './types.js';
 import { ZIWEI_CLOCK_MODE, ZiweiOptions, type ZiweiOptionsInput } from './options.js';
@@ -286,7 +288,17 @@ export function reverseLookupZiweiTier1(request: ZiweiReverseLookupRequest): rea
         chart,
       }));
     }
-    const next = stepZiweiFlowHourTarget(target, options.ratHourMode, 1);
+    // Visit boundaries rather than preserving the initial minute offset as
+    // interactive hour navigation does. Invert the selected clock each time.
+    const v = target.virtualTime;
+    const nextHour = options.ratHourMode !== RAT_HOUR_MODE.NEXT_DAY && v.hour === 23
+      ? 24 : Math.floor((v.hour + 1) / 2) * 2 + 1;
+    const date = calendarDateFromJulianDay(julianDay({
+      year: v.year, month: v.month, day: v.day, hour: 12,
+    }) + Math.floor(nextHour / 24));
+    const boundary = { ...date, hour: nextHour % 24, minute: 0, second: 0 };
+    const physical = targetFromVirtualTime(boundary, options);
+    const next = Object.freeze({ jdUT1: physical.jdUT1, virtualTime: Object.freeze(boundary) });
     if (next.jdUT1 <= target.jdUT1) throw new Error('logical-hour stepping did not advance');
     target = next;
   }
