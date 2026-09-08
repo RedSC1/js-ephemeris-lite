@@ -386,7 +386,7 @@ export function makeFlowHourFromPillar(
     branch: advanceBranch(day.limit.coordinate.branch, hourIndex),
   });
   return Object.freeze({
-    hourIndex,
+    hourIndex: ratHourSegment === RAT_HOUR_SEGMENT.LATE ? 12 : hourIndex,
     ratHourSegment,
     limit: limitCoordinate(chart, FLOW_LEVEL.HOUR, coordinate),
   });

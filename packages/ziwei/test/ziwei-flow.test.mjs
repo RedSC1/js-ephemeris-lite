@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import {
-  getPreviousJie, julianDay, calendarDateFromJulianDay, MONTH_NAME, RAT_HOUR_MODE, ZonedTime, makeGanzhi,
+  getNextJie, getPreviousJie, julianDay, calendarDateFromJulianDay, MONTH_NAME, RAT_HOUR_MODE, ZonedTime, makeGanzhi,
 } from 'js-ephemeris-lite';
 import {
   solarDayFromPreviousJie, resolveEffectiveLunarMonth, resolveZiweiVirtualTime, ZIWEI_CLOCK_MODE,
+  ZiweiRuleModule, ZiweiRuleset,
   PILLAR_BOUNDARY,
   FLOW_LEVEL,
   arrangeZiweiStars,
@@ -801,5 +802,64 @@ test('review: historical later-nine birth agrees with flow effective year', () =
     assert.equal(birth.facts.effectiveLunarYear,-216);
     const earlier=ZiweiChart.fromZonedTime(zoned(-230,1,1),options);
     assert.equal(resolveZiweiFlow(earlier,target).effectiveTargetYear,birth.facts.effectiveLunarYear);
+  }
+});
+
+
+test('review3: civil clock normalizes input offset without changing instant', () => {
+  const utc = new ZonedTime({year:2026,month:3,day:20,hour:18,offsetMinutes:0});
+  const options = new ZiweiOptions({gender:ZIWEI_GENDER.MALE});
+  const a = ZiweiChart.fromZonedTime(utc,options);
+  const b = ZiweiChart.fromZonedTime(ZonedTime.fromJulianTime(utc.toJulianTime().jdUT1,480),options);
+  assert.equal(a.facts.virtualTime.hour,b.facts.virtualTime.hour);
+  assert.equal(a.facts.virtualTime.day,b.facts.virtualTime.day);
+  assert.equal(a.facts.solarDayFromPreviousJie,b.facts.solarDayFromPreviousJie);
+  assert.deepEqual(a.starPositions,b.starPositions);
+});
+
+test('review3: late Zi selectable index round trips physical flow', () => {
+  for (const ratHourMode of [RAT_HOUR_MODE.CURRENT_DAY,RAT_HOUR_MODE.CURRENT_DAY_TOMORROW_STEM]) {
+    const c=ZiweiChart.fromZonedTime(zoned(2000,1,1),new ZiweiOptions({gender:ZIWEI_GENDER.MALE,ratHourMode}));
+    const m=c.createLimitManager(); m.setPhysicalTime(zoned(2026,3,20,23,30));
+    const f=m.resolvedFlow, old=f.hour.limit.coordinate;
+    assert.equal(f.targetHourIndex,12);
+    m.setHour(f.targetHourIndex);
+    assert.equal(m.context.hour.ratHourSegment,RAT_HOUR_SEGMENT.LATE);
+    assert.deepEqual(m.context.hour.limit.coordinate,old);
+  }
+});
+
+test('review3: custom solar placement reverse detects mid-hour Jie', () => {
+  const module=new ZiweiRuleModule({label:'solar-month',patch:{natalPlacements:{wenchang:{inputs:['solar.month_branch'],shape:[12],positions:Array.from({length:12},(_,i)=>i)}}}});
+  const options=new ZiweiOptions({gender:ZIWEI_GENDER.MALE,rules:{ruleset:new ZiweiRuleset([module])}});
+  const jie=getNextJie(zoned(2026,3,1).toJulianTime().jdUT1,options.toCalendarOptions()).time.jdUT1;
+  const at=delta=>ZonedTime.fromJulianTime(jie+delta/86400,480);
+  const post=ZiweiChart.fromZonedTime(at(30),options),pre=ZiweiChart.fromZonedTime(at(-30),options),id=findStarId('wenchang');
+  assert.notEqual(pre.starPositions[id],post.starPositions[id]);
+  const rows=reverseLookupZiweiTier1({start:at(-30),end:at(30),options,query:{wenchangBranch:post.starPositions[id]}});
+  assert.ok(rows.length>0);
+  assert.ok(Math.abs(rows[0].jdUT1-jie)<1e-8);
+});
+
+
+test('selected day rejects stale nodes without mutating state', () => {
+  const c=ZiweiChart.fromZonedTime(zoned(2000,1,1),new ZiweiOptions({gender:ZIWEI_GENDER.MALE}));
+  const m=c.createLimitManager();m.setYear(2026);m.setMonth(1);
+  const old=m.manifest.currentMonthDays[0];m.setMonth(3);m.setDay(1);const before=m.context;
+  assert.throws(()=>m.selectDay(old),RangeError);assert.equal(m.context,before);
+  const fresh=m.manifest.currentMonthDays[0];m.selectDay({...fresh,solarDate:{...fresh.solarDate}});
+  assert.equal(m.context.day.limit.coordinate.stem,fresh.stem);
+  const unchanged=m.context;
+  assert.throws(()=>m.selectDay({...fresh,stem:(fresh.stem+1)%10}),RangeError);
+  assert.equal(m.context,unchanged);
+});
+
+test('master boundary rejects invalid supplied values and preserves defaults', () => {
+  for(const key of ['ming_zhu','shen_zhu']) {
+    const compile=extra=>ZiweiConfigLoader.compileJson({label:'master-boundary',mastersJson:JSON.stringify({[key]:{table:Object.fromEntries(Array.from({length:12},(_,i)=>[i,'ziwei'])),...extra}})});
+    const name=key==='ming_zhu'?'life':'body';
+    assert.equal(compile({}).patch.masters[name].input,key==='ming_zhu'?'anchor.life':'master.year_branch');
+    for(const valid of ['lunar','solar']) assert.equal(compile({boundary:valid}).patch.masters[name].input,`${valid}.year_branch`);
+    for(const invalid of ['solr','',null,0,true]) assert.throws(()=>compile({boundary:invalid}),RangeError);
   }
 });

@@ -57,7 +57,8 @@ export function resolveZiweiVirtualTime(zonedTime: ZonedTime, options: ZiweiOpti
   if (options.clockMode === ZIWEI_CLOCK_MODE.TRUE_SOLAR) {
     return trueSolarTime(zonedTime, options.longitudeDeg!);
   }
-  return zonedTime;
+  return zonedTime.offsetMinutes === options.utcOffsetMinutes ? zonedTime
+    : ZonedTime.fromJulianTime(zonedTime.toJulianTime().jdUT1, options.utcOffsetMinutes);
 }
 
 function logicalDateForLunar(virtualTime: CivilDateTime, options: ZiweiOptions): CivilDateTime {

@@ -3,6 +3,7 @@ import {
   calendarDateFromJulianDay,
   RAT_HOUR_MODE,
   ganzhiBranch,
+  getNextJie,
   julianDay,
   localApparentToMeanSolarTime,
   lunarToSolar,
@@ -280,11 +281,12 @@ export function reverseLookupZiweiTier1(request: ZiweiReverseLookupRequest): rea
     jdUT1: startJd,
     virtualTime: Object.freeze(resolveZiweiVirtualTime(request.start, options)),
   });
-  const approximateSlots = Math.ceil((endJd - startJd) * 13) + 2;
+  const approximateSlots = Math.ceil((endJd - startJd) * 13) + Math.ceil((endJd - startJd) / 10) + 3;
   const ceiling = request.maxCandidatesToExamine ?? approximateSlots;
   if (!Number.isSafeInteger(ceiling) || ceiling < 1) throw new RangeError('maxCandidatesToExamine must be >= 1');
   const results: ZiweiReverseCandidate[] = [];
   let examined = 0;
+  let nextJie = getNextJie(startJd, options.toCalendarOptions()).time.jdUT1;
   while (target.jdUT1 <= endJd + 1e-12) {
     if (examined >= ceiling) throw new RangeError('reverse lookup candidate ceiling exceeded');
     examined += 1;
@@ -311,7 +313,12 @@ export function reverseLookupZiweiTier1(request: ZiweiReverseLookupRequest): rea
     }) + Math.floor(nextHour / 24));
     const boundary = { ...date, hour: nextHour % 24, minute: 0, second: 0 };
     const physical = targetFromVirtualTime(boundary, options);
-    const next = Object.freeze({ jdUT1: physical.jdUT1, virtualTime: Object.freeze(boundary) });
+    let next: ZiweiFlowTarget = Object.freeze({ jdUT1: physical.jdUT1, virtualTime: Object.freeze(boundary) });
+    // Solar rule inputs may change before the next hour boundary.
+    if (nextJie <= next.jdUT1) {
+      next = Object.freeze({jdUT1: nextJie, virtualTime: Object.freeze(resolveZiweiVirtualTime(ZonedTime.fromJulianTime(nextJie, options.utcOffsetMinutes), options))});
+      nextJie = getNextJie(nextJie + 1, options.toCalendarOptions()).time.jdUT1;
+    }
     if (next.jdUT1 <= target.jdUT1) throw new Error('logical-hour stepping did not advance');
     target = next;
   }

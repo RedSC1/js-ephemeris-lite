@@ -227,7 +227,13 @@ export class ZiweiLimitManager {
 
   selectDay(node: DayNode): void {
     const month = this.contextValue.month;
-    if (month === undefined) throw new Error('select a flow month first');
+    const year = this.timelineYearValue;
+    if (month === undefined || year === undefined) throw new Error('select a flow month first');
+    const valid = this.timeline.getDays(year, month.month, month.isLeap, month.effectiveMonth, month.effectiveYear)
+      .some(value => value.day === node.day && value.stem === node.stem && value.branch === node.branch
+        && value.solarDate.year === node.solarDate.year && value.solarDate.month === node.solarDate.month
+        && value.solarDate.day === node.solarDate.day);
+    if (!valid) throw new RangeError('day node does not belong to the selected month');
     const day = makeFlowDay(this.baseChart, month, node.day, node.stem);
     this.contextValue = frozenContext({
       decade: this.contextValue.decade,

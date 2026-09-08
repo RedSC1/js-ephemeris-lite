@@ -209,11 +209,11 @@ export function resolveZiweiFlowFromInstant(
     targetMonthEffectiveBaseYear = effectiveTargetYear;
     targetDay = solarDayFromPreviousJie(jdUT1, normalizedTargetVirtualTime, chart.options);
   }
-  const targetHourIndex = ganzhiBranch(targetPillars.hour);
+  const targetHourBranch = ganzhiBranch(targetPillars.hour);
   const targetRatHourSegment = ratHourSegment(
     normalizedTargetVirtualTime,
     chart.options.ratHourMode,
-    targetHourIndex,
+    targetHourBranch,
   );
   const month = boundary === PILLAR_BOUNDARY.LUNAR
     ? makeFlowMonthFromBuildingBranch(
@@ -255,7 +255,7 @@ export function resolveZiweiFlowFromInstant(
     targetMonthSequence,
     targetMonthBuildingBranch,
     targetDay,
-    targetHourIndex,
+    targetHourIndex: hour.hourIndex,
     targetRatHourSegment,
     targetMonthIsLeap,
     decade,

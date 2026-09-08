@@ -464,3 +464,8 @@ stepZiweiFlowDayTarget(target, 1, options);
 传入选项后，保留虚拟时钟位置，并重新换算 UT1，避免将真太阳时与 UT1 当作等速时钟。
 省略选项保留旧的固定时差步进语义，仅适用于固定时差时钟。
 管理器的 `currentTarget.ratHourSegment` 与解析流盘的早子／晚子标记一致。
+
+
+民用时钟模式以 `options.utcOffsetMinutes` 为排盘时区：输入时区不同时，保持实际瞬间不变，先转换到配置时区再排盘。
+拆分子时模式下，`targetHourIndex` 和 `FlowHourLimit.hourIndex` 的晚子索引为 12，早子为 0；地支索引仍为 0。
+反查除时辰边界外也检查交节时刻，以覆盖自定义规则的太阳年、月输入变化。

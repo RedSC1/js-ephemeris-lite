@@ -570,6 +570,9 @@ function parseMastersJson(source: string): ZiweiRulePatch['masters'] {
       return star;
     });
     const boundary = rule.boundary;
+    if (boundary !== undefined && boundary !== 'solar' && boundary !== 'lunar') {
+      throw new RangeError('master boundary must be lunar or solar');
+    }
     return {
       input: boundary === 'solar'
         ? 'solar.year_branch'
