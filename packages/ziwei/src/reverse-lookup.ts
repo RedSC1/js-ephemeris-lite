@@ -11,7 +11,7 @@ import {
   type LunarMonth,
 } from 'js-ephemeris-lite';
 import { resolveEffectiveLunarMonth } from './anchors.js';
-import { resolveZiweiBirthFromInstant, resolveZiweiVirtualTime } from './calendar.js';
+import { virtualTimeToUt1, resolveZiweiBirthFromInstant, resolveZiweiVirtualTime } from './calendar.js';
 import { ZiweiChart } from './chart.js';
 import { type ZiweiFlowTarget } from './flow-calendar.js';
 import { findStarId } from './stars.js';
@@ -227,7 +227,20 @@ function reverseLookupDirect(
           for (const hour of virtualHours) {
             if (examined >= ceiling) throw new RangeError('reverse lookup candidate ceiling exceeded');
             examined += 1;
-            const target = targetFromVirtualTime({ ...solarDate, hour, minute: 0, second: 0 }, options);
+            let target = targetFromVirtualTime({ ...solarDate, hour, minute: 0, second: 0 }, options);
+            const split = options.ratHourMode !== RAT_HOUR_MODE.NEXT_DAY;
+            const lo = hour === 0 ? (split ? 0 : -1) : hour === 23 ? 23 : hour - 1;
+            const hi = hour === 0 ? 1 : hour === 23 ? 24 : hour + 1;
+            const boundary = (h: number): CivilDateTime => ({
+              ...calendarDateFromJulianDay(julianDay({...solarDate, hour: 12}) + Math.floor(h / 24)),
+              hour: mod(h, 24), minute: 0, second: 0,
+            });
+            if (virtualTimeToUt1(boundary(lo), options) > endJd || virtualTimeToUt1(boundary(hi), options) <= startJd) continue;
+            // Clamp out-of-range representatives, then forward-verify the overlap.
+            if (target.jdUT1 < startJd || target.jdUT1 > endJd) {
+              const jdUT1 = Math.max(startJd, Math.min(endJd, target.jdUT1));
+              target = {jdUT1, virtualTime: resolveZiweiVirtualTime(ZonedTime.fromJulianTime(jdUT1, options.utcOffsetMinutes), options)};
+            }
             if (target.jdUT1 < startJd - 1e-12 || target.jdUT1 > endJd + 1e-12) continue;
             const birth = resolveZiweiBirthFromInstant(target.jdUT1, target.virtualTime, options);
             const chart = ZiweiChart.fromResolvedBirth(birth);

@@ -411,7 +411,7 @@ manager.setHour(0);
 manager.clearMonth(); // 同时清掉月、日、时
 manager.setPhysicalTime(target);
 manager.nextDay();
-manager.nextHour();   // 按早/晚子时的逻辑槽中心步进
+manager.nextHour();   // 按早/晚子时逻辑槽步进，保留槽内分钟偏移
 
 console.log(manager.context);
 console.log(manager.dynamicChart);
@@ -450,3 +450,17 @@ for (const candidate of candidates) {
 ```
 
 结果代表一个逻辑时辰槽，不能据此确定分钟级出生时间。
+
+
+### 底层物理时间步进
+
+`ZiweiLimitManager` 自动沿用出生盘的时钟选项。直接使用底层函数时，太阳时模式应传入同一份 `ZiweiOptions`：
+
+```ts
+stepZiweiFlowHourTarget(target, options.ratHourMode, 1, options);
+stepZiweiFlowDayTarget(target, 1, options);
+```
+
+传入选项后，保留虚拟时钟位置，并重新换算 UT1，避免将真太阳时与 UT1 当作等速时钟。
+省略选项保留旧的固定时差步进语义，仅适用于固定时差时钟。
+管理器的 `currentTarget.ratHourSegment` 与解析流盘的早子／晚子标记一致。

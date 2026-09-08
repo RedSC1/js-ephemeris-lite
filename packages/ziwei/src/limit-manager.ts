@@ -177,6 +177,7 @@ export class ZiweiLimitManager {
       year: makeFlowYear(this.baseChart, node.effectiveYear),
       month,
     });
+    this.timelineYearValue = node.effectiveYear;
     this.targetValue = null;
     this.resolvedValue = null;
   }
@@ -295,6 +296,7 @@ export class ZiweiLimitManager {
     this.targetValue = Object.freeze({
       jdUT1: target.toJulianTime().jdUT1,
       virtualTime: Object.freeze(resolveZiweiVirtualTime(target, this.baseChart.options)),
+      ratHourSegment: flow.targetRatHourSegment,
     });
   }
 
@@ -318,26 +320,29 @@ export class ZiweiLimitManager {
 
   private stepDay(direction: -1 | 1): void {
     if (this.targetValue === null) throw new Error('setPhysicalTime must be called before physical stepping');
-    this.targetValue = stepZiweiFlowDayTarget(this.targetValue, direction);
+    const next = stepZiweiFlowDayTarget(this.targetValue, direction, this.baseChart.options);
     this.installResolved(resolveZiweiFlowFromInstant(
       this.baseChart,
-      this.targetValue.jdUT1,
-      this.targetValue.virtualTime,
+      next.jdUT1,
+      next.virtualTime,
     ), FLOW_LEVEL.HOUR);
+    this.targetValue = next;
   }
 
   private stepHour(direction: -1 | 1): void {
     if (this.targetValue === null) throw new Error('setPhysicalTime must be called before physical stepping');
-    this.targetValue = stepZiweiFlowHourTarget(
+    const next = stepZiweiFlowHourTarget(
       this.targetValue,
       this.baseChart.options.ratHourMode,
       direction,
+      this.baseChart.options,
     );
     this.installResolved(resolveZiweiFlowFromInstant(
       this.baseChart,
-      this.targetValue.jdUT1,
-      this.targetValue.virtualTime,
+      next.jdUT1,
+      next.virtualTime,
     ), FLOW_LEVEL.HOUR);
+    this.targetValue = next;
   }
 
   clear(level: FlowLevel): void {

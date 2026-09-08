@@ -16,7 +16,8 @@ import {
   type FourPillars,
   type ResolvedLunarDate,
   type Ut1Input,
-  type ZonedTime,
+  ZonedTime,
+  localApparentToMeanSolarTime,
 } from 'js-ephemeris-lite';
 import { computeZiweiAnchors, resolveEffectiveLunarMonth, type ResolvedZiweiAnchors } from './anchors.js';
 import {
@@ -102,12 +103,12 @@ export function solarDayFromPreviousJie(
 ): number {
   const virtualJd = julianDay(virtualTime);
   const previousJie = getPreviousJie(jdUT1, options.toCalendarOptions());
-  const clockOffset = virtualJd - jdUT1;
+
   let currentLogical = virtualJd;
   if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && virtualTime.hour >= 23) {
     currentLogical += 1 / 24;
   }
-  const jieVirtual = previousJie.time.jdUT1 + clockOffset;
+  const jieVirtual = julianDay(resolveZiweiVirtualTime(ZonedTime.fromJulianTime(previousJie.time.jdUT1, options.utcOffsetMinutes), options));
   const jieClock = calendarDateFromJulianDay(jieVirtual);
   let jieLogical = jieVirtual;
   if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && jieClock.hour >= 23) {
@@ -178,4 +179,11 @@ export function resolveZiweiBirth(
     resolved,
   );
   return Object.freeze({ ...birth, clockTime: Object.freeze(zonedTime.toJSON()) });
+}
+
+/** Inverse chart clock evaluated at the requested virtual instant. */
+export function virtualTimeToUt1(v: CivilDateTime, options: ZiweiOptions): number {
+  const jd = julianDay(v);
+  if (options.clockMode === ZIWEI_CLOCK_MODE.TRUE_SOLAR) return localApparentToMeanSolarTime(jd, options.longitudeDeg!) - options.longitudeDeg! / 360;
+  return jd - (options.clockMode === ZIWEI_CLOCK_MODE.MEAN_SOLAR ? options.longitudeDeg! / 360 : options.utcOffsetMinutes / 1440);
 }

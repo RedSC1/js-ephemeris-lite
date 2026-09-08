@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import {
-  calendarDateFromJulianDay, MONTH_NAME, RAT_HOUR_MODE, ZonedTime, makeGanzhi,
+  getPreviousJie, julianDay, calendarDateFromJulianDay, MONTH_NAME, RAT_HOUR_MODE, ZonedTime, makeGanzhi,
 } from 'js-ephemeris-lite';
 import {
+  solarDayFromPreviousJie, resolveEffectiveLunarMonth, resolveZiweiVirtualTime, ZIWEI_CLOCK_MODE,
   PILLAR_BOUNDARY,
   FLOW_LEVEL,
   arrangeZiweiStars,
@@ -725,5 +726,80 @@ test('solar month timeline contains both sides of a Jie civil date', () => {
         && d.solarDate.month === logical.month && d.solarDate.day === logical.day),
         `month ${month.month}, delta ${delta}`);
     }
+  }
+});
+
+
+test('review: direct reverse includes a partial matching segment', () => {
+  const options = new ZiweiOptions({ gender: ZIWEI_GENDER.MALE });
+  const chart = ZiweiChart.fromZonedTime(zoned(2026, 3, 1, 2), options);
+  const query = Object.fromEntries(['lucun', 'hongluan', 'zuofu', 'wenchang', 'santai']
+    .map(key => [`${key}Branch`, chart.starPositions[findStarId(key)]]));
+  for (const [h, a, b] of [[1, 10, 30], [2, 30, 45]]) {
+    const rows = reverseLookupZiweiTier1({start: zoned(2026, 3, 1, h, a), end: zoned(2026, 3, 1, h, b), options, query});
+    assert.equal(rows.length, 1);
+  }
+});
+
+test('review: later-nine advance changes effective year', () => {
+  for (const strategy of [LEAP_MONTH_STRATEGY.AS_NEXT, LEAP_MONTH_STRATEGY.SPLIT_AFTER_FIFTEENTH]) {
+    assert.deepEqual(resolveEffectiveLunarMonth({year: -200, month: 9, day: 16, isLeap: true, monthName: MONTH_NAME.LATER_NINE}, strategy), {year: -199, month: 10});
+  }
+});
+
+test('review: physical steps retain true-solar conversion and rat metadata', () => {
+  const options = new ZiweiOptions({gender: ZIWEI_GENDER.MALE, clockMode: ZIWEI_CLOCK_MODE.TRUE_SOLAR, longitudeDeg: 116.4, ratHourMode: RAT_HOUR_MODE.CURRENT_DAY});
+  const chart = ZiweiChart.fromZonedTime(zoned(2000, 1, 1), options);
+  const m = chart.createLimitManager();
+  m.setPhysicalTime(zoned(2026, 3, 1, 23, 40));
+  assert.equal(m.currentTarget.ratHourSegment, m.resolvedFlow.targetRatHourSegment);
+  for (const action of ['nextDay', 'nextHour', 'previousHour', 'previousDay']) {
+    m[action]();
+    const t = m.currentTarget;
+    const actual = resolveZiweiVirtualTime(ZonedTime.fromJulianTime(t.jdUT1, 480), options);
+    assert.ok(Math.abs(julianDay(actual) - julianDay(t.virtualTime)) * 86400 < 0.001);
+    assert.equal(t.ratHourSegment, m.resolvedFlow.targetRatHourSegment);
+  }
+});
+
+test('review: selecting a month from another year synchronizes timeline', () => {
+  const chart = ZiweiChart.fromZonedTime(zoned(2000, 1, 1), new ZiweiOptions({gender: ZIWEI_GENDER.MALE}));
+  const m = chart.createLimitManager();
+  m.setYear(2023);
+  m.selectMonth(new ZiweiTimelineProvider(chart).getMonths(2024)[0]);
+  assert.equal(m.context.year.year, 2024);
+  assert.ok(m.manifest.currentMonthDays.length > 0);
+  assert.equal(m.manifest.currentMonthDays[0].solarDate.year, 2024);
+});
+
+test('review: flow JSON rejects unavailable month input', () => {
+  assert.throws(() => ZiweiConfigLoader.compileJson({label: 'invalid-flow', flowJson: JSON.stringify([
+    {key: 'flow_lucun', rule: {type: 'anchor_offset', anchor: 'month', offset: 0}},
+  ])}));
+});
+
+
+test('review: previous Jie uses its own apparent-solar offset', () => {
+  const options = new ZiweiOptions({gender: ZIWEI_GENDER.MALE, clockMode: ZIWEI_CLOCK_MODE.TRUE_SOLAR, longitudeDeg: 153.07804249718785, ratHourMode: RAT_HOUR_MODE.CURRENT_DAY});
+  const target = zoned(2026,3,20,20), jd = target.toJulianTime().jdUT1;
+  const v = resolveZiweiVirtualTime(target,options);
+  const jie = getPreviousJie(jd, options.toCalendarOptions()).time.jdUT1;
+  const jv = resolveZiweiVirtualTime(ZonedTime.fromJulianTime(jie,480),options);
+  const expected = Math.floor(julianDay(v)+0.5)-Math.floor(julianDay(jv)+0.5)+1;
+  assert.equal(expected,16);
+  assert.equal(solarDayFromPreviousJie(jd,v,options),expected);
+  assert.equal(ZiweiChart.fromZonedTime(target,options).facts.solarDayFromPreviousJie,expected);
+  const birth = ZiweiChart.fromZonedTime(zoned(2000,1,1),options);
+  assert.equal(resolveZiweiFlow(birth,target,PILLAR_BOUNDARY.SOLAR_TERM).targetDay,expected);
+});
+
+test('review: historical later-nine birth agrees with flow effective year', () => {
+  for (const leapMonthStrategy of [LEAP_MONTH_STRATEGY.AS_NEXT, LEAP_MONTH_STRATEGY.SPLIT_AFTER_FIFTEENTH]) {
+    const options = new ZiweiOptions({gender: ZIWEI_GENDER.MALE, leapMonthStrategy});
+    const target=zoned(-217,11,1,12), birth=ZiweiChart.fromZonedTime(target,options);
+    assert.equal(birth.facts.lunarDate.monthName,MONTH_NAME.LATER_NINE);
+    assert.equal(birth.facts.effectiveLunarYear,-216);
+    const earlier=ZiweiChart.fromZonedTime(zoned(-230,1,1),options);
+    assert.equal(resolveZiweiFlow(earlier,target).effectiveTargetYear,birth.facts.effectiveLunarYear);
   }
 });

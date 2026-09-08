@@ -547,7 +547,10 @@ function parseFlowJson(source: string): {
     seen.add(definition.key);
     stars.push(definition);
     if (star.rule === undefined) throw new TypeError(`flow[${index}].rule is required`);
-    placements[definition.key] = compileZiweiJsonPlacement(star.rule);
+    const compiled = compileZiweiJsonPlacement(star.rule);
+    const available = new Set(['anchor.bureau', 'anchor.ziwei', 'anchor.tianfu', 'anchor.life', 'anchor.body', 'birth.gender', 'lunar.year_stem', 'solar.year_stem', 'lunar.year_branch', 'solar.year_branch']);
+    if (compiled.inputs.some(input => !available.has(input))) throw new RangeError('flow rule references unavailable input');
+    placements[definition.key] = compiled;
     if (star.brightness !== undefined) {
       if (!Array.isArray(star.brightness)) throw new TypeError(`flow[${index}].brightness must be an array`);
       brightness[definition.key] = star.brightness.map(Number);

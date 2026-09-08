@@ -1,4 +1,5 @@
 import {
+  MONTH_NAME,
   ganzhiBranch,
   ganzhiStem,
   type FourPillars,
@@ -77,6 +78,7 @@ export function resolveEffectiveLunarMonth(
   const advance = lunarDate.isLeap
     && (strategy === 1 || (strategy === 2 && lunarDate.day > 15));
   if (advance) {
+    if (lunarDate.monthName === MONTH_NAME.LATER_NINE) year += 1;
     month += 1;
     if (month > 12) {
       month = 1;
