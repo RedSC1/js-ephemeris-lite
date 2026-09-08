@@ -1,0 +1,661 @@
+{
+  "source": "Original oba.getHuiLi rules and sxwnl_spa_dart test_hui_li_date.dart; frozen old-formula outputs, not new implementation outputs.",
+  "samples": [
+    {
+      "d0": -503105,
+      "expected": {
+        "year": 1,
+        "month": 1,
+        "day": 1
+      }
+    },
+    {
+      "d0": -503104,
+      "expected": {
+        "year": 1,
+        "month": 1,
+        "day": 2
+      }
+    },
+    {
+      "d0": -502397,
+      "expected": {
+        "year": 2,
+        "month": 12,
+        "day": 30
+      }
+    },
+    {
+      "d0": -502396,
+      "expected": {
+        "year": 3,
+        "month": 1,
+        "day": 1
+      }
+    },
+    {
+      "d0": -492475,
+      "expected": {
+        "year": 30,
+        "month": 12,
+        "day": 29
+      }
+    },
+    {
+      "d0": -492474,
+      "expected": {
+        "year": 31,
+        "month": 1,
+        "day": 1
+      }
+    },
+    {
+      "d0": 0,
+      "expected": {
+        "year": 1420,
+        "month": 9,
+        "day": 24
+      }
+    },
+    {
+      "d0": 1000,
+      "expected": {
+        "year": 1423,
+        "month": 7,
+        "day": 20
+      }
+    },
+    {
+      "d0": 10630,
+      "expected": {
+        "year": 1450,
+        "month": 9,
+        "day": 23
+      }
+    },
+    {
+      "d0": 10631,
+      "expected": {
+        "year": 1450,
+        "month": 9,
+        "day": 24
+      }
+    },
+    {
+      "d0": 503105,
+      "expected": {
+        "year": 2840,
+        "month": 6,
+        "day": 16
+      }
+    },
+    {
+      "d0": -2921987,
+      "expected": {
+        "year": -6825,
+        "month": 1,
+        "day": 26
+      }
+    },
+    {
+      "d0": -2921960,
+      "expected": {
+        "year": -6825,
+        "month": 2,
+        "day": 23
+      }
+    },
+    {
+      "d0": -2921927,
+      "expected": {
+        "year": -6825,
+        "month": 3,
+        "day": 27
+      }
+    },
+    {
+      "d0": -2921900,
+      "expected": {
+        "year": -6825,
+        "month": 4,
+        "day": 24
+      }
+    },
+    {
+      "d0": -2921805,
+      "expected": {
+        "year": -6825,
+        "month": 8,
+        "day": 1
+      }
+    },
+    {
+      "d0": -2921778,
+      "expected": {
+        "year": -6825,
+        "month": 8,
+        "day": 28
+      }
+    },
+    {
+      "d0": -2921652,
+      "expected": {
+        "year": -6824,
+        "month": 1,
+        "day": 7
+      }
+    },
+    {
+      "d0": -2921625,
+      "expected": {
+        "year": -6824,
+        "month": 2,
+        "day": 4
+      }
+    },
+    {
+      "d0": -2451545,
+      "expected": {
+        "year": -5498,
+        "month": 8,
+        "day": 16
+      }
+    },
+    {
+      "d0": -2451518,
+      "expected": {
+        "year": -5498,
+        "month": 9,
+        "day": 14
+      }
+    },
+    {
+      "d0": -2451485,
+      "expected": {
+        "year": -5498,
+        "month": 10,
+        "day": 17
+      }
+    },
+    {
+      "d0": -2451458,
+      "expected": {
+        "year": -5498,
+        "month": 11,
+        "day": 15
+      }
+    },
+    {
+      "d0": -2451363,
+      "expected": {
+        "year": -5497,
+        "month": 2,
+        "day": 21
+      }
+    },
+    {
+      "d0": -2451336,
+      "expected": {
+        "year": -5497,
+        "month": 3,
+        "day": 19
+      }
+    },
+    {
+      "d0": -2451210,
+      "expected": {
+        "year": -5497,
+        "month": 7,
+        "day": 27
+      }
+    },
+    {
+      "d0": -2451183,
+      "expected": {
+        "year": -5497,
+        "month": 8,
+        "day": 24
+      }
+    },
+    {
+      "d0": -1095737,
+      "expected": {
+        "year": -1672,
+        "month": 8,
+        "day": 17
+      }
+    },
+    {
+      "d0": -1095710,
+      "expected": {
+        "year": -1672,
+        "month": 9,
+        "day": 15
+      }
+    },
+    {
+      "d0": -1095677,
+      "expected": {
+        "year": -1672,
+        "month": 10,
+        "day": 18
+      }
+    },
+    {
+      "d0": -1095650,
+      "expected": {
+        "year": -1672,
+        "month": 11,
+        "day": 16
+      }
+    },
+    {
+      "d0": -1095555,
+      "expected": {
+        "year": -1671,
+        "month": 2,
+        "day": 22
+      }
+    },
+    {
+      "d0": -1095528,
+      "expected": {
+        "year": -1671,
+        "month": 3,
+        "day": 20
+      }
+    },
+    {
+      "d0": -1095402,
+      "expected": {
+        "year": -1671,
+        "month": 7,
+        "day": 28
+      }
+    },
+    {
+      "d0": -1095375,
+      "expected": {
+        "year": -1671,
+        "month": 8,
+        "day": 25
+      }
+    },
+    {
+      "d0": -730487,
+      "expected": {
+        "year": -641,
+        "month": 5,
+        "day": 4
+      }
+    },
+    {
+      "d0": -730460,
+      "expected": {
+        "year": -641,
+        "month": 6,
+        "day": 1
+      }
+    },
+    {
+      "d0": -730427,
+      "expected": {
+        "year": -641,
+        "month": 7,
+        "day": 5
+      }
+    },
+    {
+      "d0": -730400,
+      "expected": {
+        "year": -641,
+        "month": 8,
+        "day": 2
+      }
+    },
+    {
+      "d0": -730305,
+      "expected": {
+        "year": -641,
+        "month": 11,
+        "day": 9
+      }
+    },
+    {
+      "d0": -730278,
+      "expected": {
+        "year": -641,
+        "month": 12,
+        "day": 6
+      }
+    },
+    {
+      "d0": -730152,
+      "expected": {
+        "year": -640,
+        "month": 4,
+        "day": 14
+      }
+    },
+    {
+      "d0": -730125,
+      "expected": {
+        "year": -640,
+        "month": 5,
+        "day": 12
+      }
+    },
+    {
+      "d0": -503301,
+      "expected": {
+        "year": 0,
+        "month": 6,
+        "day": 11
+      }
+    },
+    {
+      "d0": -503274,
+      "expected": {
+        "year": 0,
+        "month": 7,
+        "day": 9
+      }
+    },
+    {
+      "d0": -503242,
+      "expected": {
+        "year": 0,
+        "month": 8,
+        "day": 11
+      }
+    },
+    {
+      "d0": -503215,
+      "expected": {
+        "year": 0,
+        "month": 9,
+        "day": 9
+      }
+    },
+    {
+      "d0": -503120,
+      "expected": {
+        "year": 0,
+        "month": 12,
+        "day": 15
+      }
+    },
+    {
+      "d0": -503093,
+      "expected": {
+        "year": 1,
+        "month": 1,
+        "day": 13
+      }
+    },
+    {
+      "d0": -502967,
+      "expected": {
+        "year": 1,
+        "month": 5,
+        "day": 21
+      }
+    },
+    {
+      "d0": -502940,
+      "expected": {
+        "year": 1,
+        "month": 6,
+        "day": 18
+      }
+    },
+    {
+      "d0": -152661,
+      "expected": {
+        "year": 989,
+        "month": 12,
+        "day": 6
+      }
+    },
+    {
+      "d0": -152634,
+      "expected": {
+        "year": 990,
+        "month": 1,
+        "day": 3
+      }
+    },
+    {
+      "d0": -152602,
+      "expected": {
+        "year": 990,
+        "month": 2,
+        "day": 5
+      }
+    },
+    {
+      "d0": -152575,
+      "expected": {
+        "year": 990,
+        "month": 3,
+        "day": 3
+      }
+    },
+    {
+      "d0": -152480,
+      "expected": {
+        "year": 990,
+        "month": 6,
+        "day": 9
+      }
+    },
+    {
+      "d0": -152453,
+      "expected": {
+        "year": 990,
+        "month": 7,
+        "day": 7
+      }
+    },
+    {
+      "d0": -152337,
+      "expected": {
+        "year": 990,
+        "month": 11,
+        "day": 5
+      }
+    },
+    {
+      "d0": -152310,
+      "expected": {
+        "year": 990,
+        "month": 12,
+        "day": 2
+      }
+    },
+    {
+      "d0": 27,
+      "expected": {
+        "year": 1420,
+        "month": 10,
+        "day": 21
+      }
+    },
+    {
+      "d0": 60,
+      "expected": {
+        "year": 1420,
+        "month": 11,
+        "day": 25
+      }
+    },
+    {
+      "d0": 87,
+      "expected": {
+        "year": 1420,
+        "month": 12,
+        "day": 22
+      }
+    },
+    {
+      "d0": 182,
+      "expected": {
+        "year": 1421,
+        "month": 3,
+        "day": 28
+      }
+    },
+    {
+      "d0": 209,
+      "expected": {
+        "year": 1421,
+        "month": 4,
+        "day": 25
+      }
+    },
+    {
+      "d0": 335,
+      "expected": {
+        "year": 1421,
+        "month": 9,
+        "day": 4
+      }
+    },
+    {
+      "d0": 362,
+      "expected": {
+        "year": 1421,
+        "month": 10,
+        "day": 1
+      }
+    },
+    {
+      "d0": 9497,
+      "expected": {
+        "year": 1447,
+        "month": 7,
+        "day": 12
+      }
+    },
+    {
+      "d0": 9524,
+      "expected": {
+        "year": 1447,
+        "month": 8,
+        "day": 9
+      }
+    },
+    {
+      "d0": 9556,
+      "expected": {
+        "year": 1447,
+        "month": 9,
+        "day": 12
+      }
+    },
+    {
+      "d0": 9583,
+      "expected": {
+        "year": 1447,
+        "month": 10,
+        "day": 9
+      }
+    },
+    {
+      "d0": 9678,
+      "expected": {
+        "year": 1448,
+        "month": 1,
+        "day": 15
+      }
+    },
+    {
+      "d0": 9705,
+      "expected": {
+        "year": 1448,
+        "month": 2,
+        "day": 12
+      }
+    },
+    {
+      "d0": 9831,
+      "expected": {
+        "year": 1448,
+        "month": 6,
+        "day": 20
+      }
+    },
+    {
+      "d0": 9858,
+      "expected": {
+        "year": 1448,
+        "month": 7,
+        "day": 18
+      }
+    },
+    {
+      "d0": 2921940,
+      "expected": {
+        "year": 9666,
+        "month": 4,
+        "day": 3
+      }
+    },
+    {
+      "d0": 2921967,
+      "expected": {
+        "year": 9666,
+        "month": 5,
+        "day": 1
+      }
+    },
+    {
+      "d0": 2922000,
+      "expected": {
+        "year": 9666,
+        "month": 6,
+        "day": 4
+      }
+    },
+    {
+      "d0": 2922027,
+      "expected": {
+        "year": 9666,
+        "month": 7,
+        "day": 2
+      }
+    },
+    {
+      "d0": 2922122,
+      "expected": {
+        "year": 9666,
+        "month": 10,
+        "day": 8
+      }
+    },
+    {
+      "d0": 2922149,
+      "expected": {
+        "year": 9666,
+        "month": 11,
+        "day": 6
+      }
+    },
+    {
+      "d0": 2922275,
+      "expected": {
+        "year": 9667,
+        "month": 3,
+        "day": 14
+      }
+    },
+    {
+      "d0": 2922302,
+      "expected": {
+        "year": 9667,
+        "month": 4,
+        "day": 11
+      }
+    }
+  ]
+}

@@ -2,9 +2,9 @@
 
 [简体中文](./README.md) · [English](./README.en.md)
 
-A dependency-free JavaScript library for astronomy and Chinese calendars in browsers and Node.js. It provides planetary and lunar positions, sky events, eclipses, solar terms, lunar phases, Chinese calendar conversion, Ganzhi, and solar-time calculations. TypeScript declarations are included.
+A dependency-free JavaScript library for astronomy and Chinese calendars in browsers and Node.js. It provides planetary and lunar positions, sky events, eclipses, solar terms, lunar phases, Chinese and arithmetic Hijri calendar conversion, Ganzhi, and solar-time calculations. TypeScript declarations are included.
 
-The planetary models are derived from VSOP2013 and TOP2013, the lunar model is derived from ELP/MPP02, and their compact published series are calibrated against DE441. Eclipse geometry follows this project’s C++ implementation. Historical Chinese calendar material and some era-name records are derived from [Shou Xing Tian Wen Li](https://github.com/sxwnl/sxwnl). See [Third-Party Notices](./THIRD_PARTY_NOTICES.md) for sources, modifications, licenses, and limitations.
+The planetary models are derived from VSOP2013 and TOP2013, the lunar model is derived from ELP/MPP02, and their compact published series are calibrated against DE441. Eclipse geometry follows this project’s C++ implementation. Historical Chinese calendar material, arithmetic Hijri rules, and some era-name records are derived from [Shou Xing Tian Wen Li](https://github.com/sxwnl/sxwnl). See [Third-Party Notices](./THIRD_PARTY_NOTICES.md) for sources, modifications, licenses, and limitations.
 
 Website: [redsc1.com](https://www.redsc1.com/)  
 Online tools: [redsc1.com/tools](https://www.redsc1.com/tools)
@@ -197,3 +197,22 @@ The detailed guides are currently maintained in Chinese:
 ## License and attribution
 
 Code is licensed under [MPL-2.0](./LICENSE). Scientific theories, derived data, historical material, and their respective conditions are documented in [Third-Party Notices](./THIRD_PARTY_NOTICES.md). A [Chinese version](./THIRD_PARTY_NOTICES.zh-CN.md) is also available.
+
+## Arithmetic Hijri calendar
+
+```js
+import { solarToHijri, hijriToSolar, instantToHijri, JulianTime } from 'js-ephemeris-lite';
+const hijri = solarToHijri({ year: 2000, month: 1, day: 1 });
+// { year: 1420, month: 9, day: 24 }
+console.log(hijriToSolar(hijri));
+console.log(instantToHijri(JulianTime.fromUT1(2451545), 480));
+```
+
+This is a fixed 30-year arithmetic cycle compatible with the upstream calendar rules,
+not an observational or Umm al-Qura calendar. Civil dates use the library's hybrid
+Julian/Gregorian calendar (-6000..10000); nonpositive Hijri years are proleptic.
+Instant conversion requires an explicit fixed offset in integer minutes (±14 hours),
+uses the library's UTC ≈ UT1 convention, and changes day at midnight, not sunset.
+Date-only conversion ignores clock fields and does not imply an instant.
+`hijriMonthDays(year, month)` and `isHijriLeapYear(year)` accept Hijri years -10000..10000.
+Run `node examples/hijri-calendar.mjs` for a complete example.

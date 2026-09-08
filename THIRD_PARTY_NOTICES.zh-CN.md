@@ -11,6 +11,7 @@
 
 本项目下列材料来源于许剑伟编写的《寿星天文历／寿星万年历》：
 
+- `oba.getHuiLi()` 的算术回历规则；本项目改为整数周期计算，并补充反向转换；
 - `src/generated/historical-calendar-data.js` 中的古代历法规则与历日归属；
 - `src/generated/chinese-era-data.js` 中 529 条年号记录的起始年、名义时长、
   已使用年数、政权、君主称号、君主姓名和年号名称。

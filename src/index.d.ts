@@ -17,3 +17,4 @@ export * from './qi-shuo.js';
 export * from './solar-visibility.js';
 export * from './solar-time.js';
 export * from './time.js';
+export * from './hijri-calendar.js';

@@ -290,3 +290,14 @@ ziweiCasting.facts;
 ziweiCasting.timeline();
 // @ts-expect-error shared display queries do not make casting plates valid birth charts
 const invalidBirthChart: ZiweiChart = ziweiCasting;
+
+// Arithmetic Hijri: date-only and instant APIs are intentionally distinct.
+import { solarToHijri, hijriToSolar, instantToHijri, hijriMonthDays, isHijriLeapYear, type HijriDate } from 'js-ephemeris-lite/hijri-calendar';
+const hijriDate: HijriDate = solarToHijri({ year: 2000, month: 1, day: 1 });
+const hijriCivil = hijriToSolar(hijriDate);
+instantToHijri(2451545, 480);
+hijriMonthDays(hijriDate.year, hijriDate.month);
+isHijriLeapYear(hijriDate.year);
+void hijriCivil;
+// @ts-expect-error offset is required; no implicit local or Beijing timezone.
+instantToHijri(2451545);

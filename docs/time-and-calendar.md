@@ -293,3 +293,31 @@ console.log(describeFourPillars(packed));   // { year: '己卯', ... }
 需要真太阳时或平太阳时时，调用 `calculateFourPillars(instant, virtualTime, options)`：`instant` 用于判断立春与节令边界，`virtualTime` 中的当地太阳钟字段用于计算日柱与时柱。
 
 历史月份名、纪年及归日表见[历史历法](./calendar-history.md)。
+
+## 算术回历（Hijri）
+
+这是与原 `oba.getHuiLi()` 日期规则兼容的**算术回历**，不是观测新月、地方宗教日期
+或 Umm al-Qura 日期服务。30 年周期共 10631 天；第 2、5、7、10、13、16、18、21、24、26、29 年为闰年。
+奇数月 30 天、偶数月 29 天，闰年第十二月 30 天。整数实现与旧公式逐日对照，反向转换按同一规则补充。
+
+```js
+import { solarToHijri, hijriToSolar, instantToHijri, JulianTime,
+  hijriMonthDays, isHijriLeapYear } from 'js-ephemeris-lite';
+
+const hijri = solarToHijri({ year: 2000, month: 1, day: 1 });
+// { year: 1420, month: 9, day: 24 }
+console.log(hijriToSolar(hijri)); // { year: 2000, month: 1, day: 1 }
+console.log(hijriMonthDays(2, 12), isHijriLeapYear(2)); // 30, true
+console.log(instantToHijri(JulianTime.fromUT1(2451545), 480));
+```
+
+也可以从 `js-ephemeris-lite/hijri-calendar` 子路径导入五个回历函数。
+
+- `solarToHijri` 接收民用年月日，不解释附带的时分秒或时区字段；
+  `hijriToSolar` 返回民用年月日，不把它冒充某个物理瞬间。
+- `instantToHijri(time, offsetMinutes)` 接收 UT1 JD 或 `JulianTime`，必须指定固定时区
+  （整数分钟，±14 小时）。遵循本库 `UTC ≈ UT1` 的约定，**午夜换日，不是日落换日**。
+- 正反转换均支持民用年 −6000..10000，使用本库混合儒略历/格里历；缺日和非法月日会报错。
+  历元 1 AH 对应此混合历的 622-07-16。回历年 0 和负数仅作序推，不代表历史伊斯兰纪年。
+- `HijriDate` 类型只包含 `year/month/day`；JS 输出记录只读。
+  月长/闰年辅助函数接受回历年 −10000..10000，但日期转换仍要求对应民用日期落在上述范围内。

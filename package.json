@@ -101,7 +101,11 @@
       "types": "./src/time.d.ts",
       "default": "./src/time.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./hijri-calendar": {
+      "types": "./src/hijri-calendar.d.ts",
+      "default": "./src/hijri-calendar.js"
+    }
   },
   "engines": {
     "node": ">=18"

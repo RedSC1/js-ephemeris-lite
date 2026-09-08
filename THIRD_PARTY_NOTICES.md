@@ -15,6 +15,7 @@ civil-day profile. Model and data sources are credited below.
 The following materials originate from **Shou Xing Tian Wen Li / Shou Xing
 Wan Nian Li** (寿星天文历 / 寿星万年历), authored by Xu Jianwei (许剑伟):
 
+- the arithmetic Hijri calendar rules from `oba.getHuiLi()`, re-expressed using integer cycles with reverse conversion added;
 - the ancient-calendar rules and civil-day assignments used to generate
   `src/generated/historical-calendar-data.js`;
 - the first seven fields of the 529 era-name records generated in
