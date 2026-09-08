@@ -426,8 +426,8 @@ export class ZiweiTimelineProvider {
     }
     const years = decadeIndex === undefined
       ? undefined
-      : decadeIndex === 0 && input.year !== undefined
-        ? Object.freeze([(() => {
+      : decadeIndex === 0
+        ? input.year === undefined ? this.getChildhood() : Object.freeze([(() => {
           const flow = makeFlowYear(this.chart, input.year!);
           return Object.freeze({ year: input.year!, stem: flow.limit.coordinate.stem, branch: flow.limit.coordinate.branch });
         })()])

@@ -557,6 +557,26 @@ test('timeline and limit manager preserve cascade semantics', () => {
   assert.equal(manager.manifest.currentDecadeYears, undefined);
 });
 
+test('childhood selection exposes its timeline before a year is selected', () => {
+  const manager = new ZiweiLimitManager(ancientChart());
+  const childhood = manager.timeline.getChildhood();
+  assert.ok(childhood.length > 0);
+  manager.setDecadeIndex(0, childhood[0].year);
+  assert.deepEqual(manager.manifest.currentDecadeYears, childhood);
+  assert.equal(manager.context.year, undefined);
+  for (const node of childhood) {
+    manager.setYear(node.year);
+    assert.equal(manager.context.decade.index, 0);
+    assert.equal(manager.manifest.currentDecadeYears[0].year, node.year);
+    manager.clearYear();
+    assert.deepEqual(manager.manifest.currentDecadeYears, childhood);
+  }
+  manager.setDecadeIndex(1);
+  assert.equal(manager.manifest.currentDecadeYears.length, 10);
+  manager.reset();
+  assert.equal(manager.manifest.currentDecadeYears, undefined);
+});
+
 test('split Zi exposes both rat-hour slots and physical stepping visits each one', () => {
   const sameDayChart = ancientChart({ ratHourMode: RAT_HOUR_MODE.CURRENT_DAY });
   const sameDayHours = sameDayChart.timeline()
