@@ -352,6 +352,8 @@ function normalizeStarDefinition(value: ZiweiStarDefinition): ZiweiStarDefinitio
   });
 }
 
+const FLOW_INPUTS = new Set(['anchor.bureau', 'anchor.ziwei', 'anchor.tianfu', 'anchor.life', 'anchor.body', 'birth.gender', 'lunar.year_stem', 'solar.year_stem', 'lunar.year_branch', 'solar.year_branch']);
+
 function normalizePatch(patch: ZiweiRulePatch): ZiweiRulePatch {
   const starKeys = new Set<string>();
   const stars = (patch.stars ?? []).map((star) => {
@@ -364,7 +366,16 @@ function normalizePatch(patch: ZiweiRulePatch): ZiweiRulePatch {
       ([key, value]) => [key, normalizePlacement(key, value)],
     ));
     const flowPlacements = Object.fromEntries(Object.entries(patch.flowPlacements ?? {}).map(
-      ([key, value]) => [key, normalizePlacement(key, value)],
+      ([key, value]) => {
+        const compiled = normalizePlacement(key, value);
+        for (let i = 0; i < compiled.inputs.length; i++) {
+          const input = compiled.inputs[i]!;
+          if (!FLOW_INPUTS.has(input) || compiled.shape[i] !== INPUT_DOMAINS[input]) {
+            throw new RangeError(`invalid flow input or domain: ${input}`);
+          }
+        }
+        return [key, compiled];
+      },
     ));
     const brightness = Object.fromEntries(Object.entries(patch.brightness ?? {}).map(
       ([key, value]) => [key, normalizeBrightness(key, value)],
@@ -548,8 +559,6 @@ function parseFlowJson(source: string): {
     stars.push(definition);
     if (star.rule === undefined) throw new TypeError(`flow[${index}].rule is required`);
     const compiled = compileZiweiJsonPlacement(star.rule);
-    const available = new Set(['anchor.bureau', 'anchor.ziwei', 'anchor.tianfu', 'anchor.life', 'anchor.body', 'birth.gender', 'lunar.year_stem', 'solar.year_stem', 'lunar.year_branch', 'solar.year_branch']);
-    if (compiled.inputs.some(input => !available.has(input))) throw new RangeError('flow rule references unavailable input');
     placements[definition.key] = compiled;
     if (star.brightness !== undefined) {
       if (!Array.isArray(star.brightness)) throw new TypeError(`flow[${index}].brightness must be an array`);

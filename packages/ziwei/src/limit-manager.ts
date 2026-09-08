@@ -151,6 +151,9 @@ export class ZiweiLimitManager {
   selectMonth(node: MonthNode): void {
     const year = this.timelineYearValue;
     if (year === undefined) throw new Error('select a flow year first');
+    const valid = this.timeline.getMonths(node.effectiveYear).some(v =>
+      (Object.keys(v) as (keyof MonthNode)[]).every(key => v[key] === node[key]));
+    if (!valid) throw new RangeError('month node does not belong to the chart timeline');
     const month = makeFlowMonthFromBuildingBranch(
       this.baseChart,
       node.lunarYear,
@@ -265,6 +268,11 @@ export class ZiweiLimitManager {
   selectHour(node: HourNode): void {
     const day = this.contextValue.day;
     if (day === undefined) throw new Error('select a flow day first');
+    const stem = day.limit.coordinate.stem;
+    const valid = this.timeline.getHours(makeGanzhi(stem, stem & 1)).some(v =>
+      v.hourIndex === node.hourIndex && v.branchIndex === node.branchIndex && v.stem === node.stem && v.branch === node.branch
+      && v.isEarlyRat === node.isEarlyRat && v.isLateRat === node.isLateRat);
+    if (!valid) throw new RangeError('hour node does not belong to the selected day');
     const segment = node.isEarlyRat
       ? RAT_HOUR_SEGMENT.EARLY
       : node.isLateRat

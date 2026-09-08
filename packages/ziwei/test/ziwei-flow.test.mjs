@@ -863,3 +863,34 @@ test('master boundary rejects invalid supplied values and preserves defaults', (
     for(const invalid of ['solr','',null,0,true]) assert.throws(()=>compile({boundary:invalid}),RangeError);
   }
 });
+
+
+test('direct flow modules validate supported inputs and domains', () => {
+  for(const input of ['lunar.month_index','solar.day_index','unknown']) {
+    assert.throws(()=>new ZiweiRuleModule({label:'bad-flow',patch:{flowPlacements:{flow_lucun:{inputs:[input],shape:[12],positions:Array(12).fill(0)}}}}),RangeError);
+  }
+  assert.throws(()=>new ZiweiRuleModule({label:'short-flow',patch:{flowPlacements:{flow_lucun:{inputs:['lunar.year_branch'],shape:[1],positions:[0]}}}}),RangeError);
+  assert.ok(new ZiweiRuleModule({label:'valid-flow',patch:{flowPlacements:{flow_lucun:{inputs:['lunar.year_branch'],shape:[12],positions:Array.from({length:12},(_,i)=>i)}}}}).patch.flowPlacements);
+});
+
+test('hour selection rejects stale and incompatible nodes atomically', () => {
+  for(const ratHourMode of Object.values(RAT_HOUR_MODE)) {
+    const m=ZiweiChart.fromZonedTime(zoned(2000,1,1),new ZiweiOptions({gender:ZIWEI_GENDER.MALE,ratHourMode})).createLimitManager();
+    m.setYear(2026);m.setMonth(1);m.setDay(1);const old=m.manifest.currentDayHours[0];
+    m.setDay(2);m.setHour(0);const before=m.context;
+    assert.throws(()=>m.selectHour(old),RangeError);assert.equal(m.context,before);
+    const fresh=m.manifest.currentDayHours[0];m.selectHour({...fresh});const now=m.context;
+    assert.throws(()=>m.selectHour({...fresh,isEarlyRat:!fresh.isEarlyRat}),RangeError);
+    assert.equal(m.context,now);
+  }
+});
+
+
+test('month selection rejects forged nodes and preserves physical state', () => {
+  const c=ZiweiChart.fromZonedTime(zoned(2000,1,1),new ZiweiOptions({gender:ZIWEI_GENDER.MALE}));
+  const m=c.createLimitManager();m.setPhysicalTime(zoned(2026,4,20));
+  const node=new ZiweiTimelineProvider(c).getMonths(2026)[0],before=m.context,target=m.currentTarget;
+  assert.throws(()=>m.selectMonth({...node,monthBuildingBranch:(node.monthBuildingBranch+1)%12}),RangeError);
+  assert.equal(m.context,before);assert.equal(m.currentTarget,target);
+  m.selectMonth({...node});assert.equal(m.context.month.month,node.month);
+});
