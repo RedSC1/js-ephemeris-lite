@@ -173,3 +173,26 @@ test('Li-Chun and monthly Jie switch pillars at the solved instant', () => {
     year: '甲辰', month: '丙寅', day: describeFourPillars(after).day, hour: describeFourPillars(after).hour,
   });
 });
+
+
+test('historical pillars switch at every assigned Jie boundary, early or late', async () => {
+  const e = await import('../src/index.js');
+  for (const year of [-700,-221,-104,100,237,690,761,1000,1600,2026]) {
+    let cursor=e.julianDay({year,month:1,day:1});
+    for(let i=0;i<12;i++) {
+      const term=e.getNextJie(cursor);cursor=term.time.jdUT1+2;
+      for(const mode of Object.values(e.PILLAR_HISTORICAL_MODE)) {
+        const options={pillarHistoricalMode:mode};
+        const boundary=e.getPillarTermBoundary(term,options);
+        for(const delta of [-1,1]) {
+          const time=e.ZonedTime.fromJulianTime(boundary+delta/86400,480);
+          const selected=e.getPreviousPillarJie(time.toJulianTime().jdUT1,options);
+          const pillars=e.fourPillarsForZonedTime(time,options);
+          const expected=(term.indexFromWinterSolstice+1)/2%12;
+          assert.equal(e.ganzhiBranch(pillars.month),delta>0?expected:(expected+11)%12);
+          assert.equal(selected.indexFromWinterSolstice,delta>0?term.indexFromWinterSolstice:(term.indexFromWinterSolstice+22)%24);
+        }
+      }
+    }
+  }
+});

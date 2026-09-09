@@ -1,7 +1,6 @@
 import {
   CALENDAR_DAY_BOUNDARY_MODE,
   CALENDAR_MODE,
-  civilDayNumber,
   getPreviousJie,
   getSpecificSolarTerm,
   historicalEventCivilDay,
@@ -248,17 +247,27 @@ function calculateYearPillar(jdUT1, virtualTime, options, historical) {
   return makeGanzhi(index % 10, index % 12);
 }
 
-function calculateMonthPillar(jdUT1, yearPillar, options, historical) {
-  const query = jdUT1 + (historical ? 1 : 0);
-  let previousJie = getPreviousJie(query, calendarOptions(options));
-  let boundary = historicalBoundary(previousJie, historical);
-  const candidateInFuture = boundary.assignedDay !== null
-    ? boundary.assignedDay > civilDayNumber(jdUT1, CHINA_DAY_OFFSET)
-    : previousJie.time.jdUT1 - jdUT1 > ROOT_EQUALITY_DAYS;
-  if (candidateInFuture) {
-    previousJie = getPreviousJie(previousJie.time.jdUT1 - 10, calendarOptions(options));
-    boundary = historicalBoundary(previousJie, historical);
+/** Resolve the physical boundary used by year/month pillars (not the display clock). */
+export function getPillarTermBoundary(term, options = {}) {
+  return historicalBoundary(term, useHistoricalTerms(options)).jdUT1;
+}
+
+/** Previous Jie by effective pillar boundary, including historically advanced term days. */
+export function getPreviousPillarJie(input, options = {}) {
+  const jd = asUt1JulianDay(input);
+  const historical = useHistoricalTerms(options);
+  // Include the following Jie before comparing assigned days. A one-day probe
+  // misses historical assignments several days before their astronomical event.
+  let term = getPreviousJie(jd + (historical ? 40 : 0), calendarOptions(options));
+  for (let i = 0; i < 8; i++) {
+    if (historicalBoundary(term, historical).jdUT1 <= jd + ROOT_EQUALITY_DAYS) return term;
+    term = getPreviousJie(term.time.jdUT1 - 10, calendarOptions(options));
   }
+  throw new Error('previous pillar Jie boundary not found');
+}
+
+function calculateMonthPillar(jdUT1, yearPillar, options) {
+  const previousJie = getPreviousPillarJie(jdUT1, options);
   const index = previousJie.indexFromWinterSolstice;
   if ((index & 1) === 0) throw new Error('internal error: previous Jie has an invalid index');
   const monthIndex = ((index + 21) / 2) % 12;
@@ -298,7 +307,7 @@ export function calculateFourPillars(instant, virtualTime, rawOptions = {}) {
   const ratHourMode = rawOptions.ratHourMode ?? RAT_HOUR_MODE.NEXT_DAY;
   const historical = useHistoricalTerms(rawOptions);
   const year = calculateYearPillar(jdUT1, normalizedVirtualTime, rawOptions, historical);
-  const month = calculateMonthPillar(jdUT1, year, rawOptions, historical);
+  const month = calculateMonthPillar(jdUT1, year, rawOptions);
   const { day, hour } = calculateDayAndHourPillars(normalizedVirtualTime, ratHourMode);
   return Object.freeze({ year, month, day, hour });
 }

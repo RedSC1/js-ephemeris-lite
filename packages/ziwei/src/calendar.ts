@@ -5,7 +5,7 @@ import {
   calendarDateFromJulianDay,
   ganzhiBranch,
   ganzhiStem,
-  getPreviousJie, getNextJie, historicalEventCivilDay, CALENDAR_MODE, PILLAR_HISTORICAL_MODE,
+  getPreviousJie, getNextJie, getPillarTermBoundary, getPreviousPillarJie,
   julianDay,
   makeGanzhi,
   meanSolarTime,
@@ -99,18 +99,11 @@ function makeLunarPillars(
 
 // Match the year/month pillar boundary policy, independently of the display clock.
 export function pillarJieBoundary(term: ReturnType<typeof getPreviousJie>, options: ZiweiOptions): number {
-  const historical = options.pillarHistoricalMode === PILLAR_HISTORICAL_MODE.ON ||
-    (options.pillarHistoricalMode === PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR && options.toCalendarOptions().mode === CALENDAR_MODE.HISTORICAL);
-  const day = historical ? historicalEventCivilDay('solarTerm', term.time.jdUT1) : null;
-  return day === null ? term.time.jdUT1 : day - 0.5 - 480 / 1440;
+  return getPillarTermBoundary(term, {...options.toCalendarOptions(), pillarHistoricalMode: options.pillarHistoricalMode});
 }
 
 function previousPillarJie(jd: number, options: ZiweiOptions): ReturnType<typeof getPreviousJie> {
-  let term = getPreviousJie(jd + 1, options.toCalendarOptions());
-  if (pillarJieBoundary(term, options) > jd + 1e-9) {
-    term = getPreviousJie(term.time.jdUT1 - 10, options.toCalendarOptions());
-  }
-  return term;
+  return getPreviousPillarJie(jd, {...options.toCalendarOptions(), pillarHistoricalMode: options.pillarHistoricalMode});
 }
 
 export function nextPillarJieBoundary(jd: number, options: ZiweiOptions): number {
