@@ -6,7 +6,7 @@ import {
 } from 'js-ephemeris-lite';
 import {
   solarDayFromPreviousJie, resolveEffectiveLunarMonth, resolveZiweiVirtualTime, ZIWEI_CLOCK_MODE,
-  ZiweiRuleModule, ZiweiRuleset,
+  compileZiweiJsonPlacement, ZiweiRuleModule, ZiweiRuleset,
   PILLAR_BOUNDARY,
   FLOW_LEVEL,
   arrangeZiweiStars,
@@ -931,4 +931,32 @@ test('historical repeated months retain identity through day selection', () => {
   m.addMonth(1);assert.equal(m.manifest.currentMonthDays[0].solarDate.day,31);
   m.setMonth(12,false,undefined,undefined,13);assert.equal(m.context.month.sequence,13);
   m.setPhysicalTime(zoned(23,12,31));assert.equal(m.manifest.currentMonthDays[0].solarDate.day,31);
+});
+
+
+test('fixed rule schemas reject unknown fields instead of silently ignoring them', () => {
+  const master={input:'anchor.life',stars:Array(12).fill('ziwei')};
+  for(const patch of [
+    {masters:{bdy:master}}, {masters:{life:master,bdy:master}},
+    {mastrs:{life:master}}, {masters:{body:{...master,inpt:'anchor.life'}}},
+    {stars:[{key:'custom',natal:true,natel:true}]},
+    {natalPlacements:{wenchang:{inputs:[],shape:[],positions:[0],positons:[1]}}},
+  ]) assert.throws(()=>new ZiweiRuleModule({label:'invalid-schema',patch}),RangeError);
+  const table=Object.fromEntries(Array.from({length:12},(_,i)=>[i,'ziwei']));
+  for(const raw of [
+    {shen_zh:{table}}, {shen_zhu:{table,boundry:'solar'}},
+    {shen_zhu:{table:{...table,12:'ziwei'}}},
+  ]) assert.throws(()=>ZiweiConfigLoader.compileJson({label:'invalid-schema',mastersJson:JSON.stringify(raw)}),RangeError);
+  assert.ok(new ZiweiRuleModule({label:'valid',patch:{masters:{life:master,body:master}}}).patch.masters);
+  assert.ok(ZiweiConfigLoader.compileJson({label:'valid',mastersJson:JSON.stringify({_comment:'note',shen_zhu:{table,_comment:'note'}})}).patch.masters);
+});
+
+
+test('legacy JSON rule typos cannot fall through to optional defaults', () => {
+  for(const rule of [
+    {type:'anchor_offset',anchor:'month',offest:2},
+    {type:'constant',vaule:4},
+    {type:'pipeline',steps:[{type:'constant',value:2,vaule:4}]},
+  ]) assert.throws(()=>compileZiweiJsonPlacement(rule),RangeError);
+  assert.deepEqual(compileZiweiJsonPlacement({type:'constant',value:4,_comment:'note'}).positions,[4]);
 });

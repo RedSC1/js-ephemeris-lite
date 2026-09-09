@@ -199,6 +199,15 @@ function collectRuleInputs(
   const boundary = boundaryOf(rule, inherited);
   const add = (source: string): void => { if (!result.includes(source)) result.push(source); };
   const type = String(rule.type ?? '');
+  const fields: Readonly<Record<string, readonly string[]>> = {
+    constant: ['value'], pipeline: ['steps'],
+    anchor_offset: ['anchor','offset','direction'],
+    lookup: ['anchor','table','offset','direction'],
+    lookup_offset: ['anchor','table','shift_anchor','offset','direction'],
+  };
+  if (!Object.prototype.hasOwnProperty.call(fields, type)) throw new RangeError(`unsupported rule type: ${type}`);
+  checkKeys(rule, ['type','boundary','_comment',...fields[type]!], 'JSON rule');
+
   if (type === 'pipeline') {
     const steps = rule.steps;
     if (!Array.isArray(steps)) throw new TypeError('pipeline.steps must be an array');
@@ -289,7 +298,14 @@ export function compileZiweiJsonPlacement(rule: unknown): ZiweiCompiledPlacement
   });
 }
 
+function checkKeys(value: object, allowed: readonly string[], path: string): void {
+  for (const key of Object.keys(value)) {
+    if (!allowed.includes(key)) throw new RangeError(`unknown ${path} field: ${key}`);
+  }
+}
+
 function normalizePlacement(key: string, value: ZiweiCompiledPlacement): ZiweiCompiledPlacement {
+  checkKeys(value, ['inputs','shape','positions','starId'], 'placement');
   if (key.trim().length === 0) throw new RangeError('placement contains an empty star key');
   if (value.inputs.length !== value.shape.length) throw new RangeError(`${key} placement input/shape mismatch`);
   for (let i = 0; i < value.inputs.length; i++) {
@@ -334,6 +350,7 @@ function normalizeStarReference(value: number | string, label: string): number |
 }
 
 function normalizeMaster(value: ZiweiMasterLookupPatch): ZiweiMasterLookupPatch {
+  checkKeys(value, ['input','stars'], 'master lookup');
   if (!['anchor.life', 'lunar.year_branch', 'solar.year_branch', 'master.year_branch'].includes(value.input)) {
     throw new RangeError(`unsupported master input: ${value.input}`);
   }
@@ -345,6 +362,7 @@ function normalizeMaster(value: ZiweiMasterLookupPatch): ZiweiMasterLookupPatch 
 }
 
 function normalizeStarDefinition(value: ZiweiStarDefinition): ZiweiStarDefinition {
+  checkKeys(value, ['key','category','natal'], 'star');
   if (typeof value.key !== 'string' || value.key.trim().length === 0) {
     throw new RangeError('custom star key must be a non-empty string');
   }
@@ -362,6 +380,8 @@ function normalizeStarDefinition(value: ZiweiStarDefinition): ZiweiStarDefinitio
 const FLOW_INPUTS = new Set(['anchor.bureau', 'anchor.ziwei', 'anchor.tianfu', 'anchor.life', 'anchor.body', 'birth.gender', 'lunar.year_stem', 'solar.year_stem', 'lunar.year_branch', 'solar.year_branch']);
 
 function normalizePatch(patch: ZiweiRulePatch): ZiweiRulePatch {
+  checkKeys(patch, ['stars','natalPlacements','flowPlacements','brightness','brightnessLabels','sihua','masters'], 'rule patch');
+  if (patch.masters !== undefined) checkKeys(patch.masters, ['life','body'], 'masters');
   const starKeys = new Set<string>();
   const stars = (patch.stars ?? []).map((star) => {
     const normalized = normalizeStarDefinition(star);
@@ -583,9 +603,12 @@ function parseFlowJson(source: string): {
 
 function parseMastersJson(source: string): ZiweiRulePatch['masters'] {
   const raw = asObject(parseJson(source, 'mastersJson'), 'mastersJson');
+  checkKeys(raw, ['ming_zhu','shen_zhu','_comment'], 'mastersJson');
   const parseOne = (value: unknown, life: boolean): ZiweiMasterLookupPatch => {
     const rule = asObject(value, 'master rule');
+    checkKeys(rule, ['boundary','table','_comment'], 'master rule');
     const table = asObject(rule.table, 'master.table');
+    checkKeys(table, Array.from({length:12}, (_,i) => String(i)), 'master table');
     const stars = Array.from({ length: 12 }, (_, index) => {
       const star = table[String(index)];
       if (typeof star !== 'string' && typeof star !== 'number') throw new TypeError(`master.table.${index} is required`);
