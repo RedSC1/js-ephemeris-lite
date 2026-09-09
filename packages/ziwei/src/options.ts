@@ -186,8 +186,8 @@ export class ZiweiOptions {
     if (!includes(Object.values(CALENDAR_DAY_BOUNDARY_MODE), this.dayBoundaryMode)) {
       throw new RangeError('unknown calendar day-boundary mode');
     }
-    if (!Number.isFinite(this.utcOffsetMinutes) || Math.abs(this.utcOffsetMinutes) > 840) {
-      throw new RangeError('utcOffsetMinutes must be within ±14 hours');
+    if (!Number.isInteger(this.utcOffsetMinutes) || Math.abs(this.utcOffsetMinutes) > 840) {
+      throw new RangeError('utcOffsetMinutes must be an integer within ±14 hours');
     }
     if (this.meridianDeg !== undefined
       && (!Number.isFinite(this.meridianDeg) || Math.abs(this.meridianDeg) > 180)) {

@@ -12,7 +12,7 @@ import {
   julianDay,
   type LunarMonth,
 } from 'js-ephemeris-lite';
-import { resolveZiweiVirtualTime } from './calendar.js';
+import { resolveZiweiVirtualTime, pillarJieBoundary } from './calendar.js';
 import type { ZiweiChart } from './chart.js';
 import {
   getEffectiveBirthYear,
@@ -311,6 +311,7 @@ export class ZiweiTimelineProvider {
     for (let index = 0; index < 12; index += 1) {
       starts.push(getNextJie(starts.at(-1)! + 2, this.chart.options.toCalendarOptions()).time.jdUT1);
     }
+    const boundaries = starts.map(jd => pillarJieBoundary(getNextJie(jd - 1, this.chart.options.toCalendarOptions()), this.chart.options));
     const logicalJd = (jd: number): number => {
       const v = resolveZiweiVirtualTime(ZonedTime.fromJulianTime(jd, this.chart.options.utcOffsetMinutes), this.chart.options);
       return julianDay(v) + (this.chart.options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY ? 1 / 24 : 0);
@@ -318,9 +319,9 @@ export class ZiweiTimelineProvider {
     return Object.freeze(Array.from({ length: 12 }, (_, offset) => {
       const month = offset + 1;
       const flow = makeFlowMonth(this.chart, targetYear, month);
-      const startDay = Math.floor(logicalJd(starts[offset]!) + 0.5);
+      const startDay = Math.floor(logicalJd(boundaries[offset]!) + 0.5);
       // Include a partially overlapping final civil date; the end instant remains exclusive.
-      const endDay = Math.ceil(logicalJd(starts[offset + 1]!) + 0.5);
+      const endDay = Math.ceil(logicalJd(boundaries[offset + 1]!) + 0.5);
       return Object.freeze({
         lunarYear: targetYear,
         month,
@@ -336,8 +337,8 @@ export class ZiweiTimelineProvider {
         stem: flow.limit.coordinate.stem,
         branch: flow.limit.coordinate.branch,
         displayBranch: advanceBranch(2, flow.effectiveMonth - 1),
-        solarStartJd: starts[offset]!,
-        solarEndJdExclusive: starts[offset + 1]!,
+        solarStartJd: boundaries[offset]!,
+        solarEndJdExclusive: boundaries[offset + 1]!,
         firstCivilDayNumber: startDay,
         dayCount: endDay - startDay,
       });

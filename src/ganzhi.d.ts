@@ -1,7 +1,7 @@
 import type {
   CalendarDayBoundaryMode,
   CalendarMode,
-  CalendarOptions,
+  CalendarOptions, SolarTermEvent,
 } from './chinese-calendar.js';
 import type { CivilDate, CivilDateTime, Ut1Input, ZonedTime } from './time.js';
 
@@ -81,3 +81,8 @@ export const GANZHI_INFO: Readonly<{
   calendarModes: readonly CalendarMode[];
   calendarDayBoundaryModes: readonly CalendarDayBoundaryMode[];
 }>;
+
+/** Physical boundary for a term under the configured pillar historical policy. */
+export function getPillarTermBoundary(term: SolarTermEvent, options?: FourPillarsOptions): number;
+/** Previous Jie selected by assigned historical day or exact astronomical boundary. */
+export function getPreviousPillarJie(input: Ut1Input, options?: FourPillarsOptions): SolarTermEvent;

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import {
-  getNextJie, getPreviousJie, julianDay, calendarDateFromJulianDay, MONTH_NAME, RAT_HOUR_MODE, ZonedTime, makeGanzhi,
+  PILLAR_HISTORICAL_MODE, historicalEventCivilDay, getNextJie, getPreviousJie, julianDay, calendarDateFromJulianDay, MONTH_NAME, RAT_HOUR_MODE, ZonedTime, makeGanzhi,
 } from 'js-ephemeris-lite';
 import {
   solarDayFromPreviousJie, resolveEffectiveLunarMonth, resolveZiweiVirtualTime, ZIWEI_CLOCK_MODE,
@@ -1053,5 +1053,70 @@ test('makeFlowHour round-trips every timeline slot in all rat-hour modes', () =>
     }
     for (const invalid of [-1,13,1.5,NaN]) assert.throws(()=>makeFlowHour(chart,makeFlowDay(chart,month,1,0),invalid),RangeError);
     if (mode === RAT_HOUR_MODE.NEXT_DAY) assert.throws(()=>makeFlowHour(chart,makeFlowDay(chart,month,1,0),12),RangeError);
+  }
+});
+
+
+test('historical Jie boundaries agree across reverse, flow days and timeline', () => {
+  const module = new ZiweiRuleModule({label:'historical-probe',patch:{natalPlacements:{wenchang:{inputs:['solar.month_branch'],shape:[12],positions:Array.from({length:12},(_,i)=>i)}}}});
+  for (const probeMonth of [1,9]) {
+    for (const mode of Object.values(PILLAR_HISTORICAL_MODE)) {
+      for (const offset of [480,0]) {
+        const options = new ZiweiOptions({gender:ZIWEI_GENDER.MALE,pillarHistoricalMode:mode,utcOffsetMinutes:offset,
+          flowLimitBoundary:PILLAR_BOUNDARY.SOLAR_TERM,rules:{ruleset:new ZiweiRuleset([module])}});
+        const term = getNextJie(zoned(100,probeMonth,1).toJulianTime().jdUT1,options.toCalendarOptions());
+        const boundary = mode === PILLAR_HISTORICAL_MODE.OFF ? term.time.jdUT1 : historicalEventCivilDay('solarTerm',term.time.jdUT1)-0.5-480/1440;
+        const at = seconds=>ZonedTime.fromJulianTime(boundary+seconds/86400,offset);
+        const chart = ZiweiChart.fromZonedTime(zoned(99,1,1),options);
+        const pre = ZiweiChart.fromZonedTime(at(-1800),options), post = ZiweiChart.fromZonedTime(at(1800),options);
+        const id = findStarId('wenchang');
+        assert.notEqual(pre.starPositions[id],post.starPositions[id]);
+        const rows = reverseLookupZiweiTier1({start:at(-1800),end:at(1800),options,query:{wenchangBranch:post.starPositions[id]}});
+        assert.ok(rows.some(r=>Math.abs(r.jdUT1-boundary)<1e-8));
+        const months = chart.timeline().getMonths(probeMonth===1?99:100);
+        assert.ok(Math.abs(months.find(m=>m.month===(probeMonth===1?12:8)).solarStartJd-boundary)<1e-8);
+        for (const seconds of [-1800,1800]) {
+          const instant = at(seconds), flow=resolveZiweiFlow(chart,instant);
+          const row=months.find(m=>m.solarStartJd<=instant.toJulianTime().jdUT1&&m.solarEndJdExclusive>instant.toJulianTime().jdUT1);
+          assert.equal(row.month,flow.targetMonth);
+          assert.ok(chart.timeline().getDays(flow.effectiveTargetYear,flow.targetMonth).some(d=>d.day===flow.targetDay));
+        }
+        assert.equal(post.facts.solarDayFromPreviousJie,1);
+      }
+    }
+  }
+});
+
+test('loader options and fractional offsets fail at construction', () => {
+  for (const offset of [480.5,-0.5]) assert.throws(()=>new ZiweiOptions({gender:0,utcOffsetMinutes:offset}),/integer/);
+  for (const offset of [-840,0,840]) assert.equal(new ZiweiOptions({gender:0,utcOffsetMinutes:offset}).utcOffsetMinutes,offset);
+  assert.throws(()=>ZiweiConfigLoader.compileJson({label:'typo',starsJsn:'[]'}),/unknown JSON loader/);
+  assert.throws(()=>ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(),{label:'typo',flowJsn:'[]'}),/unknown JSON loader/);
+  assert.throws(()=>ZiweiConfigLoader.withOptions(ZiweiConfigLoader.getDefault(),{label:'typo',placementDefualt:'option1'}),/unknown builtin loader/);
+});
+
+
+test('Jie probes deduplicate unchanged slots but retain changed chart states', () => {
+  const base = new ZiweiOptions({gender:ZIWEI_GENDER.MALE});
+  const jie = getNextJie(zoned(2026,3,1).toJulianTime().jdUT1,base.toCalendarOptions()).time.jdUT1;
+  const at=seconds=>ZonedTime.fromJulianTime(jie+seconds/86400,480);
+  const module=new ZiweiRuleModule({label:'changed-solar',patch:{natalPlacements:{wenchang:{inputs:['solar.month_branch'],shape:[12],positions:Array.from({length:12},(_,i)=>i)}}}});
+  for(const changed of [false,true]) {
+    const options = changed ? new ZiweiOptions({gender:ZIWEI_GENDER.MALE,rules:{ruleset:new ZiweiRuleset([module])}}) : base;
+    const before=ZiweiChart.fromZonedTime(at(-30),options), after=ZiweiChart.fromZonedTime(at(30),options);
+    const query={lucunBranch:before.starPositions[findStarId('lucun')]};
+    const search=(start,end)=>reverseLookupZiweiTier1({start:at(start),end:at(end),options,query});
+    const rows=search(-30,30);
+    assert.equal(rows.length,changed?2:1);
+    assert.ok(Math.abs(rows[0].jdUT1-at(-30).toJulianTime().jdUT1)<1e-9);
+    if(changed) {
+      assert.notDeepEqual(before.starPositions,after.starPositions);
+      assert.ok(Math.abs(rows[1].jdUT1-jie)<1e-9);
+    }
+    assert.equal(search(0,30).length,1);
+    assert.equal(search(-30,0).length,changed?2:1);
+    const wide=search(-7200,7200);
+    assert.ok(wide.length>=3);
+    if(!changed) assert.equal(wide.filter(r=>Math.abs(r.jdUT1-jie)<1e-9).length,0);
   }
 });

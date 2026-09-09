@@ -3,7 +3,6 @@ import {
   calendarDateFromJulianDay,
   RAT_HOUR_MODE,
   ganzhiBranch,
-  getNextJie,
   julianDay,
   localApparentToMeanSolarTime,
   lunarToSolar,
@@ -12,7 +11,7 @@ import {
   type LunarMonth,
 } from 'js-ephemeris-lite';
 import { resolveEffectiveLunarMonth } from './anchors.js';
-import { virtualTimeToUt1, resolveZiweiBirthFromInstant, resolveZiweiVirtualTime } from './calendar.js';
+import { nextPillarJieBoundary, virtualTimeToUt1, resolveZiweiBirthFromInstant, resolveZiweiVirtualTime } from './calendar.js';
 import { ZiweiChart } from './chart.js';
 import { type ZiweiFlowTarget } from './flow-calendar.js';
 import { findStarId } from './stars.js';
@@ -286,13 +285,21 @@ export function reverseLookupZiweiTier1(request: ZiweiReverseLookupRequest): rea
   if (!Number.isSafeInteger(ceiling) || ceiling < 1) throw new RangeError('maxCandidatesToExamine must be >= 1');
   const results: ZiweiReverseCandidate[] = [];
   let examined = 0;
-  let nextJie = getNextJie(startJd, options.toCalendarOptions()).time.jdUT1;
+  let insideHourProbe = false;
+  let previousState: string | undefined;
+  let nextJie = nextPillarJieBoundary(startJd, options);
   while (target.jdUT1 <= endJd + 1e-12) {
     if (examined >= ceiling) throw new RangeError('reverse lookup candidate ceiling exceeded');
     examined += 1;
     const birth = resolveZiweiBirthFromInstant(target.jdUT1, target.virtualTime, options);
     const chart = ZiweiChart.fromResolvedBirth(birth);
-    if (matches(chart, request.query)) {
+    // Pillar metadata changes at every Jie even when the placed chart does not.
+    const { solarTerm: _solar, lunar: _lunar, ...placementAnchors } = chart.anchors;
+    const state = JSON.stringify([placementAnchors, chart.bodyPalace, chart.lifeMaster, chart.bodyMaster,
+      chart.palaceStems, chart.starPositions, chart.birthYearTransformations]);
+    const duplicate = insideHourProbe && state === previousState;
+    previousState = state;
+    if (!duplicate && matches(chart, request.query)) {
       const hourBranch = ganzhiBranch(chart.facts.solarTermPillars.hour);
       results.push(Object.freeze({
         jdUT1: target.jdUT1,
@@ -315,9 +322,10 @@ export function reverseLookupZiweiTier1(request: ZiweiReverseLookupRequest): rea
     const physical = targetFromVirtualTime(boundary, options);
     let next: ZiweiFlowTarget = Object.freeze({ jdUT1: physical.jdUT1, virtualTime: Object.freeze(boundary) });
     // Solar rule inputs may change before the next hour boundary.
+    insideHourProbe = nextJie < next.jdUT1;
     if (nextJie <= next.jdUT1) {
       next = Object.freeze({jdUT1: nextJie, virtualTime: Object.freeze(resolveZiweiVirtualTime(ZonedTime.fromJulianTime(nextJie, options.utcOffsetMinutes), options))});
-      nextJie = getNextJie(nextJie + 1, options.toCalendarOptions()).time.jdUT1;
+      nextJie = nextPillarJieBoundary(nextJie, options);
     }
     if (next.jdUT1 <= target.jdUT1) throw new Error('logical-hour stepping did not advance');
     target = next;

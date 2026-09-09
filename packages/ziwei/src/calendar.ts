@@ -5,7 +5,7 @@ import {
   calendarDateFromJulianDay,
   ganzhiBranch,
   ganzhiStem,
-  getPreviousJie,
+  getPreviousJie, getNextJie, getPillarTermBoundary, getPreviousPillarJie,
   julianDay,
   makeGanzhi,
   meanSolarTime,
@@ -97,19 +97,38 @@ function makeLunarPillars(
   });
 }
 
+// Match the year/month pillar boundary policy, independently of the display clock.
+export function pillarJieBoundary(term: ReturnType<typeof getPreviousJie>, options: ZiweiOptions): number {
+  return getPillarTermBoundary(term, {...options.toCalendarOptions(), pillarHistoricalMode: options.pillarHistoricalMode});
+}
+
+function previousPillarJie(jd: number, options: ZiweiOptions): ReturnType<typeof getPreviousJie> {
+  return getPreviousPillarJie(jd, {...options.toCalendarOptions(), pillarHistoricalMode: options.pillarHistoricalMode});
+}
+
+export function nextPillarJieBoundary(jd: number, options: ZiweiOptions): number {
+  let term = previousPillarJie(jd, options);
+  for (let i = 0; i < 4; i++) {
+    term = getNextJie(term.time.jdUT1 + 1, options.toCalendarOptions());
+    const boundary = pillarJieBoundary(term, options);
+    if (boundary > jd + 1e-9) return boundary;
+  }
+  throw new Error('next pillar Jie boundary not found');
+}
+
 export function solarDayFromPreviousJie(
   jdUT1: number,
   virtualTime: CivilDateTime,
   options: ZiweiOptions,
 ): number {
   const virtualJd = julianDay(virtualTime);
-  const previousJie = getPreviousJie(jdUT1, options.toCalendarOptions());
+  const previousJie = previousPillarJie(jdUT1, options);
 
   let currentLogical = virtualJd;
   if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && virtualTime.hour >= 23) {
     currentLogical += 1 / 24;
   }
-  const jieVirtual = julianDay(resolveZiweiVirtualTime(ZonedTime.fromJulianTime(previousJie.time.jdUT1, options.utcOffsetMinutes), options));
+  const jieVirtual = julianDay(resolveZiweiVirtualTime(ZonedTime.fromJulianTime(pillarJieBoundary(previousJie, options), options.utcOffsetMinutes), options));
   const jieClock = calendarDateFromJulianDay(jieVirtual);
   let jieLogical = jieVirtual;
   if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && jieClock.hour >= 23) {

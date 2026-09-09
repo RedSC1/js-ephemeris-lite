@@ -673,6 +673,7 @@ function compilePlacementOptions(
 }
 
 function compileBuiltinRuleModule(input: ZiweiBuiltinRuleModuleInput): ZiweiRuleModule {
+  checkKeys(input, ['label','placementDefault','brightnessDefault','sihuaDefault','masters','longevity','placement','brightness','sihua'], 'builtin loader');
   const knownPlacementKeys = new Set([
     ...GENERATED_PLACEMENT_VARIANTS.map((variant) => variant.starKey),
     ...GENERATED_FLOW_PLACEMENT_VARIANTS.map((variant) => variant.starKey),
@@ -754,6 +755,7 @@ export class ZiweiConfigLoader {
   }
 
   static compileJson(input: ZiweiJsonRuleModuleInput): ZiweiRuleModule {
+    checkKeys(input, ['label','starsJson','brightnessJson','sihuaJson','flowJson','mastersJson'], 'JSON loader');
     const label = normalizeModuleLabel(input.label);
     if (/^option[1-4]$/i.test(label)) {
       throw new RangeError(`custom JSON label is reserved by a built-in option: ${label}`);
