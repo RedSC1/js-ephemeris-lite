@@ -1,4 +1,4 @@
-import { MONTH_NAME, ganzhiBranch, ganzhiStem } from 'js-ephemeris-lite';
+import { MONTH_NAME, RAT_HOUR_MODE, getHourGanzhi, ganzhiBranch, ganzhiStem } from 'js-ephemeris-lite';
 import type { ZiweiChart } from './chart.js';
 import {
   CHILDHOOD_STRATEGY,
@@ -392,17 +392,17 @@ export function makeFlowHourFromPillar(
   });
 }
 
+/** Construct a timeline hour index: 0..11, plus late rat hour 12 in split modes. */
 export function makeFlowHour(chart: ZiweiChart, day: FlowDayLimit, hourIndex: number): FlowHourLimit {
-  if (!Number.isInteger(hourIndex) || hourIndex < 0 || hourIndex >= 12) {
-    throw new RangeError('hourIndex must be 0..11');
+  const split = chart.options.ratHourMode !== RAT_HOUR_MODE.NEXT_DAY;
+  if (!Number.isInteger(hourIndex) || hourIndex < 0 || hourIndex > (split ? 12 : 11)) {
+    throw new RangeError(`hourIndex must be 0..${split ? 12 : 11}`);
   }
-  const coordinate = Object.freeze({
-    stem: (day.limit.coordinate.stem % 5 * 2 + hourIndex) % 10,
-    branch: advanceBranch(day.limit.coordinate.branch, hourIndex),
-  });
-  return Object.freeze({
-    hourIndex,
-    ratHourSegment: hourIndex === 0 ? RAT_HOUR_SEGMENT.UNIFIED : RAT_HOUR_SEGMENT.NONE,
-    limit: limitCoordinate(chart, FLOW_LEVEL.HOUR, coordinate),
-  });
+  const late = hourIndex === 12;
+  const dayStem = (day.limit.coordinate.stem +
+    (late && chart.options.ratHourMode === RAT_HOUR_MODE.CURRENT_DAY_TOMORROW_STEM ? 1 : 0)) % 10;
+  const segment = late ? RAT_HOUR_SEGMENT.LATE
+    : hourIndex === 0 ? (split ? RAT_HOUR_SEGMENT.EARLY : RAT_HOUR_SEGMENT.UNIFIED)
+    : RAT_HOUR_SEGMENT.NONE;
+  return makeFlowHourFromPillar(chart, day, getHourGanzhi(dayStem, hourIndex % 12), segment);
 }

@@ -25,7 +25,7 @@ import {
   getEffectiveBirthYear,
   resolveZiweiFlow,
   makeFlowMonthFromBuildingBranch,
-  makeFlowMonth,
+  makeFlowMonth, makeFlowDay, makeFlowHour, makeFlowHourFromPillar,
   makeFlowLayer,
   computeZiweiAnchors,
   reverseLookupZiweiTier1,
@@ -1031,5 +1031,27 @@ test('complete legacy natal and flow star configuration remains loadable', () =>
     const star = dynamic.getFlowStar(findStarId(raw.key));
     assert.ok(star.branch >= 0 && star.branch < 12);
     if (raw.brightness) assert.equal(star.brightness,raw.brightness[star.branch]);
+  }
+});
+
+
+test('makeFlowHour round-trips every timeline slot in all rat-hour modes', () => {
+  for (const mode of Object.values(RAT_HOUR_MODE)) {
+    const chart = ancientChart({ratHourMode: mode});
+    const month = makeFlowMonth(chart, 2023, 5, 5, false);
+    for (let pillar = 0; pillar < 60; pillar++) {
+      const day = makeFlowDay(chart, month, 1, pillar % 10);
+      for (const node of chart.timeline().getHours(makeGanzhi(pillar % 10, pillar % 12))) {
+        const segment = node.isLateRat ? RAT_HOUR_SEGMENT.LATE : node.isEarlyRat ? RAT_HOUR_SEGMENT.EARLY
+          : node.branch === 0 ? RAT_HOUR_SEGMENT.UNIFIED : RAT_HOUR_SEGMENT.NONE;
+        const hour = makeFlowHour(chart, day, node.hourIndex);
+        assert.deepEqual(hour, makeFlowHourFromPillar(chart, day, makeGanzhi(node.stem,node.branch), segment));
+        assert.equal(hour.hourIndex,node.hourIndex);
+        assert.equal(hour.limit.coordinate.stem,node.stem);
+        assert.equal(hour.limit.coordinate.branch,(day.limit.coordinate.branch+node.branch)%12);
+      }
+    }
+    for (const invalid of [-1,13,1.5,NaN]) assert.throws(()=>makeFlowHour(chart,makeFlowDay(chart,month,1,0),invalid),RangeError);
+    if (mode === RAT_HOUR_MODE.NEXT_DAY) assert.throws(()=>makeFlowHour(chart,makeFlowDay(chart,month,1,0),12),RangeError);
   }
 });
