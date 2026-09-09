@@ -5,7 +5,7 @@ import {
   calendarDateFromJulianDay,
   ganzhiBranch,
   ganzhiStem,
-  getPreviousJie,
+  getPreviousJie, getNextJie, historicalEventCivilDay, CALENDAR_MODE, PILLAR_HISTORICAL_MODE,
   julianDay,
   makeGanzhi,
   meanSolarTime,
@@ -97,19 +97,45 @@ function makeLunarPillars(
   });
 }
 
+// Match the year/month pillar boundary policy, independently of the display clock.
+export function pillarJieBoundary(term: ReturnType<typeof getPreviousJie>, options: ZiweiOptions): number {
+  const historical = options.pillarHistoricalMode === PILLAR_HISTORICAL_MODE.ON ||
+    (options.pillarHistoricalMode === PILLAR_HISTORICAL_MODE.FOLLOW_CALENDAR && options.toCalendarOptions().mode === CALENDAR_MODE.HISTORICAL);
+  const day = historical ? historicalEventCivilDay('solarTerm', term.time.jdUT1) : null;
+  return day === null ? term.time.jdUT1 : day - 0.5 - 480 / 1440;
+}
+
+function previousPillarJie(jd: number, options: ZiweiOptions): ReturnType<typeof getPreviousJie> {
+  let term = getPreviousJie(jd + 1, options.toCalendarOptions());
+  if (pillarJieBoundary(term, options) > jd + 1e-9) {
+    term = getPreviousJie(term.time.jdUT1 - 10, options.toCalendarOptions());
+  }
+  return term;
+}
+
+export function nextPillarJieBoundary(jd: number, options: ZiweiOptions): number {
+  let term = previousPillarJie(jd, options);
+  for (let i = 0; i < 4; i++) {
+    term = getNextJie(term.time.jdUT1 + 1, options.toCalendarOptions());
+    const boundary = pillarJieBoundary(term, options);
+    if (boundary > jd + 1e-9) return boundary;
+  }
+  throw new Error('next pillar Jie boundary not found');
+}
+
 export function solarDayFromPreviousJie(
   jdUT1: number,
   virtualTime: CivilDateTime,
   options: ZiweiOptions,
 ): number {
   const virtualJd = julianDay(virtualTime);
-  const previousJie = getPreviousJie(jdUT1, options.toCalendarOptions());
+  const previousJie = previousPillarJie(jdUT1, options);
 
   let currentLogical = virtualJd;
   if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && virtualTime.hour >= 23) {
     currentLogical += 1 / 24;
   }
-  const jieVirtual = julianDay(resolveZiweiVirtualTime(ZonedTime.fromJulianTime(previousJie.time.jdUT1, options.utcOffsetMinutes), options));
+  const jieVirtual = julianDay(resolveZiweiVirtualTime(ZonedTime.fromJulianTime(pillarJieBoundary(previousJie, options), options.utcOffsetMinutes), options));
   const jieClock = calendarDateFromJulianDay(jieVirtual);
   let jieLogical = jieVirtual;
   if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && jieClock.hour >= 23) {
