@@ -536,6 +536,7 @@ function parseSihuaJson(source: string): ZiweiRulePatch['sihua'] {
 }
 
 function starDefinitionFromJson(star: JsonObject, natal: boolean, index: number): ZiweiStarDefinition {
+  checkKeys(star, ['key', 'type', 'category', 'rule', '_comment', ...(natal ? [] : ['brightness'])], `JSON ${natal ? 'natal' : 'flow'} star[${index}]`);
   if (typeof star.key !== 'string' || star.key.trim().length === 0) {
     throw new TypeError(`star[${index}].key must be a non-empty string`);
   }

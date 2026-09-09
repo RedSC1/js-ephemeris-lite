@@ -960,3 +960,27 @@ test('legacy JSON rule typos cannot fall through to optional defaults', () => {
   ]) assert.throws(()=>compileZiweiJsonPlacement(rule),RangeError);
   assert.deepEqual(compileZiweiJsonPlacement({type:'constant',value:4,_comment:'note'}).positions,[4]);
 });
+
+
+test('legacy star declarations validate raw fields before projection', () => {
+  const rule = { type: 'constant', value: 4 };
+  for (const field of ['starsJson', 'flowJson']) {
+    const compile = star => ZiweiConfigLoader.compileJson({ label: 'raw-star-schema', [field]: JSON.stringify([star]) });
+    for (const typo of ['brighness', 'tyep', 'catgory', 'natel', 'rulle']) {
+      assert.throws(() => compile({ key: 'extra', rule, [typo]: 0 }), /unknown JSON .* star/);
+    }
+    for (const categoryKey of ['type', 'category']) {
+      const star = { key: 'extra', rule, [categoryKey]: 'minor', _comment: 'supported metadata' };
+      if (field === 'flowJson') star.brightness = Array(12).fill(6);
+      const { patch } = compile(star);
+      assert.deepEqual(patch.stars, [{ key: 'extra', category: 'minor', natal: field === 'starsJson' }]);
+      assert.deepEqual(patch[field === 'starsJson' ? 'natalPlacements' : 'flowPlacements'].extra.positions, [4]);
+      if (field === 'flowJson') assert.deepEqual(patch.brightness.extra, Array(12).fill(6));
+    }
+    if (field === 'starsJson') {
+      assert.throws(() => compile({ key: 'extra', rule, brightness: Array(12).fill(6) }), /unknown JSON natal star/);
+    } else {
+      assert.throws(() => compile({ key: 'extra', rule, brightness: null }), TypeError);
+    }
+  }
+});
