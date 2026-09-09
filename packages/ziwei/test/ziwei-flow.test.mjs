@@ -1094,3 +1094,29 @@ test('loader options and fractional offsets fail at construction', () => {
   assert.throws(()=>ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(),{label:'typo',flowJsn:'[]'}),/unknown JSON loader/);
   assert.throws(()=>ZiweiConfigLoader.withOptions(ZiweiConfigLoader.getDefault(),{label:'typo',placementDefualt:'option1'}),/unknown builtin loader/);
 });
+
+
+test('Jie probes deduplicate unchanged slots but retain changed chart states', () => {
+  const base = new ZiweiOptions({gender:ZIWEI_GENDER.MALE});
+  const jie = getNextJie(zoned(2026,3,1).toJulianTime().jdUT1,base.toCalendarOptions()).time.jdUT1;
+  const at=seconds=>ZonedTime.fromJulianTime(jie+seconds/86400,480);
+  const module=new ZiweiRuleModule({label:'changed-solar',patch:{natalPlacements:{wenchang:{inputs:['solar.month_branch'],shape:[12],positions:Array.from({length:12},(_,i)=>i)}}}});
+  for(const changed of [false,true]) {
+    const options = changed ? new ZiweiOptions({gender:ZIWEI_GENDER.MALE,rules:{ruleset:new ZiweiRuleset([module])}}) : base;
+    const before=ZiweiChart.fromZonedTime(at(-30),options), after=ZiweiChart.fromZonedTime(at(30),options);
+    const query={lucunBranch:before.starPositions[findStarId('lucun')]};
+    const search=(start,end)=>reverseLookupZiweiTier1({start:at(start),end:at(end),options,query});
+    const rows=search(-30,30);
+    assert.equal(rows.length,changed?2:1);
+    assert.ok(Math.abs(rows[0].jdUT1-at(-30).toJulianTime().jdUT1)<1e-9);
+    if(changed) {
+      assert.notDeepEqual(before.starPositions,after.starPositions);
+      assert.ok(Math.abs(rows[1].jdUT1-jie)<1e-9);
+    }
+    assert.equal(search(0,30).length,1);
+    assert.equal(search(-30,0).length,changed?2:1);
+    const wide=search(-7200,7200);
+    assert.ok(wide.length>=3);
+    if(!changed) assert.equal(wide.filter(r=>Math.abs(r.jdUT1-jie)<1e-9).length,0);
+  }
+});
