@@ -292,6 +292,13 @@ export function compileZiweiJsonPlacement(rule: unknown): ZiweiCompiledPlacement
 function normalizePlacement(key: string, value: ZiweiCompiledPlacement): ZiweiCompiledPlacement {
   if (key.trim().length === 0) throw new RangeError('placement contains an empty star key');
   if (value.inputs.length !== value.shape.length) throw new RangeError(`${key} placement input/shape mismatch`);
+  for (let i = 0; i < value.inputs.length; i++) {
+    const input = value.inputs[i]!;
+    if (!Object.prototype.hasOwnProperty.call(INPUT_DOMAINS, input) || value.shape[i] !== INPUT_DOMAINS[input]) {
+      throw new RangeError(`${key} has an unsupported input or domain: ${input}`);
+    }
+  }
+
   const count = value.shape.reduce((n, domain) => {
     if (!Number.isInteger(domain) || domain < 1) throw new RangeError(`${key} has an invalid placement domain`);
     return n * domain;
@@ -370,7 +377,7 @@ function normalizePatch(patch: ZiweiRulePatch): ZiweiRulePatch {
         const compiled = normalizePlacement(key, value);
         for (let i = 0; i < compiled.inputs.length; i++) {
           const input = compiled.inputs[i]!;
-          if (!FLOW_INPUTS.has(input) || compiled.shape[i] !== INPUT_DOMAINS[input]) {
+          if (!FLOW_INPUTS.has(input)) {
             throw new RangeError(`invalid flow input or domain: ${input}`);
           }
         }

@@ -894,3 +894,15 @@ test('month selection rejects forged nodes and preserves physical state', () => 
   assert.equal(m.context,before);assert.equal(m.currentTarget,target);
   m.selectMonth({...node});assert.equal(m.context.month.month,node.month);
 });
+
+
+test('natal modules reject unknown inputs and invalid domains at construction', () => {
+  for(const input of ['unknown','constructor','lunar.year_branch','lunar.day_index','solar.day_index']) {
+    assert.throws(()=>new ZiweiRuleModule({label:'bad-natal',patch:{natalPlacements:{wenchang:{inputs:[input],shape:[1],positions:[0]}}}}),RangeError);
+  }
+  for(const [input,domain] of Object.entries({'lunar.year_branch':12,'lunar.day_index':30,'solar.day_index':33,'anchor.bureau':5,'birth.gender':2})) {
+    const module=new ZiweiRuleModule({label:'valid-natal',patch:{natalPlacements:{wenchang:{inputs:[input],shape:[domain],positions:Array.from({length:domain},(_,i)=>i%12)}}}});
+    const c=ZiweiChart.fromZonedTime(zoned(2000,1,1),new ZiweiOptions({gender:ZIWEI_GENDER.MALE,rules:{ruleset:new ZiweiRuleset([module])}}));
+    assert.ok(c.starPositions[findStarId('wenchang')]>=0 && c.starPositions[findStarId('wenchang')]<12);
+  }
+});
