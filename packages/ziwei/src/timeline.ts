@@ -350,11 +350,13 @@ export class ZiweiTimelineProvider {
     isLeap = false,
     effectiveMonth?: number,
     effectiveYear?: number,
+    sequence?: number,
   ): readonly DayNode[] {
     const target = this.getMonths(targetYear).find((value) => value.month === month
       && value.isLeap === isLeap
       && (effectiveMonth === undefined || value.effectiveMonth === effectiveMonth)
-      && (effectiveYear === undefined || value.effectiveYear === effectiveYear));
+      && (effectiveYear === undefined || value.effectiveYear === effectiveYear)
+      && (sequence === undefined || value.sequence === sequence));
     if (target === undefined) return Object.freeze([]);
     return Object.freeze(Array.from({ length: target.dayCount }, (_, offset) => {
       const solarDate = dateOnly(target.firstCivilDayNumber - 0.5 + offset);
@@ -421,6 +423,7 @@ export class ZiweiTimelineProvider {
     isLeap?: boolean;
     effectiveMonth?: number;
     effectiveYear?: number;
+    sequence?: number;
     day?: number;
   } = {}): TimelineManifest {
     let decadeIndex = input.decadeIndex;
@@ -442,7 +445,7 @@ export class ZiweiTimelineProvider {
     const months = input.year === undefined ? undefined : this.getMonths(input.year);
     const days = input.year === undefined || input.month === undefined
       ? undefined
-      : this.getDays(input.year, input.month, input.isLeap ?? false, input.effectiveMonth, input.effectiveYear);
+      : this.getDays(input.year, input.month, input.isLeap ?? false, input.effectiveMonth, input.effectiveYear, input.sequence);
     const targetDay = input.day === undefined ? undefined : days?.find((value) => value.day === input.day);
     const hours = targetDay === undefined
       ? undefined

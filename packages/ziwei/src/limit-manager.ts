@@ -102,6 +102,7 @@ export class ZiweiLimitManager {
       isLeap: this.contextValue.month?.isLeap,
       effectiveMonth: this.contextValue.month?.effectiveMonth,
       effectiveYear: this.contextValue.month?.effectiveYear,
+      sequence: this.contextValue.month?.sequence,
       day: this.contextValue.day?.day,
     });
   }
@@ -185,13 +186,14 @@ export class ZiweiLimitManager {
     this.resolvedValue = null;
   }
 
-  setMonth(month: number, isLeap = false, effectiveMonth?: number, effectiveYear?: number): void {
+  setMonth(month: number, isLeap = false, effectiveMonth?: number, effectiveYear?: number, sequence?: number): void {
     const year = this.timelineYearValue;
     if (year === undefined) throw new Error('select a flow year first');
     const node = this.timeline.getMonths(year).find((value) => value.month === month
       && value.isLeap === isLeap
       && (effectiveMonth === undefined || value.effectiveMonth === effectiveMonth)
-      && (effectiveYear === undefined || value.effectiveYear === effectiveYear));
+      && (effectiveYear === undefined || value.effectiveYear === effectiveYear)
+      && (sequence === undefined || value.sequence === sequence));
     if (node === undefined) throw new RangeError('requested flow month does not exist');
     this.selectMonth(node);
   }
@@ -232,7 +234,7 @@ export class ZiweiLimitManager {
     const month = this.contextValue.month;
     const year = this.timelineYearValue;
     if (month === undefined || year === undefined) throw new Error('select a flow month first');
-    const valid = this.timeline.getDays(year, month.month, month.isLeap, month.effectiveMonth, month.effectiveYear)
+    const valid = this.timeline.getDays(year, month.month, month.isLeap, month.effectiveMonth, month.effectiveYear, month.sequence)
       .some(value => value.day === node.day && value.stem === node.stem && value.branch === node.branch
         && value.solarDate.year === node.solarDate.year && value.solarDate.month === node.solarDate.month
         && value.solarDate.day === node.solarDate.day);
@@ -259,6 +261,7 @@ export class ZiweiLimitManager {
       month.isLeap,
       month.effectiveMonth,
       month.effectiveYear,
+      month.sequence,
     )
       .find((value) => value.day === day);
     if (node === undefined) throw new RangeError('requested flow day does not exist');

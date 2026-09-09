@@ -469,3 +469,6 @@ stepZiweiFlowDayTarget(target, 1, options);
 民用时钟模式以 `options.utcOffsetMinutes` 为排盘时区：输入时区不同时，保持实际瞬间不变，先转换到配置时区再排盘。
 拆分子时模式下，`targetHourIndex` 和 `FlowHourLimit.hourIndex` 的晚子索引为 12，早子为 0；地支索引仍为 0。
 反查除时辰边界外也检查交节时刻，以覆盖自定义规则的太阳年、月输入变化。
+
+
+历史同月号月份可用 `MonthNode.sequence` 区分。`timeline.getDays(year, month, isLeap, effectiveMonth, effectiveYear, sequence)` 与 `manager.setMonth(month, isLeap, effectiveMonth, effectiveYear, sequence)` 支持尾部可选参数；`getManifest` 支持 `sequence` 字段。管理器选月后自动沿用该标识，省略参数时仍取首个匹配月份。

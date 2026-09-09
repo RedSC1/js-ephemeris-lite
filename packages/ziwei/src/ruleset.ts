@@ -396,6 +396,9 @@ function normalizePatch(patch: ZiweiRulePatch): ZiweiRulePatch {
     }));
     const sihua = Object.fromEntries(Object.entries(patch.sihua ?? {}).map(([stem, set]) => {
       if (!STEM_KEYS.includes(stem)) throw new RangeError(`unknown sihua stem: ${stem}`);
+      for (const key of Object.keys(set)) {
+        if (!['lu', 'quan', 'ke', 'ji'].includes(key)) throw new RangeError(`unknown sihua transformation: ${key}`);
+      }
       const result: Record<string, number | string> = {};
       for (const key of ['lu', 'quan', 'ke', 'ji'] as const) {
         if (set[key] !== undefined) result[key] = normalizeStarReference(set[key], `sihua.${stem}.${key}`);
@@ -497,6 +500,9 @@ function parseSihuaJson(source: string): ZiweiRulePatch['sihua'] {
   const raw = asObject(parseJson(source, 'sihuaJson'), 'sihuaJson');
   return Object.fromEntries(Object.entries(raw).map(([stem, value]) => {
     const set = asObject(value, `sihua.${stem}`);
+    for (const key of Object.keys(set)) {
+      if (!['lu', 'quan', 'ke', 'ji'].includes(key)) throw new RangeError(`unknown sihua transformation: ${key}`);
+    }
     const result: Record<string, string | number> = {};
     for (const key of ['lu', 'quan', 'ke', 'ji']) {
       if (set[key] === undefined) continue;

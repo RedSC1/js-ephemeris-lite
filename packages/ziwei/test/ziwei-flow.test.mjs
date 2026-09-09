@@ -906,3 +906,29 @@ test('natal modules reject unknown inputs and invalid domains at construction', 
     assert.ok(c.starPositions[findStarId('wenchang')]>=0 && c.starPositions[findStarId('wenchang')]<12);
   }
 });
+
+
+test('sihua rejects unknown transformation keys at both entry points', () => {
+  for(const row of [{kua:'ziwei'},{lu:'ziwei',kua:'tianji'}]) {
+    assert.throws(()=>new ZiweiRuleModule({label:'bad',patch:{sihua:{jia:row}}}),RangeError);
+    assert.throws(()=>ZiweiConfigLoader.compileJson({label:'bad',sihuaJson:JSON.stringify({jia:row})}),RangeError);
+  }
+  assert.ok(new ZiweiRuleModule({label:'valid',patch:{sihua:{jia:{quan:'ziwei'}}}}).patch.sihua);
+});
+
+test('historical repeated months retain identity through day selection', () => {
+  const c=ZiweiChart.fromZonedTime(zoned(1,1,1),new ZiweiOptions({gender:ZIWEI_GENDER.MALE}));
+  const t=new ZiweiTimelineProvider(c),m=c.createLimitManager(),months=t.getMonths(23).filter(v=>v.month===12&&!v.isLeap);
+  assert.deepEqual(months.map(v=>v.sequence),[12,13]);m.setYear(23);
+  for(const n of months) {
+    m.selectMonth(n);const expected=calendarDateFromJulianDay(n.firstCivilDayNumber-.5);
+    const days=t.getDays(23,12,false,12,23,n.sequence);
+    assert.equal(days[0].solarDate.day,expected.day);
+    assert.equal(m.manifest.currentMonthDays[0].solarDate.day,expected.day);
+    m.setDay(1);assert.equal(m.context.day.limit.coordinate.stem,days[0].stem);
+  }
+  m.addMonth(-1);assert.equal(m.manifest.currentMonthDays[0].solarDate.day,2);
+  m.addMonth(1);assert.equal(m.manifest.currentMonthDays[0].solarDate.day,31);
+  m.setMonth(12,false,undefined,undefined,13);assert.equal(m.context.month.sequence,13);
+  m.setPhysicalTime(zoned(23,12,31));assert.equal(m.manifest.currentMonthDays[0].solarDate.day,31);
+});
