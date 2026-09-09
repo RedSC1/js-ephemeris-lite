@@ -984,3 +984,52 @@ test('legacy star declarations validate raw fields before projection', () => {
     }
   }
 });
+
+
+test('lookup tables reject keys outside their anchor domain, including nested rules', () => {
+  const stems = ['jia','yi','bing','ding','wu','ji','geng','xin','ren','gui'];
+  const branches = ['zi','chou','yin','mao','chen','si','wu','wei','shen','you','xu','hai'];
+  for (const [anchor, boundary, keys] of [
+    ['year_stem','lunar',stems], ['month_stem','solar',stems],
+    ['year_branch','lunar',branches], ['ming','lunar',branches],
+    ['wuxingjv','lunar',['water2','wood3','metal4','earth5','fire6']],
+    ['month','lunar',Array.from({length:12},(_,i)=>String(i))],
+    ['day','lunar',Array.from({length:30},(_,i)=>String(i))],
+    ['day','solar',Array.from({length:33},(_,i)=>String(i))],
+  ]) {
+    const table = Object.fromEntries(keys.map((key,i)=>[key,i%12]));
+    for (const type of ['lookup','lookup_offset']) {
+      const rule = {type,anchor,boundary,table,...(type==='lookup_offset'?{shift_anchor:'hour'}:{})};
+      assert.ok(compileZiweiJsonPlacement(rule).positions.length > 0);
+      const invalid = {...rule,table:{...table,jiaa:0}};
+      assert.throws(()=>compileZiweiJsonPlacement(invalid), /unknown .*table field: jiaa/);
+      assert.throws(()=>compileZiweiJsonPlacement({type:'pipeline',steps:[invalid]}), /unknown .*table field: jiaa/);
+      if (anchor === 'day') {
+        assert.throws(()=>compileZiweiJsonPlacement({...rule,table:{...table,[keys.length]:0}}), /unknown .*table field/);
+        const {boundary: ignored, ...inherited} = rule;
+        assert.deepEqual(compileZiweiJsonPlacement({type:'pipeline',boundary,steps:[inherited]}).positions,
+          compileZiweiJsonPlacement(rule).positions);
+      }
+      const missing = {...table}; delete missing[keys[0]];
+      assert.throws(()=>compileZiweiJsonPlacement({...rule,table:missing}), /table has no value/);
+    }
+  }
+});
+
+test('complete legacy natal and flow star configuration remains loadable', () => {
+  const fixture = JSON.parse(readFileSync(new URL('./fixtures/legacy-stars.json', import.meta.url), 'utf8'));
+  const ruleset = ZiweiConfigLoader.overrideWith(ZiweiConfigLoader.getDefault(), {
+    label:'legacy-complete', starsJson:JSON.stringify(fixture.stars), flowJson:JSON.stringify(fixture.flow),
+  });
+  const chart = ZiweiChart.fromZonedTime(zoned(2003,3,13,14), new ZiweiOptions({gender:ZIWEI_GENDER.MALE,rules:{ruleset}}));
+  assert.equal(chart.starCatalog.length, 159);
+  for (const raw of fixture.stars.filter(s=>s.type==='bad')) {
+    assert.equal(chart.starCatalog.find(s=>s.key===raw.key).category,'malefic');
+  }
+  const dynamic = dynamicChartForTime(chart,zoned(2033,12,22)).chart;
+  for (const raw of fixture.flow) {
+    const star = dynamic.getFlowStar(findStarId(raw.key));
+    assert.ok(star.branch >= 0 && star.branch < 12);
+    if (raw.brightness) assert.equal(star.brightness,raw.brightness[star.branch]);
+  }
+});

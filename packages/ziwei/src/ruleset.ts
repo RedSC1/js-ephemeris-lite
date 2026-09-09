@@ -217,7 +217,12 @@ function collectRuleInputs(
   if (type === 'constant') return;
   const anchor = rule.anchor;
   if (typeof anchor !== 'string') throw new TypeError(`${type}.anchor must be a string`);
-  add(sourceFor(anchor, boundary));
+  const source = sourceFor(anchor, boundary);
+  add(source);
+  if (type === 'lookup' || type === 'lookup_offset') {
+    const table = asObject(rule.table, `${type}.table`);
+    checkKeys(table, Array.from({ length: INPUT_DOMAINS[source]! }, (_, i) => lookupKey(source, i)), `${type}.table`);
+  }
   if (type === 'lookup_offset') {
     if (typeof rule.shift_anchor !== 'string') throw new TypeError('lookup_offset.shift_anchor must be a string');
     add(sourceFor(rule.shift_anchor, boundary));
@@ -543,7 +548,7 @@ function starDefinitionFromJson(star: JsonObject, natal: boolean, index: number)
   const rawCategory = star.type ?? star.category;
   const category = typeof rawCategory === 'string' && LEGACY_CYCLE_CATEGORIES.has(rawCategory)
     ? 'cycle'
-    : rawCategory;
+    : rawCategory === 'bad' ? 'malefic' : rawCategory;
   if (category !== undefined && (typeof category !== 'string' || category.trim().length === 0)) {
     throw new TypeError(`star[${index}].type must be a non-empty string`);
   }
