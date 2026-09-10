@@ -7,7 +7,7 @@ export * from './relations.js';
 export * from './reverse-lookup.js';
 export * from './rules.js';
 export * from './shen-sha.js';
-export * from './shen-sha-registry.js';
+export * from './shen-sha-catalog.js';
 
 export const BAZI_LITE_INFO = Object.freeze({
   status: 'rule core available',

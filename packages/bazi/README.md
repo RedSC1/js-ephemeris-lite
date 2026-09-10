@@ -98,5 +98,6 @@ console.log(snapshot.schemaVersion, json);
 
 ## 自定义神煞
 
-实例级 `ShenShaRegistry` 支持注册、替换、删除与恢复默认规则，通过 `bind(chart, { gender })`
-保存规则集合快照，不改变原有 66 位神煞接口。见 [注册表说明](docs/shen-sha-registry.md)。
+`BaziShenShaCatalog` 支持不可变用户模块和选择快照，与 C++ 语义对齐。
+内置 66 种不可覆盖或删除，通过 `disabledIds` 停用；替代流派使用独立模块 ID。
+见 [用户模块说明](docs/shen-sha-catalog.md)。
