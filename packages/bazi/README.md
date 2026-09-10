@@ -95,3 +95,8 @@ console.log(snapshot.schemaVersion, json);
 代码采用 [MPL-2.0](./LICENSE)。
 本包来源说明见[中文第三方声明](./THIRD_PARTY_NOTICES.zh-CN.md)；天文与历史
 数据来源另见核心库的[中文第三方声明](https://github.com/RedSC1/js-ephemeris-lite/blob/main/THIRD_PARTY_NOTICES.zh-CN.md)。
+
+## 自定义神煞
+
+实例级 `ShenShaRegistry` 支持注册、替换、删除与恢复默认规则，通过 `bind(chart, { gender })`
+保存规则集合快照，不改变原有 66 位神煞接口。见 [注册表说明](docs/shen-sha-registry.md)。
