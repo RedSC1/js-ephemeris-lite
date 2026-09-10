@@ -63,3 +63,27 @@ test('callback failures propagate; disabled callbacks never run',()=>{
  const asyncCatalog=new BaziShenShaCatalog().addModule(new BaziShenShaModule('async',[{id:'x',name:'X',test:async()=>{throw error;}}]));
  assert.throws(()=>asyncCatalog.createContext().evaluate(chart,0,0),/synchronous boolean/);
 });
+
+test('genderless rules retain Jin-Shen, Tong-Zi, San-Qi and Gong matches', () => {
+  const gz = s => ('甲乙丙丁戊己庚辛壬癸'.indexOf(s[0]) << 4) | '子丑寅卯辰巳午未申酉戌亥'.indexOf(s[1]);
+  const cases = [
+    [25, '甲子', '甲寅', '甲子', '癸酉', 3],
+    [31, '甲子', '甲寅', '甲子', '癸酉', 2],
+    [33, '甲子', '戊辰', '庚午', '甲子', 2],
+    [34, '乙丑', '丙寅', '丁卯', '甲子', 2],
+    [35, '壬子', '癸丑', '辛卯', '甲子', 2],
+    [48, '甲子', '甲寅', '癸亥', '癸丑', 2],
+    [49, '甲子', '甲寅', '甲申', '甲戌', 2],
+  ];
+  const dependent = new Set([18, 19, 20, 45]);
+  for (const [id, year, month, day, hour, kind] of cases) {
+    const chart = analyzePillars({year: gz(year), month: gz(month), day: gz(day), hour: gz(hour)});
+    const target = kind === 3 ? chart.pillars.hour : chart.pillars.day;
+    const ids = shenShaIds(collectTargetShenSha(chart, target, kind));
+    assert(ids.includes(id), `missing ${id}`);
+    assert(ids.every(id => !dependent.has(id)));
+    for (const gender of [0, 1]) {
+      assert.deepEqual(ids, shenShaIds(collectTargetShenSha(chart, target, kind, {gender})).filter(id => !dependent.has(id)));
+    }
+  }
+});
