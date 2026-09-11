@@ -17,7 +17,7 @@ Node.js 18 or later is required. Browser projects can use the package through an
 npm install js-ephemeris-lite
 ```
 
-This documentation describes version 1.0.0. For an installed release, refer to the documentation bundled with that version.
+This documentation describes version 1.1.0. For an installed release, refer to the documentation bundled with that version.
 
 ### Sun/Moon and calendar-only applications
 
@@ -194,15 +194,16 @@ All packages can be installed separately. The Bazi, Ziwei, and Huangli packages 
 
 ## Documentation
 
-The detailed guides are currently maintained in Chinese:
-
 - [Positions](./docs/positions.md)
-- [Time, solar time, Ganzhi, and Chinese calendars](./docs/time-and-calendar.md)
+- [Time and calendar API (English)](./docs/time-and-calendar.en.md)
+- [Time, solar time, Ganzhi, and Chinese calendars (Chinese)](./docs/time-and-calendar.md)
 - [Sky events and visibility](./docs/sky-events.md)
 - [Eclipse search](./docs/eclipse-search.md)
 - [Accuracy and model limits](./docs/accuracy.md)
 - [Architecture](./docs/architecture.md)
 - [Development and tests](./docs/development.md)
+
+The package-specific Bazi and Ziwei directories also include English READMEs and guides.
 
 ## License and attribution
 

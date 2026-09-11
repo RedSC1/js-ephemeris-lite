@@ -12,7 +12,9 @@ test('JSON keeps source offset separate from calendar offset and solar clock', (
     const json = JSON.parse(JSON.stringify(chart));
     assert.equal(json.schemaVersion, 'bazi-chart-v1');
     assert.deepEqual(json.birth.clockTime, clock.toJSON());
-    assert.deepEqual(json.birth.virtualTime, chart.birthCivilTime);
+    assert.deepEqual(json.birth.chartTime, chart.birthChartTime);
+    assert.deepEqual(json.birth.virtualTime, chart.birthChartTime);
+    assert.strictEqual(chart.birthCivilTime, chart.birthChartTime);
     assert.equal(json.birth.jdUT1, chart.birthJdUT1);
     assert.equal(json.birth.gender, 'female');
     assert.equal(json.options.utcOffsetMinutes, 480);
@@ -23,6 +25,27 @@ test('JSON keeps source offset separate from calendar offset and solar clock', (
     assert.deepEqual(json.fortune.decades.map((entry) => entry.pillar), chart.getDaYunTable().map((entry) => entry.pillar));
     assert.ok(json.columns.every((column) => Array.isArray(column.shenSha)));
   }
+});
+
+test('solar and lunar day constructors require an explicit birth hour', () => {
+  const options = new BaziOptions({ gender: GENDER.MALE, utcOffsetMinutes: 480 });
+  const solar = BaziChart.fromSolarDay(
+    { year: 2003, month: 3, day: 13 },
+    { hour: 14, minute: 15 },
+    options,
+  );
+  const lunar = BaziChart.fromLunarDay(
+    { year: 2003, month: 2, day: 11, isLeap: false },
+    { hour: 14, minute: 15 },
+    options,
+  );
+  assert.deepEqual(lunar.pillars, solar.pillars);
+  assert.throws(() => BaziChart.fromSolarDay(
+    { year: 2003, month: 3, day: 13 },
+    {},
+    options,
+  ));
+  assert.throws(() => new BaziOptions({ utcOffsetMinutes: 480.5 }));
 });
 
 test('instant-only export never invents the original birth clock or gender', () => {

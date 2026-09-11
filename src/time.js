@@ -439,6 +439,16 @@ export class ZonedTime {
     return new JulianTime(localJd - this.offsetMinutes / 1440);
   }
 
+  /** Display the same physical instant with another fixed UTC offset. */
+  toZonedTime(offsetMinutes) {
+    return ZonedTime.fromJulianTime(this.toJulianTime(), offsetMinutes);
+  }
+
+  /** Display the same physical instant at UTC+00:00. */
+  toUtc() {
+    return this.toZonedTime(0);
+  }
+
   toDate() {
     return this.toJulianTime().toDate();
   }

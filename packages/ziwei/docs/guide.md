@@ -35,13 +35,30 @@ const options = new ZiweiOptions({
 const chart = ZiweiChart.fromZonedTime(birth, options);
 ```
 
+日期类型只表示一天。已有公历日或农历日时，需另传出生时辰：
+
+```js
+const solarChart = ZiweiChart.fromSolarDay(
+  { year: 2003, month: 3, day: 13 },
+  { hour: 14, minute: 15 },
+  options,
+);
+const lunarChart = ZiweiChart.fromLunarDay(
+  { year: 2003, month: 2, day: 11, isLeap: false },
+  { hour: 14, minute: 15 },
+  options,
+);
+```
+
+农历转公历和最终排盘共用 `options`，时区取 `options.utcOffsetMinutes`。
+
 紫微的性别编码：`MALE = 0`、`FEMALE = 1`。它与八字包的编码顺序不同，跨包传递时应使用对应包的性别常量。
 
 `ZiweiChart` 保留原始历法事实；手动修改安星参数不会覆盖这些字段：
 
 ```ts
 chart.facts.jdUT1;
-chart.facts.virtualTime;
+chart.facts.chartTime;
 chart.facts.lunarDate;
 chart.facts.solarTermPillars;
 chart.facts.lunarPillars;
@@ -281,9 +298,14 @@ anchors 和计算设置。星曜使用数组，不序列化 BigInt；自定义�
 编译后 patch 和覆盖顺序一并保留。内置星曜的稳定标识为 `key`，应用可按自己的语言增加显示名称。
 
 - `birth.clockTime`：原始出生年月日时分秒和固定 `offsetMinutes`，与历法归日偏移分开保存。
-- `birth.virtualTime`：排盘所用钟表/平太阳/真太阳时间；`birth.jdUT1` 是实际输入瞬间。
+- `birth.chartTime`：排盘所用钟表/平太阳/真太阳时间；`birth.jdUT1` 是实际输入瞬间。
+- `birth.virtualTime`：`chartTime` 的旧版兼容字段。
 - `birth.logicalLunarDate`：经过早晚子时等规则处理的排盘农历。
-- `fromLunar()` 额外保留 `birth.lunarInput`，同时记录转换后的原始钟表。
+- `fromLunarDay()` 额外保留 `birth.lunarInput`，同时记录转换后的原始钟表。
+
+命盘、时间线和流运管理器保存并复用创建时的历法、时区、太阳时、子时和节气设置。
+低层自由函数可以显式传入其他设置用于比较；在交节、换日、闰月或历史改历边界，
+混用设置可能使流运与原命盘口径不一致。一般应以新设置重新创建命盘。
 - 只有 instant/facts 的低层入口没有原始出生钟表，`clockTime` 为 `null`。
 - 日期使用儒略历/格里历 1582 年切换及天文学纪年（0 = 公元前 1 年）。
 
@@ -445,7 +467,7 @@ const candidates = reverseLookupZiweiTier1({
 });
 
 for (const candidate of candidates) {
-  console.log(candidate.virtualTime, candidate.lunarDate, candidate.chart);
+  console.log(candidate.chartTime, candidate.lunarDate, candidate.chart);
 }
 ```
 

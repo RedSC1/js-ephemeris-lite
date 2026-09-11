@@ -12,7 +12,7 @@ import {
   julianDay,
   type LunarMonth,
 } from 'js-ephemeris-lite';
-import { resolveZiweiVirtualTime, pillarJieBoundary } from './calendar.js';
+import { resolveZiweiChartTime, pillarJieBoundary } from './calendar.js';
 import type { ZiweiChart } from './chart.js';
 import {
   getEffectiveBirthYear,
@@ -313,7 +313,7 @@ export class ZiweiTimelineProvider {
     }
     const boundaries = starts.map(jd => pillarJieBoundary(getNextJie(jd - 1, this.chart.options.toCalendarOptions()), this.chart.options));
     const logicalJd = (jd: number): number => {
-      const v = resolveZiweiVirtualTime(ZonedTime.fromJulianTime(jd, this.chart.options.utcOffsetMinutes), this.chart.options);
+      const v = resolveZiweiChartTime(ZonedTime.fromJulianTime(jd, this.chart.options.utcOffsetMinutes), this.chart.options);
       return julianDay(v) + (this.chart.options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY ? 1 / 24 : 0);
     };
     return Object.freeze(Array.from({ length: 12 }, (_, offset) => {

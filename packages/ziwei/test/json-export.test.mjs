@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ZonedTime } from 'js-ephemeris-lite';
+import { ZonedTime, solarToLunar } from 'js-ephemeris-lite';
 import { ZiweiCastingChart, ZiweiChart, ZiweiConfigLoader, ZiweiOptions, ZiweiRuleset, ZiweiRuleModule,
   resolveZiweiBirth, resolveZiweiBirthFromInstant } from '../dist/index.js';
 
@@ -13,7 +13,9 @@ test('JSON preserves source clock, solar clock and late-zi logical date separate
     const json = JSON.parse(JSON.stringify(chart));
     assert.equal(json.schemaVersion, 'ziwei-chart-v1');
     assert.deepEqual(json.birth.clockTime, clock.toJSON());
-    assert.deepEqual(json.birth.virtualTime, chart.facts.virtualTime);
+    assert.deepEqual(json.birth.chartTime, chart.facts.chartTime);
+    assert.deepEqual(json.birth.virtualTime, chart.facts.chartTime);
+    assert.deepEqual(chart.facts.virtualTime, chart.facts.chartTime);
     assert.equal(json.birth.jdUT1, chart.facts.jdUT1);
     assert.equal(json.birth.gender, 'male');
     assert.equal(json.options.utcOffsetMinutes, 480);
@@ -34,6 +36,18 @@ test('lunar and instant entries preserve known inputs without inventing a birth 
   const withoutClock = JSON.parse(JSON.stringify(ZiweiChart.fromResolvedBirth(resolved)));
   assert.equal(withoutClock.birth.clockTime, null);
   assert.equal(withoutClock.birth.lunarInput, null);
+});
+
+test('solar and lunar day constructors share chart options and require a clock', () => {
+  const options = new ZiweiOptions({ gender: 0, utcOffsetMinutes: 480 });
+  const solarDay = { year: 2003, month: 3, day: 13 };
+  const clock = { hour: 14, minute: 15 };
+  const lunarDay = solarToLunar(solarDay, options.toCalendarOptions());
+  const solar = ZiweiChart.fromSolarDay(solarDay, clock, options);
+  const lunar = ZiweiChart.fromLunarDay(lunarDay, clock, options);
+  assert.deepEqual(lunar.starPositions, solar.starPositions);
+  assert.deepEqual(lunar.anchors, solar.anchors);
+  assert.throws(() => ZiweiChart.fromSolarDay(solarDay, {}, options));
 });
 
 test('custom stars, brightness and labelled rule order survive JSON export', () => {

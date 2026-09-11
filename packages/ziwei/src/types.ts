@@ -122,6 +122,9 @@ export interface ZiweiLunarDateFacts {
 
 export interface ZiweiCalendarFacts {
   readonly jdUT1: number;
+  /** Clock fields actually used to construct the chart. */
+  readonly chartTime: Readonly<CivilDateTime>;
+  /** @deprecated Use chartTime. */
   readonly virtualTime: Readonly<CivilDateTime>;
   readonly gender: ZiweiGender;
   readonly lunarDate: ZiweiLunarDateFacts;

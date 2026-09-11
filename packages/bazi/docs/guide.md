@@ -48,6 +48,24 @@ const options = new BaziOptions({
 const chart = BaziChart.fromZonedTime(birth, options);
 ```
 
+如果已经持有公历日或农历日，出生时辰应单独传入：
+
+```js
+const solarChart = BaziChart.fromSolarDay(
+  { year: 2003, month: 3, day: 13 },
+  { hour: 14, minute: 15 },
+  options,
+);
+const lunarChart = BaziChart.fromLunarDay(
+  { year: 2003, month: 2, day: 11, isLeap: false },
+  { hour: 14, minute: 15 },
+  options,
+);
+```
+
+`fromLunarDay()` 的历法转换与最终排盘共用 `options`；时区只取
+`options.utcOffsetMinutes`，无需再传一份可能冲突的偏移。
+
 `BaziOptions` 集中保存历法、钟表、子时、性别、起运、大运和人元司令设置。`BaziChart` 会持有同一个不可变实例，后续查询会复用这些设置：
 
 ```ts
@@ -229,12 +247,17 @@ const json = JSON.stringify(chart, null, 2); // 自动调用 toJSON()
 未提供性别时 `birth.gender` 与 `fortune` 为 `null`。
 
 - `birth.clockTime`：`fromZonedTime()` 收到的原始出生年月日时分秒及 `offsetMinutes`。
-- `birth.virtualTime`：排盘采用的钟表/平太阳/真太阳时间；不带 UTC 偏移。
+- `birth.chartTime`：排盘采用的钟表/平太阳/真太阳时间；不带 UTC 偏移。
+- `birth.virtualTime`：`chartTime` 的旧版兼容字段。
 - `birth.jdUT1`：出生瞬间。时区设置 `options.utcOffsetMinutes` 用于历法归日，
   不一定等于原始钟表的偏移，因此两者分别保存。
 - `birth.calendar` 为 1582 年切换的儒略历/格里历，`yearNumbering` 为天文学纪年（0 = 公元前 1 年）。
-- 低层 `fromInstant()` 未接收原始钟表，`clockTime` 为 `null`；`birthCivilTime` 表示计算用的虚拟钟表。
-  可用导出的 `jdUT1`、`virtualTime`、`options` 重算。
+- 低层 `fromInstant()` 未接收原始钟表，`clockTime` 为 `null`；`birthChartTime` 表示计算用钟面。
+  可用导出的 `jdUT1`、`chartTime`、`options` 重算。
+
+`BaziChart` 保存创建时的完整设置，命盘上的起运、大运等方法会自动复用。自由函数
+接受另一份设置是为了低层比较和研究；交节、换日、闰月或历史改历边界混用设置时，
+结果可能不再对应原命盘。除非明确比较口径，否则请传 `chart.options` 或重新建盘。
 
 导出中的神煞以普通数组表示。起运/大运的民用日期采用排盘钟表（virtual-time）
 基准，导出内以 `fortune.clockBasis` 标明。本 schema 为本命盘快照，

@@ -7,14 +7,14 @@ import {
   ganzhiStem,
   julianDay,
   lunarToSolar,
-  normalizeChartVirtualTime,
+  normalizeChartTime,
   type CivilDateTime,
   type LunarMonth,
   type LunarMonthName,
   type Ut1Input,
   type ZonedTime,
 } from 'js-ephemeris-lite';
-import { virtualTimeToUt1, resolveZiweiLogicalLunarDate, resolveZiweiVirtualTime, solarDayFromPreviousJie } from './calendar.js';
+import { chartTimeToUt1, resolveZiweiLogicalLunarDate, resolveZiweiChartTime, solarDayFromPreviousJie } from './calendar.js';
 import type { ZiweiOptions } from './options.js';
 import type { ZiweiChart } from './chart.js';
 import { ZiweiDynamicChart, makeFlowLayer, makeSmallLimitLayer } from './flow.js';
@@ -57,6 +57,9 @@ export interface ResolvedFlowMonthMetadata {
 
 export interface ZiweiFlowTarget {
   readonly jdUT1: number;
+  /** Canonical chart clock. Optional only for legacy caller-created targets. */
+  readonly chartTime?: Readonly<CivilDateTime>;
+  /** @deprecated Use chartTime. */
   readonly virtualTime: Readonly<CivilDateTime>;
   readonly ratHourSegment?: RatHourSegment;
 }
@@ -172,7 +175,7 @@ export function resolveZiweiFlowFromInstant(
 ): ResolvedZiweiFlow {
   const jdUT1 = typeof targetInstant === 'number' ? targetInstant : targetInstant.jdUT1;
   if (jdUT1 < chart.facts.jdUT1) throw new RangeError('target instant precedes birth instant');
-  const normalizedTargetVirtualTime = normalizeChartVirtualTime(targetVirtualTime);
+  const normalizedTargetVirtualTime = normalizeChartTime(targetVirtualTime);
   const targetPillars = calculateFourPillars(jdUT1, normalizedTargetVirtualTime, {
     ...chart.options.toCalendarOptions(),
     pillarHistoricalMode: chart.options.pillarHistoricalMode,
@@ -275,7 +278,7 @@ export function resolveZiweiFlow(
   return resolveZiweiFlowFromInstant(
     chart,
     target.toJulianTime(),
-    resolveZiweiVirtualTime(target, chart.options),
+    resolveZiweiChartTime(target, chart.options),
     boundary,
   );
 }
@@ -314,6 +317,10 @@ function frozenClock(value: CivilDateTime): Readonly<CivilDateTime> {
   return Object.freeze({ ...value });
 }
 
+function targetChartTime(target: ZiweiFlowTarget): Readonly<CivilDateTime> {
+  return target.chartTime ?? target.virtualTime;
+}
+
 /** Step one logical hour preserving virtual clock position. Pass options for solar-clock inversion. */
 export function stepZiweiFlowHourTarget(
   current: ZiweiFlowTarget,
@@ -322,7 +329,7 @@ export function stepZiweiFlowHourTarget(
   options?: ZiweiOptions,
 ): ZiweiFlowTarget & { readonly ratHourSegment: RatHourSegment } {
   if (direction !== -1 && direction !== 1) throw new RangeError('direction must be -1 or 1');
-  const currentVirtualTime = normalizeChartVirtualTime(current.virtualTime);
+  const currentVirtualTime = normalizeChartTime(targetChartTime(current));
   const split = ratHourMode !== RAT_HOUR_MODE.NEXT_DAY;
   const oneHourStep = split && (direction > 0
     ? currentVirtualTime.hour >= 22 || currentVirtualTime.hour < 1
@@ -348,9 +355,11 @@ export function stepZiweiFlowHourTarget(
   };
   const targetHourBranch = Math.floor((targetHour + 1) / 2) % 12;
   const segment = ratHourSegment(targetVirtual, ratHourMode, targetHourBranch);
+  const chartTime = frozenClock(targetVirtual);
   return Object.freeze({
-    jdUT1: options ? virtualTimeToUt1(targetVirtual, options) : current.jdUT1 + stepHours / 24,
-    virtualTime: frozenClock(targetVirtual),
+    jdUT1: options ? chartTimeToUt1(targetVirtual, options) : current.jdUT1 + stepHours / 24,
+    chartTime,
+    virtualTime: chartTime,
     ratHourSegment: segment,
   });
 }
@@ -362,7 +371,7 @@ export function stepZiweiFlowDayTarget(
   options?: ZiweiOptions,
 ): ZiweiFlowTarget {
   if (direction !== -1 && direction !== 1) throw new RangeError('direction must be -1 or 1');
-  const currentVirtualTime = normalizeChartVirtualTime(current.virtualTime);
+  const currentVirtualTime = normalizeChartTime(targetChartTime(current));
   const sourceNoon = julianDay({
     year: currentVirtualTime.year,
     month: currentVirtualTime.month,
@@ -373,7 +382,8 @@ export function stepZiweiFlowDayTarget(
   const virtualTime = frozenClock({ year: date.year, month: date.month, day: date.day,
     hour: currentVirtualTime.hour, minute: currentVirtualTime.minute, second: currentVirtualTime.second });
   return Object.freeze({
-    jdUT1: options ? virtualTimeToUt1(virtualTime, options) : current.jdUT1 + direction,
+    jdUT1: options ? chartTimeToUt1(virtualTime, options) : current.jdUT1 + direction,
+    chartTime: virtualTime,
     virtualTime,
     ...(options ? {ratHourSegment: ratHourSegment(virtualTime, options.ratHourMode, Math.floor((virtualTime.hour + 1) / 2) % 12)}
       : current.ratHourSegment === undefined ? {} : {ratHourSegment: current.ratHourSegment}),

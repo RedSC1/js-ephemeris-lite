@@ -138,22 +138,22 @@ export function getNayinElement(value) {
   return NAYIN_ELEMENT_BY_INDEX[ganzhiIndex(value)];
 }
 
-function validateVirtualTime(value) {
+function validateChartTime(value) {
   if (!value || !Number.isInteger(value.year) || !Number.isInteger(value.month)
     || !Number.isInteger(value.day) || !Number.isInteger(value.hour)
     || !Number.isInteger(value.minute) || !Number.isFinite(value.second)) {
-    throw new TypeError('virtualTime must contain valid civil date-time fields');
+    throw new TypeError('chartTime must contain valid clock fields');
   }
   if (value.month < 1 || value.month > 12 || value.day < 1 || value.day > 31
     || value.hour < 0 || value.hour > 23 || value.minute < 0 || value.minute > 59
     || value.second < 0 || value.second >= 60) {
-    throw new RangeError('virtualTime field is outside its valid range');
+    throw new RangeError('chartTime field is outside its valid range');
   }
   const jd = julianDay({ ...value, hour: 12, minute: 0, second: 0 });
   const roundtrip = calendarDateFromJulianDay(jd);
   if (roundtrip.year !== value.year || roundtrip.month !== value.month
     || roundtrip.day !== value.day) {
-    throw new RangeError('invalid virtualTime');
+    throw new RangeError('invalid chartTime');
   }
 }
 
@@ -164,21 +164,21 @@ function validateVirtualTime(value) {
  * epsilon, it recognizes the exact scalar-JD spellings of each boundary.
  * Real fractional input immediately before or after the boundary is retained.
  */
-export function normalizeChartVirtualTime(virtualTime) {
-  validateVirtualTime(virtualTime);
-  if (virtualTime.minute !== 0 && virtualTime.minute !== 59) {
-    return Object.freeze({ ...virtualTime });
+export function normalizeChartTime(chartTime) {
+  validateChartTime(chartTime);
+  if (chartTime.minute !== 0 && chartTime.minute !== 59) {
+    return Object.freeze({ ...chartTime });
   }
 
   const midnight = {
-    year: virtualTime.year,
-    month: virtualTime.month,
-    day: virtualTime.day,
+    year: chartTime.year,
+    month: chartTime.month,
+    day: chartTime.day,
     hour: 0,
     minute: 0,
     second: 0,
   };
-  const sourceJd = julianDay(virtualTime);
+  const sourceJd = julianDay(chartTime);
   const midnightJd = julianDay(midnight);
   for (let hour = 0; hour <= 24; hour += 1) {
     const boundaryJd = midnightJd + hour / 24;
@@ -199,12 +199,15 @@ export function normalizeChartVirtualTime(virtualTime) {
       second: 0,
     });
   }
-  return Object.freeze({ ...virtualTime });
+  return Object.freeze({ ...chartTime });
 }
+
+/** @deprecated Use normalizeChartTime(). */
+export const normalizeChartVirtualTime = normalizeChartTime;
 
 /** Civil-date day pillar. Time-of-day fields are deliberately ignored. */
 export function calculateDayPillar(civilDate) {
-  validateVirtualTime({ ...civilDate, hour: 0, minute: 0, second: 0 });
+  validateChartTime({ ...civilDate, hour: 0, minute: 0, second: 0 });
   const noon = julianDay({ ...civilDate, hour: 12, minute: 0, second: 0 });
   const dayIndex = positiveMod(Math.floor(noon - J2000) - 6, 60);
   return makeGanzhi(dayIndex % 10, dayIndex % 12);
@@ -297,18 +300,18 @@ function calculateDayAndHourPillars(virtualTime, ratHourMode) {
 /**
  * Calculate year/month/day/hour pillars.
  *
- * `instant` is the physical UT1-like instant. `virtualTime` is the resolved
+ * `instant` is the physical UT1-like instant. `chartTime` is the resolved
  * clock used for day/hour boundaries: normally a ZonedTime, but a caller may
  * pass a separately resolved mean/apparent-solar clock with the same fields.
  */
-export function calculateFourPillars(instant, virtualTime, rawOptions = {}) {
+export function calculateFourPillars(instant, chartTime, rawOptions = {}) {
   const jdUT1 = asUt1JulianDay(instant);
-  const normalizedVirtualTime = normalizeChartVirtualTime(virtualTime);
+  const normalizedChartTime = normalizeChartTime(chartTime);
   const ratHourMode = rawOptions.ratHourMode ?? RAT_HOUR_MODE.NEXT_DAY;
   const historical = useHistoricalTerms(rawOptions);
-  const year = calculateYearPillar(jdUT1, normalizedVirtualTime, rawOptions, historical);
+  const year = calculateYearPillar(jdUT1, normalizedChartTime, rawOptions, historical);
   const month = calculateMonthPillar(jdUT1, year, rawOptions);
-  const { day, hour } = calculateDayAndHourPillars(normalizedVirtualTime, ratHourMode);
+  const { day, hour } = calculateDayAndHourPillars(normalizedChartTime, ratHourMode);
   return Object.freeze({ year, month, day, hour });
 }
 

@@ -1,4 +1,7 @@
-import { ZonedTime, ganzhiBranch, ganzhiStem, lunarToSolar, type LunarDate } from 'js-ephemeris-lite';
+import {
+  ZonedTime, ganzhiBranch, ganzhiStem, lunarToSolar,
+  type CivilDate, type LunarDate,
+} from 'js-ephemeris-lite';
 import { computePalaceStems, type ZiweiAnchors } from './anchors.js';
 import { resolveZiweiBirth, type ResolvedZiweiBirth } from './calendar.js';
 import { ZiweiOptions, type ZiweiOptionsInput } from './options.js';
@@ -39,6 +42,27 @@ function masterLookupBranch(
 }
 
 export type { ZiweiPalaceState, ZiweiStarPlacement } from './plate.js';
+
+export interface BirthClockInput {
+  readonly hour: number;
+  readonly minute?: number;
+  readonly second?: number;
+}
+
+function clockForDay(
+  day: CivilDate,
+  clock: BirthClockInput,
+  options: ZiweiOptions,
+): ZonedTime {
+  if (clock === null || typeof clock !== 'object' || !Number.isInteger(clock.hour)) {
+    throw new TypeError('birth clock hour is required and must be an integer');
+  }
+  return new ZonedTime({
+    year: day.year, month: day.month, day: day.day,
+    hour: clock.hour, minute: clock.minute ?? 0, second: clock.second ?? 0,
+    offsetMinutes: options.utcOffsetMinutes,
+  });
+}
 
 export class ZiweiChart extends ZiweiPlate {
   readonly birthClockTime: Readonly<ReturnType<ZonedTime['toJSON']>> | null;
@@ -146,6 +170,29 @@ export class ZiweiChart extends ZiweiPlate {
     return new ZiweiChart(resolveZiweiBirth(birth, options));
   }
 
+  static fromSolarDay(
+    solarDay: CivilDate,
+    clock: BirthClockInput,
+    rawOptions: ZiweiOptions | ZiweiOptionsInput,
+  ): ZiweiChart {
+    const options = rawOptions instanceof ZiweiOptions ? rawOptions : new ZiweiOptions(rawOptions);
+    return new ZiweiChart(resolveZiweiBirth(clockForDay(solarDay, clock, options), options));
+  }
+
+  static fromLunarDay(
+    lunarDay: LunarDate,
+    clock: BirthClockInput,
+    rawOptions: ZiweiOptions | ZiweiOptionsInput,
+  ): ZiweiChart {
+    const options = rawOptions instanceof ZiweiOptions ? rawOptions : new ZiweiOptions(rawOptions);
+    const solarDay = lunarToSolar(lunarDay, options.toCalendarOptions());
+    return new ZiweiChart(
+      resolveZiweiBirth(clockForDay(solarDay, clock, options), options),
+      Object.freeze({ ...lunarDay, ...clock }),
+    );
+  }
+
+  /** @deprecated Use fromLunarDay with a separate required birth clock. */
   static fromLunar(
     lunar: LunarDate & { hour?: number; minute?: number; second?: number },
     rawOptions: ZiweiOptions | ZiweiOptionsInput,
@@ -236,7 +283,8 @@ export class ZiweiChart extends ZiweiPlate {
         yearNumbering: 'astronomical' as const,
         jdUT1: this.facts.jdUT1,
         clockTime: this.birthClockTime,
-        virtualTime: this.facts.virtualTime,
+        chartTime: this.facts.chartTime,
+        virtualTime: this.facts.chartTime,
         clockMode: this.options.clockMode,
         longitudeDeg: this.options.longitudeDeg ?? null,
         gender: this.facts.gender === 0 ? 'male' as const : 'female' as const,

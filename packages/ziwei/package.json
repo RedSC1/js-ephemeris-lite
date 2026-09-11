@@ -1,6 +1,6 @@
 {
   "name": "ziwei-lite",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Zi Wei Dou Shu for JavaScript with natal charts, transformations, flow periods, timelines, custom rules, and birth-time reverse lookup",
   "type": "module",
   "license": "MPL-2.0",
@@ -29,6 +29,7 @@
     "docs",
     "dist",
     "README.md",
+    "README.en.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.zh-CN.md"
   ],
@@ -40,7 +41,7 @@
     "prepack": "npm test"
   },
   "dependencies": {
-    "js-ephemeris-lite": "^1.0.0"
+    "js-ephemeris-lite": "^1.1.0"
   },
   "engines": {
     "node": ">=18"

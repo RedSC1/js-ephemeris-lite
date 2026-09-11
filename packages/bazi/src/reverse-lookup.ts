@@ -446,7 +446,7 @@ function evaluateTimeState(candidate: BaziDateCandidate, clockTime: ZonedTime): 
   const hourIndex = ganzhiBranch(chart.pillars.hour);
   const isLateZi = candidate.options.ratHourMode !== RAT_HOUR_MODE.NEXT_DAY
     && hourIndex === 0
-    && chart.birthCivilTime.hour >= 23;
+    && chart.birthChartTime.hour >= 23;
   return Object.freeze({ chart, hourIndex, isLateZi });
 }
 

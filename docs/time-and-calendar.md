@@ -22,6 +22,16 @@ console.log(now.jdTT, clock.toJulianTime().jdUT1);
 console.log(now.toZonedTime(480));
 ```
 
+已经有 `ZonedTime` 时可直接转换同一物理瞬间的固定时区显示：
+
+```js
+console.log(clock.toUtc());
+console.log(clock.toZonedTime(540));
+```
+
+无需再写 `clock.toJulianTime().toZonedTime(...)`。固定偏移不处理夏令时；需要地区
+时区历史规则时应配合外部时区数据库。
+
 ### 事件时间与时区
 
 `JulianTime` 表示物理瞬间，不保存时区；`ZonedTime` 表示该瞬间在某个固定偏移下的钟表读数。
@@ -290,7 +300,7 @@ console.log(describeFourPillars(packed));   // { year: '己卯', ... }
 
 `RAT_HOUR_MODE` 只决定 23:00～00:00 的日柱/时干规则：`NEXT_DAY` 在 23:00 整体换入次日，`CURRENT_DAY` 的日柱和时干都沿用当天，`CURRENT_DAY_TOMORROW_STEM` 保留当天日柱但按次日五鼠遁取时干。它不会改变农历月份。`PILLAR_HISTORICAL_MODE` 决定年月柱节界是否采用历史分配日；历史分配日固定为 UTC+08 的中国历日，不能随本地时区平移。
 
-需要真太阳时或平太阳时时，调用 `calculateFourPillars(instant, virtualTime, options)`：`instant` 用于判断立春与节令边界，`virtualTime` 中的当地太阳钟字段用于计算日柱与时柱。
+需要真太阳时或平太阳时时，调用 `calculateFourPillars(instant, chartTime, options)`：`instant` 用于判断立春与节令边界，`chartTime` 中的当地太阳钟字段用于计算日柱与时柱。`normalizeChartTime()` 是对应的规范化入口；旧名 `normalizeChartVirtualTime()` 暂作兼容别名。
 
 历史月份名、纪年及归日表见[历史历法](./calendar-history.md)。
 

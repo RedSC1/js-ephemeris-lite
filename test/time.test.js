@@ -140,3 +140,19 @@ test('ZonedTime requires an offset and preserves the represented instant', () =>
   );
   near(reconstructed.toJulianTime().jdUT1, JulianTime.fromDate(expected).jdUT1, 1e-12);
 });
+
+test('ZonedTime converts directly between fixed offsets', () => {
+  const china = new ZonedTime({
+    year: 2025, month: 1, day: 29, hour: 12, minute: 30,
+    second: 15.25, offsetMinutes: 480,
+  });
+  const utc = china.toUtc();
+  assert.equal(utc.offsetMinutes, 0);
+  assert.deepEqual(
+    [utc.year, utc.month, utc.day, utc.hour, utc.minute],
+    [2025, 1, 29, 4, 30],
+  );
+  near(utc.second, 15.25, 5e-5);
+  assert.equal(utc.toZonedTime(480).offsetMinutes, 480);
+  near(utc.toZonedTime(480).toJulianTime().jdUT1, china.toJulianTime().jdUT1, 1e-12);
+});

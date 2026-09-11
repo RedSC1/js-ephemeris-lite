@@ -1,5 +1,7 @@
 # ziwei-lite
 
+[English](./README.en.md)
+
 面向 JavaScript 和 TypeScript 的紫微斗数计算库。
 从出生时间生成命盘，查询宫位、星曜、四化及流运，并支持自定义安星规则。
 天文与农历计算由 `js-ephemeris-lite` 提供。
@@ -45,16 +47,19 @@ console.log(chart.birthYearTransformations);
 除了公历钟表时间，也可以从已知农历日期创建：
 
 ```js
-const lunarChart = ZiweiChart.fromLunar({
+const lunarChart = ZiweiChart.fromLunarDay({
   year: 2003,
   month: 2,
   day: 11,
   isLeap: false,
+}, {
   hour: 14,
   minute: 15,
-  second: 0,
 }, new ZiweiOptions({ gender: ZIWEI_GENDER.MALE }));
 ```
+
+日期对象只表示一天，出生时辰必须单独传入。`fromSolarDay()` 提供对称的公历日入口。
+两个入口都使用同一份 `ZiweiOptions` 解释固定时区、历史历法与定气定朔精度。
 
 如果只想按给定的年月日时参数安星，不需要真实日期和行运时间，可直接调用：
 
@@ -134,7 +139,7 @@ console.log(chart.anchors.bureau, chart.lifeMaster, chart.bodyMaster);
 
 | 任务 | API |
 | --- | --- |
-| 公历／农历出生盘 | `ZiweiChart.fromZonedTime()`／`ZiweiChart.fromLunar()` |
+| 公历／农历出生盘 | `ZiweiChart.fromZonedTime()`／`fromSolarDay()`／`fromLunarDay()` |
 | 已解析历法事实建盘 | `ZiweiChart.fromResolvedBirth()` |
 | 不依赖真实日期的安星 | `arrangeZiweiStars()` |
 | 修改或复原盘面 | `chart.modify()`／`chart.shiftLifePalace()`／`chart.reset()` |
@@ -203,6 +208,14 @@ manager.nextHour();
 
 选择上层会清除不再有效的下层状态；物理步进会继续遵循命盘的时区、太阳时和子时设置。
 
+`chart.facts.chartTime` 是实际用于排盘的民用、平太阳或真太阳钟面，
+`chart.facts.jdUT1` 是物理瞬间，`birthClockTime` 保留原始输入钟表。旧字段
+`virtualTime` 暂作兼容别名。
+
+命盘方法、时间线和流运管理器会复用建盘时保存的设置。底层自由函数允许显式混用
+另一套设置，方便比较不同流派，但在交节、换日、闰月和历史改历边界可能与原命盘
+不一致；通常应重新建盘，不建议只替换后续计算的选项。
+
 JSON 为本命盘快照，包含出生时间、计算设置和自定义规则。
 
 ```ts
@@ -249,7 +262,7 @@ const candidates = reverseLookupZiweiTier1({
   },
 });
 
-console.log(candidates.map((item) => item.virtualTime));
+console.log(candidates.map((item) => item.chartTime));
 ```
 
 反查结果表示符合条件的逻辑时辰槽，不代表分钟级出生时间。

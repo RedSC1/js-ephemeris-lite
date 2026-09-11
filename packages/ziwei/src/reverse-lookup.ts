@@ -11,7 +11,7 @@ import {
   type LunarMonth,
 } from 'js-ephemeris-lite';
 import { resolveEffectiveLunarMonth } from './anchors.js';
-import { nextPillarJieBoundary, virtualTimeToUt1, resolveZiweiBirthFromInstant, resolveZiweiVirtualTime } from './calendar.js';
+import { nextPillarJieBoundary, chartTimeToUt1, resolveZiweiBirthFromInstant, resolveZiweiChartTime } from './calendar.js';
 import { ZiweiChart } from './chart.js';
 import { type ZiweiFlowTarget } from './flow-calendar.js';
 import { findStarId } from './stars.js';
@@ -41,6 +41,8 @@ export interface ZiweiReverseLookupRequest {
 
 export interface ZiweiReverseCandidate {
   readonly jdUT1: number;
+  readonly chartTime: Readonly<CivilDateTime>;
+  /** @deprecated Use chartTime. */
   readonly virtualTime: ZiweiFlowTarget['virtualTime'];
   readonly lunarDate: ZiweiChart['facts']['lunarDate'];
   readonly hourBranch: number;
@@ -59,6 +61,10 @@ const QUERY_STARS: readonly [keyof ZiweiTier1ReverseQuery, string][] = [
   ['bazuoBranch', 'bazuo'],
   ['ziweiBranch', 'ziwei'],
 ];
+
+function flowChartTime(target: ZiweiFlowTarget): Readonly<CivilDateTime> {
+  return target.chartTime ?? target.virtualTime;
+}
 
 function validateQuery(query: ZiweiTier1ReverseQuery): void {
   let count = 0;
@@ -86,7 +92,7 @@ function matches(chart: ZiweiChart, query: ZiweiTier1ReverseQuery): boolean {
 function segmentForTarget(target: ZiweiFlowTarget, options: ZiweiOptions, hourBranch: number): RatHourSegment {
   if (hourBranch !== 0) return RAT_HOUR_SEGMENT.NONE;
   if (options.ratHourMode === 'next-day') return RAT_HOUR_SEGMENT.UNIFIED;
-  return target.virtualTime.hour >= 23 ? RAT_HOUR_SEGMENT.LATE : RAT_HOUR_SEGMENT.EARLY;
+  return flowChartTime(target).hour >= 23 ? RAT_HOUR_SEGMENT.LATE : RAT_HOUR_SEGMENT.EARLY;
 }
 
 function mod(value: number, modulus: number): number {
@@ -170,9 +176,11 @@ function targetFromVirtualTime(virtualTime: CivilDateTime, options: ZiweiOptions
       - options.longitudeDeg! / 360;
   }
   const physical = ZonedTime.fromJulianTime(jdUT1, options.utcOffsetMinutes);
+  const chartTime = Object.freeze(resolveZiweiChartTime(physical, options));
   return Object.freeze({
     jdUT1,
-    virtualTime: Object.freeze(resolveZiweiVirtualTime(physical, options)),
+    chartTime,
+    virtualTime: chartTime,
   });
 }
 
@@ -235,14 +243,16 @@ function reverseLookupDirect(
               ...calendarDateFromJulianDay(julianDay({...solarDate, hour: 12}) + Math.floor(h / 24)),
               hour: mod(h, 24), minute: 0, second: 0,
             });
-            if (virtualTimeToUt1(boundary(lo), options) > endJd || virtualTimeToUt1(boundary(hi), options) <= startJd) continue;
+            if (chartTimeToUt1(boundary(lo), options) > endJd || chartTimeToUt1(boundary(hi), options) <= startJd) continue;
             // Clamp out-of-range representatives, then forward-verify the overlap.
             if (target.jdUT1 < startJd || target.jdUT1 > endJd) {
               const jdUT1 = Math.max(startJd, Math.min(endJd, target.jdUT1));
-              target = {jdUT1, virtualTime: resolveZiweiVirtualTime(ZonedTime.fromJulianTime(jdUT1, options.utcOffsetMinutes), options)};
+              const chartTime = resolveZiweiChartTime(ZonedTime.fromJulianTime(jdUT1, options.utcOffsetMinutes), options);
+              target = {jdUT1, chartTime, virtualTime: chartTime};
             }
             if (target.jdUT1 < startJd - 1e-12 || target.jdUT1 > endJd + 1e-12) continue;
-            const birth = resolveZiweiBirthFromInstant(target.jdUT1, target.virtualTime, options);
+            const targetTime = flowChartTime(target);
+            const birth = resolveZiweiBirthFromInstant(target.jdUT1, targetTime, options);
             const chart = ZiweiChart.fromResolvedBirth(birth);
             if (!matches(chart, request.query)) continue;
             const physicalHourBranch = ganzhiBranch(chart.facts.solarTermPillars.hour);
@@ -251,7 +261,8 @@ function reverseLookupDirect(
             seen.add(key);
             results.push(Object.freeze({
               jdUT1: target.jdUT1,
-              virtualTime: target.virtualTime,
+              chartTime: targetTime,
+              virtualTime: targetTime,
               lunarDate: chart.facts.lunarDate,
               hourBranch: physicalHourBranch,
               ratHourSegment: segmentForTarget(target, options, physicalHourBranch),
@@ -276,9 +287,11 @@ export function reverseLookupZiweiTier1(request: ZiweiReverseLookupRequest): rea
   if (directInverseAvailable(request.query, options)) {
     return reverseLookupDirect(request, options, startJd, endJd);
   }
+  const startChartTime = Object.freeze(resolveZiweiChartTime(request.start, options));
   let target: ZiweiFlowTarget = Object.freeze({
     jdUT1: startJd,
-    virtualTime: Object.freeze(resolveZiweiVirtualTime(request.start, options)),
+    chartTime: startChartTime,
+    virtualTime: startChartTime,
   });
   const approximateSlots = Math.ceil((endJd - startJd) * 13) + Math.ceil((endJd - startJd) / 10) + 3;
   const ceiling = request.maxCandidatesToExamine ?? approximateSlots;
@@ -291,7 +304,8 @@ export function reverseLookupZiweiTier1(request: ZiweiReverseLookupRequest): rea
   while (target.jdUT1 <= endJd + 1e-12) {
     if (examined >= ceiling) throw new RangeError('reverse lookup candidate ceiling exceeded');
     examined += 1;
-    const birth = resolveZiweiBirthFromInstant(target.jdUT1, target.virtualTime, options);
+    const targetTime = flowChartTime(target);
+    const birth = resolveZiweiBirthFromInstant(target.jdUT1, targetTime, options);
     const chart = ZiweiChart.fromResolvedBirth(birth);
     // Pillar metadata changes at every Jie even when the placed chart does not.
     const { solarTerm: _solar, lunar: _lunar, ...placementAnchors } = chart.anchors;
@@ -303,7 +317,8 @@ export function reverseLookupZiweiTier1(request: ZiweiReverseLookupRequest): rea
       const hourBranch = ganzhiBranch(chart.facts.solarTermPillars.hour);
       results.push(Object.freeze({
         jdUT1: target.jdUT1,
-        virtualTime: target.virtualTime,
+        chartTime: targetTime,
+        virtualTime: targetTime,
         lunarDate: chart.facts.lunarDate,
         hourBranch,
         ratHourSegment: segmentForTarget(target, options, hourBranch),
@@ -312,7 +327,7 @@ export function reverseLookupZiweiTier1(request: ZiweiReverseLookupRequest): rea
     }
     // Visit boundaries rather than preserving the initial minute offset as
     // interactive hour navigation does. Invert the selected clock each time.
-    const v = target.virtualTime;
+    const v = flowChartTime(target);
     const nextHour = options.ratHourMode !== RAT_HOUR_MODE.NEXT_DAY && v.hour === 23
       ? 24 : Math.floor((v.hour + 1) / 2) * 2 + 1;
     const date = calendarDateFromJulianDay(julianDay({
@@ -320,11 +335,17 @@ export function reverseLookupZiweiTier1(request: ZiweiReverseLookupRequest): rea
     }) + Math.floor(nextHour / 24));
     const boundary = { ...date, hour: nextHour % 24, minute: 0, second: 0 };
     const physical = targetFromVirtualTime(boundary, options);
-    let next: ZiweiFlowTarget = Object.freeze({ jdUT1: physical.jdUT1, virtualTime: Object.freeze(boundary) });
+    const boundaryChartTime = Object.freeze(boundary);
+    let next: ZiweiFlowTarget = Object.freeze({
+      jdUT1: physical.jdUT1, chartTime: boundaryChartTime, virtualTime: boundaryChartTime,
+    });
     // Solar rule inputs may change before the next hour boundary.
     insideHourProbe = nextJie < next.jdUT1;
     if (nextJie <= next.jdUT1) {
-      next = Object.freeze({jdUT1: nextJie, virtualTime: Object.freeze(resolveZiweiVirtualTime(ZonedTime.fromJulianTime(nextJie, options.utcOffsetMinutes), options))});
+      const chartTime = Object.freeze(resolveZiweiChartTime(
+        ZonedTime.fromJulianTime(nextJie, options.utcOffsetMinutes), options,
+      ));
+      next = Object.freeze({jdUT1: nextJie, chartTime, virtualTime: chartTime});
       nextJie = nextPillarJieBoundary(nextJie, options);
     }
     if (next.jdUT1 <= target.jdUT1) throw new Error('logical-hour stepping did not advance');

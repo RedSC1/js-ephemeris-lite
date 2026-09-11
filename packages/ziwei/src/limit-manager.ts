@@ -1,5 +1,5 @@
 import { ganzhiBranch, makeGanzhi, type ZonedTime } from 'js-ephemeris-lite';
-import { resolveZiweiVirtualTime } from './calendar.js';
+import { resolveZiweiChartTime } from './calendar.js';
 import type { ZiweiChart } from './chart.js';
 import {
   resolveZiweiFlow,
@@ -310,9 +310,11 @@ export class ZiweiLimitManager {
   setPhysicalTime(target: ZonedTime, deepestLevel: FlowLevel = FLOW_LEVEL.HOUR): void {
     const flow = resolveZiweiFlow(this.baseChart, target);
     this.installResolved(flow, deepestLevel);
+    const chartTime = Object.freeze(resolveZiweiChartTime(target, this.baseChart.options));
     this.targetValue = Object.freeze({
       jdUT1: target.toJulianTime().jdUT1,
-      virtualTime: Object.freeze(resolveZiweiVirtualTime(target, this.baseChart.options)),
+      chartTime,
+      virtualTime: chartTime,
       ratHourSegment: flow.targetRatHourSegment,
     });
   }
@@ -341,7 +343,7 @@ export class ZiweiLimitManager {
     this.installResolved(resolveZiweiFlowFromInstant(
       this.baseChart,
       next.jdUT1,
-      next.virtualTime,
+      next.chartTime ?? next.virtualTime,
     ), FLOW_LEVEL.HOUR);
     this.targetValue = next;
   }
@@ -357,7 +359,7 @@ export class ZiweiLimitManager {
     this.installResolved(resolveZiweiFlowFromInstant(
       this.baseChart,
       next.jdUT1,
-      next.virtualTime,
+      next.chartTime ?? next.virtualTime,
     ), FLOW_LEVEL.HOUR);
     this.targetValue = next;
   }

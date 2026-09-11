@@ -66,6 +66,10 @@ export class ZonedTime implements CivilDateTime {
   static fromJulianTime(time: Ut1Input, offsetMinutes: number): ZonedTime;
   static fromDate(date: Date, offsetMinutes: number): ZonedTime;
   toJulianTime(): JulianTime;
+  /** Display the same physical instant with another fixed UTC offset. */
+  toZonedTime(offsetMinutes: number): ZonedTime;
+  /** Display the same physical instant at UTC+00:00. */
+  toUtc(): ZonedTime;
   toDate(): Date;
   toJSON(): CivilDateTime & { offsetMinutes: number };
 }

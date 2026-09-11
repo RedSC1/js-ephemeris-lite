@@ -151,12 +151,12 @@ function validateCivilTime(value: CivilDateTime): void {
     || value.month < 1 || value.month > 12 || value.day < 1 || value.day > 31
     || value.hour < 0 || value.hour > 23 || value.minute < 0 || value.minute > 59
     || value.second < 0 || value.second >= 60) {
-    throw new RangeError('birthCivilTime is not a valid civil clock');
+    throw new RangeError('birthChartTime is not a valid chart clock');
   }
   const noon = julianDay({ ...value, hour: 12, minute: 0, second: 0 });
   const date = calendarDateFromJulianDay(noon);
   if (date.year !== value.year || date.month !== value.month || date.day !== value.day) {
-    throw new RangeError('birthCivilTime is not a valid civil clock');
+    throw new RangeError('birthChartTime is not a valid chart clock');
   }
 }
 
@@ -208,16 +208,16 @@ function addCalendarComponents(
 
 /**
  * Calculate the Jie interval and Qi-Yun start. `instant` is physical time;
- * `birthCivilTime` is the already-resolved civil/mean-solar/true-solar clock.
+ * `birthChartTime` is the already-resolved civil/mean-solar/true-solar clock.
  */
 export function calculateQiYun(
   instant: Ut1Input,
-  birthCivilTime: CivilDateTime,
+  birthChartTime: CivilDateTime,
   chart: BaziPillarAnalysis,
   gender: Gender,
   rawOptions: QiYunOptions = {},
 ): QiYunResult {
-  validateCivilTime(birthCivilTime);
+  validateCivilTime(birthChartTime);
   const timeModel = rawOptions.timeModel ?? QIYUN_TIME_MODEL.TRADITIONAL_CALENDAR;
   if (![QIYUN_TIME_MODEL.TRADITIONAL_CALENDAR, QIYUN_TIME_MODEL.JULIAN_YEAR,
     QIYUN_TIME_MODEL.TROPICAL_YEAR].includes(timeModel)) {
@@ -243,7 +243,7 @@ export function calculateQiYun(
   let startCivilTime: Readonly<CivilDateTime>;
   if (timeModel === QIYUN_TIME_MODEL.TRADITIONAL_CALENDAR) {
     const added = addCalendarComponents(
-      birthCivilTime,
+      birthChartTime,
       traditionalOffset.years,
       traditionalOffset.months,
       remainingMonthDays,
@@ -255,7 +255,7 @@ export function calculateQiYun(
       ? DAYS_PER_JULIAN_YEAR : DAYS_PER_TROPICAL_YEAR;
     const elapsedDays = intervalDays * yearDays / 3;
     startJdUT1 = jdUT1 + elapsedDays;
-    startCivilTime = Object.freeze(calendarDateFromJulianDay(julianDay(birthCivilTime) + elapsedDays));
+    startCivilTime = Object.freeze(calendarDateFromJulianDay(julianDay(birthChartTime) + elapsedDays));
   }
   return Object.freeze({
     direction,
@@ -282,12 +282,12 @@ export interface DaYunOptions {
 }
 
 export function generateDaYun(
-  birthCivilTime: CivilDateTime,
+  birthChartTime: CivilDateTime,
   chart: BaziPillarAnalysis,
   qiYun: QiYunResult,
   options: DaYunOptions = {},
 ): readonly DaYunEntry[] {
-  validateCivilTime(birthCivilTime);
+  validateCivilTime(birthChartTime);
   const count = options.count ?? 8;
   const boundaryModel = options.boundaryModel ?? DAYUN_BOUNDARY_MODEL.CIVIL_YEARS;
   if (!Number.isInteger(count) || count < 0) throw new RangeError('count must be a non-negative integer');
@@ -321,7 +321,7 @@ export function generateDaYun(
       startCivilTime = Object.freeze(calendarDateFromJulianDay(originCivilJd + startDays));
       endCivilTime = Object.freeze(calendarDateFromJulianDay(originCivilJd + endDays));
     }
-    const startVirtualAge = startCivilTime.year - birthCivilTime.year + 1;
+    const startVirtualAge = startCivilTime.year - birthChartTime.year + 1;
     return Object.freeze({
       index,
       pillar: advanceGanzhi(chart.pillars.month, qiYun.direction * index),

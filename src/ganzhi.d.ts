@@ -62,10 +62,12 @@ export function getHourGanzhi(dayStem: number, hourIndex: number): Ganzhi;
 export function getNayinId(value: Ganzhi): number;
 export function getNayinElement(value: Ganzhi): number;
 export function calculateDayPillar(civilDate: CivilDate): Ganzhi;
-export function normalizeChartVirtualTime(virtualTime: CivilDateTime): Readonly<CivilDateTime>;
+export function normalizeChartTime(chartTime: CivilDateTime): Readonly<CivilDateTime>;
+/** @deprecated Use normalizeChartTime(). */
+export const normalizeChartVirtualTime: typeof normalizeChartTime;
 export function calculateFourPillars(
   instant: Ut1Input,
-  virtualTime: CivilDateTime,
+  chartTime: CivilDateTime,
   options?: FourPillarsOptions,
 ): FourPillars;
 export function fourPillarsForZonedTime(

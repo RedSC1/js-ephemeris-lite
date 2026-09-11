@@ -107,7 +107,7 @@ export function getEffectiveBirthYear(
   boundary = chart.options.flowLimitBoundary,
 ): number {
   if (boundary === PILLAR_BOUNDARY.LUNAR) return chart.facts.effectiveLunarYear;
-  const civilYear = chart.facts.virtualTime.year;
+  const civilYear = chart.facts.chartTime.year;
   const pillarStem = ganzhiStem(chart.facts.solarTermPillars.year);
   if (yearStem(civilYear) === pillarStem) return civilYear;
   if (yearStem(civilYear - 1) === pillarStem) return civilYear - 1;

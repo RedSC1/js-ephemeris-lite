@@ -1,17 +1,20 @@
 import {
   asUt1JulianDay,
   calculateFourPillars,
+  lunarToSolar,
   getNayinId,
   ganzhiBranch,
   ganzhiStem,
   meanSolarTime,
-  normalizeChartVirtualTime,
+  normalizeChartTime,
   trueSolarTime,
+  type CivilDate,
   type CivilDateTime,
   type FourPillars,
   type Ganzhi,
+  type LunarDate,
   type Ut1Input,
-  type ZonedTime,
+  ZonedTime,
 } from 'js-ephemeris-lite';
 import {
   type DaYunEntry,
@@ -88,6 +91,32 @@ export interface BaziPillarAnalysisOptions {
   earthPalaceMode?: BaziOptionsInput['earthPalaceMode'];
 }
 
+/** Clock fields combined with a solar or lunar calendar day. */
+export interface BirthClockInput {
+  hour: number;
+  minute?: number;
+  second?: number;
+}
+
+function zonedBirthClock(
+  day: CivilDate,
+  clock: BirthClockInput,
+  offsetMinutes: number,
+): ZonedTime {
+  if (clock === null || typeof clock !== 'object' || !Number.isInteger(clock.hour)) {
+    throw new TypeError('birth clock hour is required and must be an integer');
+  }
+  return new ZonedTime({
+    year: day.year,
+    month: day.month,
+    day: day.day,
+    hour: clock.hour,
+    minute: clock.minute ?? 0,
+    second: clock.second ?? 0,
+    offsetMinutes,
+  });
+}
+
 /** Interpret known pillars without pretending that a birth instant is known. */
 export function analyzePillars(
   rawPillars: FourPillars,
@@ -129,14 +158,19 @@ export class BaziChart implements BaziPillarAnalysis {
   readonly birthJdUT1: number;
   /** Original clock supplied to fromZonedTime; null for the low-level instant API. */
   readonly birthClockTime: Readonly<ReturnType<ZonedTime['toJSON']>> | null;
-  /** The calculation's virtual clock, NOT necessarily the original birth clock. */
-  readonly birthCivilTime: Readonly<CivilDateTime>;
+  /** The resolved civil, mean-solar, or true-solar clock used by the chart. */
+  readonly birthChartTime: Readonly<CivilDateTime>;
+
+  /** @deprecated Use birthChartTime. */
+  get birthCivilTime(): Readonly<CivilDateTime> {
+    return this.birthChartTime;
+  }
 
   private constructor(
     analysis: BaziPillarAnalysis,
     options: BaziOptions,
     birthJdUT1: number,
-    birthCivilTime: Readonly<CivilDateTime>,
+    birthChartTime: Readonly<CivilDateTime>,
     birthClockTime: BaziChart['birthClockTime'] = null,
   ) {
     this.pillars = analysis.pillars;
@@ -145,24 +179,24 @@ export class BaziChart implements BaziPillarAnalysis {
     this.columns = analysis.columns;
     this.options = options;
     this.birthJdUT1 = birthJdUT1;
-    this.birthCivilTime = birthCivilTime;
+    this.birthChartTime = birthChartTime;
     this.birthClockTime = birthClockTime;
     Object.freeze(this);
   }
 
   static fromInstant(
     instant: Ut1Input,
-    virtualTime: CivilDateTime,
+    chartTime: CivilDateTime,
     options: BaziOptions | BaziOptionsInput = {},
   ): BaziChart {
     const resolved = resolveBaziOptions(options);
     const jdUT1 = asUt1JulianDay(instant);
-    const pillars = calculateFourPillars(jdUT1, virtualTime, resolved.toFourPillarsOptions());
+    const pillars = calculateFourPillars(jdUT1, chartTime, resolved.toFourPillarsOptions());
     return new BaziChart(
       analyzePillars(pillars, { earthPalaceMode: resolved.earthPalaceMode }),
       resolved,
       jdUT1,
-      freezeCivilTime(normalizeChartVirtualTime(virtualTime)),
+      freezeCivilTime(normalizeChartTime(chartTime)),
     );
   }
 
@@ -171,15 +205,39 @@ export class BaziChart implements BaziPillarAnalysis {
     options: BaziOptions | BaziOptionsInput = {},
   ): BaziChart {
     const resolved = resolveBaziOptions(options);
-    let virtualTime: CivilDateTime = zonedTime;
+    let chartTime: CivilDateTime = zonedTime;
     if (resolved.clockMode === BAZI_CLOCK_MODE.MEAN_SOLAR) {
-      virtualTime = meanSolarTime(zonedTime, resolved.longitudeDeg!);
+      chartTime = meanSolarTime(zonedTime, resolved.longitudeDeg!);
     } else if (resolved.clockMode === BAZI_CLOCK_MODE.TRUE_SOLAR) {
-      virtualTime = trueSolarTime(zonedTime, resolved.longitudeDeg!);
+      chartTime = trueSolarTime(zonedTime, resolved.longitudeDeg!);
     }
-    const chart = BaziChart.fromInstant(zonedTime.toJulianTime(), virtualTime, resolved);
-    return new BaziChart(chart, resolved, chart.birthJdUT1, chart.birthCivilTime,
+    const chart = BaziChart.fromInstant(zonedTime.toJulianTime(), chartTime, resolved);
+    return new BaziChart(chart, resolved, chart.birthJdUT1, chart.birthChartTime,
       Object.freeze(zonedTime.toJSON()));
+  }
+
+  /** Build from a calendar day plus explicit clock fields in the configured offset. */
+  static fromSolarDay(
+    solarDay: CivilDate,
+    clock: BirthClockInput,
+    options: BaziOptions | BaziOptionsInput = {},
+  ): BaziChart {
+    const resolved = resolveBaziOptions(options);
+    return BaziChart.fromZonedTime(
+      zonedBirthClock(solarDay, clock, resolved.utcOffsetMinutes),
+      resolved,
+    );
+  }
+
+  /** Convert a lunar day with the chart's calendar settings, then build the chart. */
+  static fromLunarDay(
+    lunarDay: LunarDate,
+    clock: BirthClockInput,
+    options: BaziOptions | BaziOptionsInput = {},
+  ): BaziChart {
+    const resolved = resolveBaziOptions(options);
+    const solarDay = lunarToSolar(lunarDay, resolved.toCalendarOptions());
+    return BaziChart.fromSolarDay(solarDay, clock, resolved);
   }
 
   /** Versioned, JSON-safe natal chart, including the original and calculation clocks. */
@@ -195,7 +253,8 @@ export class BaziChart implements BaziPillarAnalysis {
         yearNumbering: 'astronomical' as const,
         jdUT1: this.birthJdUT1,
         clockTime: this.birthClockTime,
-        virtualTime: this.birthCivilTime,
+        chartTime: this.birthChartTime,
+        virtualTime: this.birthChartTime,
         clockMode: this.options.clockMode,
         longitudeDeg: this.options.longitudeDeg ?? null,
         gender: this.options.gender === undefined ? null
@@ -219,7 +278,7 @@ export class BaziChart implements BaziPillarAnalysis {
       fortune: qiYun === null ? null : {
         clockBasis: 'virtual-time' as const,
         qiYun,
-        decades: generateDaYun(this.birthCivilTime, this, qiYun, this.options.toDaYunOptions())
+        decades: generateDaYun(this.birthChartTime, this, qiYun, this.options.toDaYunOptions())
           .map((entry) => ({ ...entry, pillarName: unpackPillar(entry.pillar).name })),
       },
     };
@@ -229,7 +288,7 @@ export class BaziChart implements BaziPillarAnalysis {
     const gender = this.requireGender();
     return calculateQiYun(
       this.birthJdUT1,
-      this.birthCivilTime,
+      this.birthChartTime,
       this,
       gender,
       this.options.toQiYunOptions(),
@@ -238,7 +297,7 @@ export class BaziChart implements BaziPillarAnalysis {
 
   getDaYunTable(): readonly DaYunEntry[] {
     return generateDaYun(
-      this.birthCivilTime,
+      this.birthChartTime,
       this,
       this.getQiYun(),
       this.options.toDaYunOptions(),
@@ -272,10 +331,10 @@ export type CalculateBaziOptions = BaziOptionsInput;
 
 export function calculateBazi(
   instant: Ut1Input,
-  virtualTime: CivilDateTime,
+  chartTime: CivilDateTime,
   options: BaziOptions | BaziOptionsInput = {},
 ): BaziChart {
-  return BaziChart.fromInstant(instant, virtualTime, options);
+  return BaziChart.fromInstant(instant, chartTime, options);
 }
 
 export function baziForZonedTime(

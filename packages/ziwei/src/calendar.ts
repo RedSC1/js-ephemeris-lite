@@ -9,7 +9,7 @@ import {
   julianDay,
   makeGanzhi,
   meanSolarTime,
-  normalizeChartVirtualTime,
+  normalizeChartTime,
   solarToLunar,
   trueSolarTime,
   type CivilDateTime,
@@ -31,7 +31,7 @@ import type { ZiweiCalendarFacts, ZiweiLunarDateFacts } from './types.js';
 export interface ResolvedZiweiBirth extends ResolvedZiweiAnchors {
   readonly facts: ZiweiCalendarFacts;
   readonly options: ZiweiOptions;
-  /** Original birth clock, not the solar/virtual clock used to place stars. */
+  /** Original birth clock, before the chart-clock convention is applied. */
   readonly clockTime?: Readonly<ReturnType<ZonedTime['toJSON']>>;
 }
 
@@ -50,7 +50,7 @@ function freezeCivilTime(value: CivilDateTime): Readonly<CivilDateTime> {
   });
 }
 
-export function resolveZiweiVirtualTime(zonedTime: ZonedTime, options: ZiweiOptions): CivilDateTime {
+export function resolveZiweiChartTime(zonedTime: ZonedTime, options: ZiweiOptions): CivilDateTime {
   if (options.clockMode === ZIWEI_CLOCK_MODE.MEAN_SOLAR) {
     return meanSolarTime(zonedTime, options.longitudeDeg!);
   }
@@ -61,19 +61,22 @@ export function resolveZiweiVirtualTime(zonedTime: ZonedTime, options: ZiweiOpti
     : ZonedTime.fromJulianTime(zonedTime.toJulianTime().jdUT1, options.utcOffsetMinutes);
 }
 
-function logicalDateForLunar(virtualTime: CivilDateTime, options: ZiweiOptions): CivilDateTime {
-  let logicalJd = julianDay(virtualTime);
-  if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && virtualTime.hour >= 23) {
+/** @deprecated Use resolveZiweiChartTime. */
+export const resolveZiweiVirtualTime = resolveZiweiChartTime;
+
+function logicalDateForLunar(chartTime: CivilDateTime, options: ZiweiOptions): CivilDateTime {
+  let logicalJd = julianDay(chartTime);
+  if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && chartTime.hour >= 23) {
     logicalJd += 1 / 24;
   }
   return calendarDateFromJulianDay(logicalJd);
 }
 
 export function resolveZiweiLogicalLunarDate(
-  virtualTime: CivilDateTime,
+  chartTime: CivilDateTime,
   options: ZiweiOptions,
 ): ResolvedLunarDate {
-  const logicalDate = logicalDateForLunar(virtualTime, options);
+  const logicalDate = logicalDateForLunar(chartTime, options);
   return solarToLunar(
     { year: logicalDate.year, month: logicalDate.month, day: logicalDate.day },
     options.toCalendarOptions(),
@@ -118,17 +121,17 @@ export function nextPillarJieBoundary(jd: number, options: ZiweiOptions): number
 
 export function solarDayFromPreviousJie(
   jdUT1: number,
-  virtualTime: CivilDateTime,
+  chartTime: CivilDateTime,
   options: ZiweiOptions,
 ): number {
-  const virtualJd = julianDay(virtualTime);
+  const virtualJd = julianDay(chartTime);
   const previousJie = previousPillarJie(jdUT1, options);
 
   let currentLogical = virtualJd;
-  if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && virtualTime.hour >= 23) {
+  if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && chartTime.hour >= 23) {
     currentLogical += 1 / 24;
   }
-  const jieVirtual = julianDay(resolveZiweiVirtualTime(ZonedTime.fromJulianTime(pillarJieBoundary(previousJie, options), options.utcOffsetMinutes), options));
+  const jieVirtual = julianDay(resolveZiweiChartTime(ZonedTime.fromJulianTime(pillarJieBoundary(previousJie, options), options.utcOffsetMinutes), options));
   const jieClock = calendarDateFromJulianDay(jieVirtual);
   let jieLogical = jieVirtual;
   if (options.ratHourMode === RAT_HOUR_MODE.NEXT_DAY && jieClock.hour >= 23) {
@@ -143,14 +146,14 @@ export function solarDayFromPreviousJie(
 
 export function resolveZiweiBirthFromInstant(
   instant: Ut1Input,
-  virtualTime: CivilDateTime,
+  chartTime: CivilDateTime,
   rawOptions: ZiweiOptions | ZiweiOptionsInput,
 ): ResolvedZiweiBirth {
   const options = resolveZiweiOptions(rawOptions);
   const jdUT1 = asUt1JulianDay(instant);
-  const normalizedVirtualTime = normalizeChartVirtualTime(virtualTime);
+  const normalizedChartTime = normalizeChartTime(chartTime);
   const calendarOptions = options.toCalendarOptions();
-  const resolvedLunar = resolveZiweiLogicalLunarDate(normalizedVirtualTime, options);
+  const resolvedLunar = resolveZiweiLogicalLunarDate(normalizedChartTime, options);
   const lunarDate: ZiweiLunarDateFacts = Object.freeze({
     year: resolvedLunar.year,
     historicalYear: resolvedLunar.historicalYear,
@@ -163,7 +166,7 @@ export function resolveZiweiBirthFromInstant(
     { ...lunarDate, year: resolvedLunar.historicalYear },
     options.leapMonthStrategy,
   );
-  const solarTermPillars = calculateFourPillars(jdUT1, normalizedVirtualTime, {
+  const solarTermPillars = calculateFourPillars(jdUT1, normalizedChartTime, {
     ...calendarOptions,
     pillarHistoricalMode: options.pillarHistoricalMode,
     ratHourMode: options.ratHourMode,
@@ -173,16 +176,18 @@ export function resolveZiweiBirthFromInstant(
     ganzhiStem(value);
     ganzhiBranch(value);
   }
+  const frozenChartTime = freezeCivilTime(normalizedChartTime);
   const facts: ZiweiCalendarFacts = Object.freeze({
     jdUT1,
-    virtualTime: freezeCivilTime(normalizedVirtualTime),
+    chartTime: frozenChartTime,
+    virtualTime: frozenChartTime,
     gender: options.gender,
     lunarDate,
     solarTermPillars,
     lunarPillars: makeLunarPillars(effective.year, effective.month, solarTermPillars),
     effectiveLunarYear: effective.year,
     effectiveLunarMonth: effective.month,
-    solarDayFromPreviousJie: solarDayFromPreviousJie(jdUT1, normalizedVirtualTime, options),
+    solarDayFromPreviousJie: solarDayFromPreviousJie(jdUT1, normalizedChartTime, options),
   });
   const resolved = computeZiweiAnchors(facts, options);
   return Object.freeze({ facts, ...resolved, options });
@@ -195,15 +200,18 @@ export function resolveZiweiBirth(
   const resolved = resolveZiweiOptions(options);
   const birth = resolveZiweiBirthFromInstant(
     zonedTime.toJulianTime(),
-    resolveZiweiVirtualTime(zonedTime, resolved),
+    resolveZiweiChartTime(zonedTime, resolved),
     resolved,
   );
   return Object.freeze({ ...birth, clockTime: Object.freeze(zonedTime.toJSON()) });
 }
 
-/** Inverse chart clock evaluated at the requested virtual instant. */
-export function virtualTimeToUt1(v: CivilDateTime, options: ZiweiOptions): number {
+/** Convert chart clock fields back to the physical UT1 instant. */
+export function chartTimeToUt1(v: CivilDateTime, options: ZiweiOptions): number {
   const jd = julianDay(v);
   if (options.clockMode === ZIWEI_CLOCK_MODE.TRUE_SOLAR) return localApparentToMeanSolarTime(jd, options.longitudeDeg!) - options.longitudeDeg! / 360;
   return jd - (options.clockMode === ZIWEI_CLOCK_MODE.MEAN_SOLAR ? options.longitudeDeg! / 360 : options.utcOffsetMinutes / 1440);
 }
+
+/** @deprecated Use chartTimeToUt1. */
+export const virtualTimeToUt1 = chartTimeToUt1;

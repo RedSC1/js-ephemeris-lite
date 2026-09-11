@@ -1,5 +1,7 @@
 # bazi-lite
 
+[English](./README.en.md)
+
 面向 JavaScript 和 TypeScript 的八字计算库，支持四柱解读、神煞、起运大运和出生时间反查。
 天文、历法与太阳时计算由 `js-ephemeris-lite` 提供，可在浏览器或 Node.js 中使用。
 
@@ -64,11 +66,30 @@ for (const column of chart.columns) {
 console.log(unpackPillar(chart.extraPillars.mingGong).name);
 console.log(shenShaNames(chart.getShenSha().day));
 console.log(collectChartRelations(chart));
-console.log(chart.birthClockTime, chart.birthCivilTime, chart.birthJdUT1);
+console.log(chart.birthClockTime, chart.birthChartTime, chart.birthJdUT1);
 ```
 
-`birthClockTime` 是用户输入的钟表，`birthCivilTime` 是实际用于定日柱和时柱的
+`birthClockTime` 是用户输入的钟表，`birthChartTime` 是实际用于定日柱和时柱的
 民用／平太阳／真太阳钟面，`birthJdUT1` 是不随钟表修正改变的物理瞬间。
+旧名 `birthCivilTime` 暂作兼容别名。
+
+已知的公历日或农历日不包含出生时辰，需单独传入时间：
+
+```js
+const fromSolar = BaziChart.fromSolarDay(
+  { year: 2003, month: 3, day: 13 },
+  { hour: 14, minute: 15 },
+  chart.options,
+);
+const fromLunar = BaziChart.fromLunarDay(
+  { year: 2003, month: 2, day: 11, isLeap: false },
+  { hour: 14, minute: 15 },
+  chart.options,
+);
+```
+
+两个入口都用 `options.utcOffsetMinutes` 解释钟表；农历入口还会把同一份历法设置
+用于农历转公历，避免转换和排盘采用不同口径。
 
 只有四柱、没有可信出生时刻时，使用纯规则入口，不要虚构日期：
 
@@ -150,6 +171,7 @@ for (const candidate of candidates) {
 | 任务 | API |
 | --- | --- |
 | 从真实钟表时间排盘 | `BaziChart.fromZonedTime()` |
+| 从公历日／农历日和时辰排盘 | `BaziChart.fromSolarDay()`／`BaziChart.fromLunarDay()` |
 | 从物理瞬间和已处理钟面排盘 | `BaziChart.fromInstant()`／`calculateBazi()` |
 | 只解释一组已知四柱 | `analyzePillars()` |
 | 起运与大运 | `chart.getQiYun()`／`chart.getDaYunTable()` |
@@ -167,6 +189,11 @@ for (const candidate of candidates) {
 `options.with(...)` 可创建一份调整后的配置。
 
 完整参数、默认值和独立示例见[使用指南](./docs/guide.md)。
+
+命盘会保留创建时的历法、时区、太阳时、子时和节气精度设置；`getQiYun()`、
+`getDaYunTable()` 等命盘方法继续使用这些设置。底层自由函数仍允许另传设置，便于
+研究比较，但在交节、换日、闰月或历史改历边界混用口径可能得到不一致结果；一般应
+使用原命盘的 `chart.options`，需要更换口径时重新建盘。
 
 ## 导出命盘
 
@@ -191,6 +218,7 @@ console.log(snapshot.schemaVersion, json);
 ## 文档与许可
 
 [使用指南](./docs/guide.md)涵盖读取命盘、太阳时、神煞、运限、反查与默认设置。
+[English README](./README.en.md) 和 [English guide](./docs/guide.en.md) 提供英文说明。
 
 代码采用 [MPL-2.0](./LICENSE)。
 本包来源说明见[中文第三方声明](./THIRD_PARTY_NOTICES.zh-CN.md)；天文与历史

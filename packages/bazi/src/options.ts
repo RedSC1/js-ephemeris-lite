@@ -5,6 +5,8 @@ import {
   RAT_HOUR_MODE,
   type CalendarDayBoundaryMode,
   type CalendarMode,
+  type CalendarOptions,
+  type Accuracy,
   type FourPillarsOptions,
   type PillarHistoricalMode,
   type RatHourMode,
@@ -33,6 +35,7 @@ export type BaziClockMode = typeof BAZI_CLOCK_MODE[keyof typeof BAZI_CLOCK_MODE]
 /** All persistent choices that define a BaZi calculation. */
 export interface BaziOptionsInput {
   mode?: CalendarMode;
+  eventAccuracy?: Accuracy;
   dayBoundaryMode?: CalendarDayBoundaryMode;
   utcOffsetMinutes?: number;
   meridianDeg?: number;
@@ -58,6 +61,7 @@ function includes<T>(values: readonly T[], value: T): boolean {
  */
 export class BaziOptions {
   readonly mode: CalendarMode;
+  readonly eventAccuracy: Accuracy;
   readonly dayBoundaryMode: CalendarDayBoundaryMode;
   readonly utcOffsetMinutes: number;
   readonly meridianDeg: number | undefined;
@@ -74,6 +78,7 @@ export class BaziOptions {
 
   constructor(input: BaziOptionsInput = {}) {
     this.mode = input.mode ?? CALENDAR_MODE.HISTORICAL;
+    this.eventAccuracy = input.eventAccuracy ?? 'mid';
     this.dayBoundaryMode = input.dayBoundaryMode
       ?? CALENDAR_DAY_BOUNDARY_MODE.FIXED_UTC_OFFSET;
     this.utcOffsetMinutes = input.utcOffsetMinutes ?? 480;
@@ -92,11 +97,14 @@ export class BaziOptions {
       ?? RENYUAN_SILING_TABLE.SAN_MING_TONG_HUI;
 
     if (!includes(Object.values(CALENDAR_MODE), this.mode)) throw new RangeError('unknown calendar mode');
+    if (!includes(['fast', 'mid', 'accurate'] as const, this.eventAccuracy)) {
+      throw new RangeError('unknown event accuracy');
+    }
     if (!includes(Object.values(CALENDAR_DAY_BOUNDARY_MODE), this.dayBoundaryMode)) {
       throw new RangeError('unknown calendar day-boundary mode');
     }
-    if (!Number.isFinite(this.utcOffsetMinutes) || Math.abs(this.utcOffsetMinutes) > 14 * 60) {
-      throw new RangeError('utcOffsetMinutes must be within ±14 hours');
+    if (!Number.isInteger(this.utcOffsetMinutes) || Math.abs(this.utcOffsetMinutes) > 14 * 60) {
+      throw new RangeError('utcOffsetMinutes must be an integer within ±14 hours');
     }
     if (this.meridianDeg !== undefined
       && (!Number.isFinite(this.meridianDeg) || Math.abs(this.meridianDeg) > 180)) {
@@ -154,6 +162,7 @@ export class BaziOptions {
   toFourPillarsOptions(): FourPillarsOptions {
     return Object.freeze({
       mode: this.mode,
+      eventAccuracy: this.eventAccuracy,
       dayBoundaryMode: this.dayBoundaryMode,
       utcOffsetMinutes: this.utcOffsetMinutes,
       meridianDeg: this.meridianDeg,
@@ -165,6 +174,7 @@ export class BaziOptions {
   toQiYunOptions(): QiYunOptions {
     return Object.freeze({
       mode: this.mode,
+      eventAccuracy: this.eventAccuracy,
       dayBoundaryMode: this.dayBoundaryMode,
       utcOffsetMinutes: this.utcOffsetMinutes,
       meridianDeg: this.meridianDeg,
@@ -179,10 +189,21 @@ export class BaziOptions {
     });
   }
 
+  toCalendarOptions(): CalendarOptions {
+    return Object.freeze({
+      mode: this.mode,
+      eventAccuracy: this.eventAccuracy,
+      dayBoundaryMode: this.dayBoundaryMode,
+      utcOffsetMinutes: this.utcOffsetMinutes,
+      meridianDeg: this.meridianDeg,
+    });
+  }
+
   toJSON(): Required<Omit<BaziOptionsInput, 'meridianDeg' | 'gender' | 'longitudeDeg'>>
     & Pick<BaziOptionsInput, 'meridianDeg' | 'gender' | 'longitudeDeg'> {
     return {
       mode: this.mode,
+      eventAccuracy: this.eventAccuracy,
       dayBoundaryMode: this.dayBoundaryMode,
       utcOffsetMinutes: this.utcOffsetMinutes,
       meridianDeg: this.meridianDeg,
