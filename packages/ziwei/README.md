@@ -40,6 +40,75 @@ console.log(chart.birthYearTransformations);
 出生钟表需明确固定 UTC 偏移，`ZiweiOptions` 需提供性别。
 请使用 `ZIWEI_GENDER` 常量；它与八字包的性别数值编码不同。
 
+## 创建命盘
+
+除了公历钟表时间，也可以从已知农历日期创建：
+
+```js
+const lunarChart = ZiweiChart.fromLunar({
+  year: 2003,
+  month: 2,
+  day: 11,
+  isLeap: false,
+  hour: 14,
+  minute: 15,
+  second: 0,
+}, new ZiweiOptions({ gender: ZIWEI_GENDER.MALE }));
+```
+
+如果只想按给定的年月日时参数安星，不需要真实日期和行运时间，可直接调用：
+
+```js
+import { arrangeZiweiStars } from 'ziwei-lite';
+
+const placement = arrangeZiweiStars({
+  yearGanIndex: 9,  // 癸，甲为 0
+  yearZhiIndex: 7, // 未，子为 0
+  month: 2,
+  day: 30,
+  hourZhiIndex: 6,
+}, new ZiweiOptions({ gender: ZIWEI_GENDER.MALE }));
+
+console.log(placement.bureau, placement.starPositions);
+```
+
+直接安星不会生成出生瞬间、农历事实或行运时间轴；允许输入现实中不存在的“二月三十”。
+
+## 读取宫位、星曜与四化
+
+```js
+import {
+  PALACE_NAMES,
+  STAR_TRANSFORM_MARK,
+  brightnessName,
+  findStarId,
+} from 'ziwei-lite';
+
+for (const palace of chart.palaces) {
+  console.log({
+    palace: PALACE_NAMES[palace.palaceId],
+    branch: palace.branch,
+    stem: palace.stem,
+    stars: chart.getStarsInPalace(palace.palaceId),
+  });
+}
+
+const ziweiId = findStarId('ziwei');
+if (ziweiId !== undefined) {
+  const star = chart.getStarPosition(ziweiId);
+  if (star) {
+    console.log(star.branch, brightnessName(star.brightness));
+    console.log(chart.hasTransform(ziweiId, STAR_TRANSFORM_MARK.BIRTH_YEAR_QUAN));
+  }
+}
+
+console.log(chart.birthYearTransformations);
+console.log(chart.anchors.bureau, chart.lifeMaster, chart.bodyMaster);
+```
+
+星曜 ID 在内置表中保持稳定；自定义星曜使用规则集内的 ID。用于宫位集合的 `bigint`
+不应直接交给 `JSON.stringify()`，命盘快照会自动转换为普通星曜数组。
+
 ## 示例导航
 
 | 需求 | 指南 |
@@ -61,6 +130,20 @@ console.log(chart.birthYearTransformations);
 - 直接输入干支与月日时安星、`chart.modify()` 选择性覆盖，以及保留起限时间的命宫平移。
 - 独立的 `ZiweiCastingChart`：手动拼盘、报数映射与随机起盘，不虚构出生日期。
 
+## 主要入口
+
+| 任务 | API |
+| --- | --- |
+| 公历／农历出生盘 | `ZiweiChart.fromZonedTime()`／`ZiweiChart.fromLunar()` |
+| 已解析历法事实建盘 | `ZiweiChart.fromResolvedBirth()` |
+| 不依赖真实日期的安星 | `arrangeZiweiStars()` |
+| 修改或复原盘面 | `chart.modify()`／`chart.shiftLifePalace()`／`chart.reset()` |
+| 完整流运 | `chart.resolveFlow()`／`chart.dynamicForTime()` |
+| UI 时间线导航 | `chart.timeline()`／`chart.createLimitManager()` |
+| 报数、随机及手动拼盘 | `ZiweiCastingChart` |
+| 星曜条件反查 | `reverseLookupZiweiTier1()` |
+| JSON 快照 | `chart.toJSON()`／`JSON.stringify(chart)` |
+
 ## 常用设置
 
 默认采用中国历史历法、UTC+8 历法日界、出生钟表时间和天盘；
@@ -71,6 +154,20 @@ console.log(chart.birthYearTransformations);
 并通过 `eventAccuracy` 选择 `fast`、`mid` 或 `accurate` 定气定朔精度；
 使用 `options.with(...)` 派生新的配置。
 详见[命盘与设置指南](./docs/guide.md)。
+
+天地人盘通过同一套入口创建，只改变命宫与身宫的定位口径：
+
+```js
+import { ZIWEI_CHART_MODE } from 'ziwei-lite';
+
+const earthChart = ZiweiChart.fromZonedTime(
+  birth,
+  new ZiweiOptions({
+    gender: ZIWEI_GENDER.MALE,
+    chartMode: ZIWEI_CHART_MODE.DI_PAN,
+  }),
+);
+```
 
 ## 流运与导出
 
@@ -86,6 +183,25 @@ const flow = chart.resolveFlow(target);
 console.log(flow.year, flow.month, flow.day, flow.hour);
 console.log(JSON.stringify(chart, null, 2));
 ```
+
+应用需要逐级选择大限、流年、月、日、时，可使用带级联状态的管理器：
+
+```js
+const manager = chart.createLimitManager();
+manager.setYear(2026);
+manager.setMonth(8);
+manager.setDay(1);
+manager.setHour(0);
+
+console.log(manager.context);
+console.log(manager.dynamicChart);
+
+manager.setPhysicalTime(target);
+manager.nextDay();
+manager.nextHour();
+```
+
+选择上层会清除不再有效的下层状态；物理步进会继续遵循命盘的时区、太阳时和子时设置。
 
 JSON 为本命盘快照，包含出生时间、计算设置和自定义规则。
 
@@ -112,6 +228,31 @@ const random = ZiweiCastingChart.random(casting.options);
 ```
 
 详见[手动拼盘、报数与随机盘](./docs/guide.md#手动拼盘报数与随机盘)，包括随机空间、映射版本与运行环境要求。
+
+## 星曜条件反查
+
+反查必须提供有限时间范围，返回结果会再次通过正常排盘入口核对：
+
+```js
+import { reverseLookupZiweiTier1 } from 'ziwei-lite';
+
+const candidates = reverseLookupZiweiTier1({
+  start: new ZonedTime({
+    year: 2003, month: 3, day: 1, offsetMinutes: 480,
+  }),
+  end: new ZonedTime({
+    year: 2003, month: 4, day: 1, offsetMinutes: 480,
+  }),
+  options: chart.options,
+  query: {
+    ziweiBranch: chart.anchors.ziwei,
+  },
+});
+
+console.log(candidates.map((item) => item.virtualTime));
+```
+
+反查结果表示符合条件的逻辑时辰槽，不代表分钟级出生时间。
 
 
 ## 文档与许可

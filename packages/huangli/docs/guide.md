@@ -1,6 +1,6 @@
 # 黄历使用指南
 
-[返回首页](../README.md)。以下示例适用于 npm beta 包和仓库 workspace。
+[返回首页](../README.md)。以下示例适用于 npm 发布包和仓库 workspace。
 
 ## 单日、月与年
 

@@ -17,7 +17,7 @@ Node.js 18 or later is required. Browser projects can use the package through an
 npm install js-ephemeris-lite
 ```
 
-This documentation describes 1.0.0-rc.2, a release candidate for the first stable version.
+This documentation describes version 1.0.0. For an installed release, refer to the documentation bundled with that version.
 
 ### Sun/Moon and calendar-only applications
 

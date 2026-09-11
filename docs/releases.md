@@ -35,12 +35,12 @@ npm trust github taiyin-star-catalog-lite --repo RedSC1/js-ephemeris-lite --file
 先同步所有 workspace 的版本、内部依赖范围和 lockfile：
 
 ```sh
-npm run release:set-version -- 1.0.0-beta.2
+npm run release:set-version -- 1.0.0
 git add package.json package-lock.json packages/*/package.json
-git commit -m "release: 1.0.0-beta.2"
+git commit -m "release: prepare 1.0.0"
 git push origin main
-git tag v1.0.0-beta.2
-git push origin v1.0.0-beta.2
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 Action 会依次完成：

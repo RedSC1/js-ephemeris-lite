@@ -38,6 +38,94 @@ console.log(chart.getDaYunTable());
 `offsetMinutes` 是出生钟表的固定 UTC 偏移，单位为分钟。
 性别可省略；计算起运、大运及性别相关神煞时需要提供。
 
+## 读取命盘
+
+`BaziChart` 同时保存四柱、逐柱解释、附加柱和排盘采用的时间口径：
+
+```js
+import {
+  TEN_GOD_NAMES,
+  LIFE_STAGE_NAMES,
+  collectChartRelations,
+  shenShaNames,
+  unpackPillar,
+} from 'bazi-lite';
+
+for (const column of chart.columns) {
+  console.log({
+    pillar: column.name,
+    tenGod: TEN_GOD_NAMES[column.visibleTenGod],
+    hiddenTenGods: column.hiddenTenGods.map((id) => TEN_GOD_NAMES[id]),
+    lifeStage: LIFE_STAGE_NAMES[column.lifeStage],
+    nayinId: column.nayinId,
+  });
+}
+
+console.log(unpackPillar(chart.extraPillars.mingGong).name);
+console.log(shenShaNames(chart.getShenSha().day));
+console.log(collectChartRelations(chart));
+console.log(chart.birthClockTime, chart.birthCivilTime, chart.birthJdUT1);
+```
+
+`birthClockTime` 是用户输入的钟表，`birthCivilTime` 是实际用于定日柱和时柱的
+民用／平太阳／真太阳钟面，`birthJdUT1` 是不随钟表修正改变的物理瞬间。
+
+只有四柱、没有可信出生时刻时，使用纯规则入口，不要虚构日期：
+
+```js
+import { analyzePillars, packPillar } from 'bazi-lite';
+
+const analysis = analyzePillars({
+  year: packPillar(2, 6),
+  month: packPillar(6, 2),
+  day: packPillar(5, 9),
+  hour: packPillar(0, 0),
+});
+```
+
+`analyzePillars()` 可读取十神、藏干、长生、纳音、附加柱和关系，但不会提供需要
+出生瞬间的起运时刻。
+
+## 起运、大运与反查
+
+命盘已经保存性别、节气与钟表设置，计算运限时无需重新拼装时间参数：
+
+```js
+const qiYun = chart.getQiYun();
+const daYun = chart.getDaYunTable();
+
+console.log(qiYun.direction, qiYun.referenceJie);
+console.log(qiYun.startAgeYears, qiYun.startCivilTime);
+
+for (const item of daYun) {
+  console.log(
+    unpackPillar(item.pillar).name,
+    item.startVirtualAge,
+    item.endVirtualAge,
+    item.startCivilTime,
+  );
+}
+```
+
+按三柱或四柱反查时必须给出有限日期范围：
+
+```js
+import { reverseLookupBazi } from 'bazi-lite';
+
+const candidates = reverseLookupBazi({
+  ...chart.pillars,
+  startDate: { year: 1990, month: 1, day: 1 },
+  endDate: { year: 2010, month: 12, day: 31 },
+  options: chart.options,
+});
+
+for (const candidate of candidates) {
+  console.log(candidate.timeCandidate?.startTime, candidate.chart.pillars);
+}
+```
+
+反查沿用正向排盘的历法、太阳时与晚子时设置，并在交节日保留节前、节后候选。
+
 ## 示例导航
 
 | 需求 | 指南 |
@@ -56,6 +144,18 @@ console.log(chart.getDaYunTable());
 - 钟表时间、地方平太阳时、真太阳时及三种晚子时规则。
 - 指定日期范围内的三柱/四柱反查。
 - JSON 命盘快照，包含出生时间与计算设置。
+
+## 主要入口
+
+| 任务 | API |
+| --- | --- |
+| 从真实钟表时间排盘 | `BaziChart.fromZonedTime()` |
+| 从物理瞬间和已处理钟面排盘 | `BaziChart.fromInstant()`／`calculateBazi()` |
+| 只解释一组已知四柱 | `analyzePillars()` |
+| 起运与大运 | `chart.getQiYun()`／`chart.getDaYunTable()` |
+| 神煞与干支关系 | `chart.getShenSha()`／`collectChartRelations()` |
+| 三柱、四柱反查 | `searchBaziDates()`／`reverseLookupBazi()` |
+| JSON 快照 | `chart.toJSON()`／`JSON.stringify(chart)` |
 
 ## 常用设置
 
