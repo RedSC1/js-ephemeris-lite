@@ -210,45 +210,46 @@ export function collectTargetShenSha(
     if ((forward && targetBranch === plus3) || (!forward && targetBranch === plus9)) set(18);
     if ((forward && targetBranch === plus9) || (!forward && targetBranch === plus3)) set(19);
     if (targetBranch === (yearBranch + (forward ? 7 : 5)) % 12) set(20);
-    const hourStem = ganzhiStem(hour);
-    const hourBranch = ganzhiBranch(hour);
-    const yearNayin = getNayinElement(year);
-    if (targetKind === SHEN_SHA_TARGET.HOUR && (dayStem === 0 || dayStem === 5)
-      && ((targetStem === 9 && targetBranch === 9) || (targetStem === 5 && targetBranch === 5)
-        || (targetStem === 1 && targetBranch === 1))) set(25);
-    if ((targetKind === SHEN_SHA_TARGET.DAY || targetKind === SHEN_SHA_TARGET.HOUR)
-      && (((season === 0 || season === 2) && (targetBranch === 2 || targetBranch === 0))
-        || ((season === 1 || season === 3) && (targetBranch === 3 || targetBranch === 7 || targetBranch === 4))
-        || ((yearNayin === 2 || yearNayin === 1) && (targetBranch === 6 || targetBranch === 3))
-        || ((yearNayin === 0 || yearNayin === 4) && (targetBranch === 9 || targetBranch === 10))
-        || (yearNayin === 3 && (targetBranch === 4 || targetBranch === 5)))) set(31);
-    if (targetKind === SHEN_SHA_TARGET.DAY) {
-      const stems = [yearStem, ganzhiStem(month), dayStem, hourStem];
-      if ([0, 4, 6].every((stem) => stems.includes(stem))) set(33);
-      if ([1, 2, 3].every((stem) => stems.includes(stem))) set(34);
-      if ([8, 9, 7].every((stem) => stems.includes(stem))) set(35);
-    }
-    if (yearNayin !== 1 && yearNayin !== 2) {
-      const counterpart = targetBranch === 10 ? 11 : targetBranch === 11 ? 10
-        : targetBranch === 4 ? 5 : targetBranch === 5 ? 4 : -1;
-      const hasCounterpart = [yearBranch, monthBranch, dayBranch, hourBranch].includes(counterpart);
-      if (((targetBranch === 10 || targetBranch === 11) && yearNayin === 4
-          && gender === GENDER.MALE && hasCounterpart)
-        || ((targetBranch === 4 || targetBranch === 5) && (yearNayin === 0 || yearNayin === 3)
-          && gender === GENDER.FEMALE && hasCounterpart)) set(45);
-    }
-    if (targetKind === SHEN_SHA_TARGET.DAY && dayStem === hourStem && dayBranch !== hourBranch) {
-      if ((dayStem === 9 && unorderedPair(dayBranch, hourBranch, 11, 1))
-        || (dayStem === 3 && unorderedPair(dayBranch, hourBranch, 5, 7))
-        || (dayStem === 5 && unorderedPair(dayBranch, hourBranch, 7, 5))
-        || (dayStem === 4 && unorderedPair(dayBranch, hourBranch, 4, 6))) set(48);
-      if ((dayStem === 0 && (unorderedPair(dayBranch, hourBranch, 8, 10)
-          || unorderedPair(dayBranch, hourBranch, 2, 0)))
-        || (dayStem === 1 && unorderedPair(dayBranch, hourBranch, 7, 9))
-        || (dayStem === 4 && unorderedPair(dayBranch, hourBranch, 8, 6))
-        || (dayStem === 7 && unorderedPair(dayBranch, hourBranch, 1, 3))) set(49);
-    }
   }
+  const hourStem = ganzhiStem(hour);
+  const hourBranch = ganzhiBranch(hour);
+  const ruleYearNayin = getNayinElement(year);
+  if (targetKind === SHEN_SHA_TARGET.HOUR && (dayStem === 0 || dayStem === 5)
+    && ((targetStem === 9 && targetBranch === 9) || (targetStem === 5 && targetBranch === 5)
+      || (targetStem === 1 && targetBranch === 1))) set(25);
+  if ((targetKind === SHEN_SHA_TARGET.DAY || targetKind === SHEN_SHA_TARGET.HOUR)
+    && (((season === 0 || season === 2) && (targetBranch === 2 || targetBranch === 0))
+      || ((season === 1 || season === 3) && (targetBranch === 3 || targetBranch === 7 || targetBranch === 4))
+      || ((ruleYearNayin === 2 || ruleYearNayin === 1) && (targetBranch === 6 || targetBranch === 3))
+      || ((ruleYearNayin === 0 || ruleYearNayin === 4) && (targetBranch === 9 || targetBranch === 10))
+      || (ruleYearNayin === 3 && (targetBranch === 4 || targetBranch === 5)))) set(31);
+  if (targetKind === SHEN_SHA_TARGET.DAY) {
+    const stems = [yearStem, ganzhiStem(month), dayStem, hourStem];
+    if ([0, 4, 6].every((stem) => stems.includes(stem))) set(33);
+    if ([1, 2, 3].every((stem) => stems.includes(stem))) set(34);
+    if ([8, 9, 7].every((stem) => stems.includes(stem))) set(35);
+  }
+  if (ruleYearNayin !== 1 && ruleYearNayin !== 2) {
+    const counterpart = targetBranch === 10 ? 11 : targetBranch === 11 ? 10
+      : targetBranch === 4 ? 5 : targetBranch === 5 ? 4 : -1;
+    const hasCounterpart = [yearBranch, monthBranch, dayBranch, hourBranch].includes(counterpart);
+    if (((targetBranch === 10 || targetBranch === 11) && ruleYearNayin === 4
+        && gender === GENDER.MALE && hasCounterpart)
+      || ((targetBranch === 4 || targetBranch === 5) && (ruleYearNayin === 0 || ruleYearNayin === 3)
+        && gender === GENDER.FEMALE && hasCounterpart)) set(45);
+  }
+  if (targetKind === SHEN_SHA_TARGET.DAY && dayStem === hourStem && dayBranch !== hourBranch) {
+    if ((dayStem === 9 && unorderedPair(dayBranch, hourBranch, 11, 1))
+      || (dayStem === 3 && unorderedPair(dayBranch, hourBranch, 5, 7))
+      || (dayStem === 5 && unorderedPair(dayBranch, hourBranch, 7, 5))
+      || (dayStem === 4 && unorderedPair(dayBranch, hourBranch, 4, 6))) set(48);
+    if ((dayStem === 0 && (unorderedPair(dayBranch, hourBranch, 8, 10)
+        || unorderedPair(dayBranch, hourBranch, 2, 0)))
+      || (dayStem === 1 && unorderedPair(dayBranch, hourBranch, 7, 9))
+      || (dayStem === 4 && unorderedPair(dayBranch, hourBranch, 8, 6))
+      || (dayStem === 7 && unorderedPair(dayBranch, hourBranch, 1, 3))) set(49);
+  }
+
 
   if (contains(GU_CHEN, yearBranch, targetBranch)) set(21);
   if (contains(GUA_SU, yearBranch, targetBranch)) set(22);

@@ -95,3 +95,9 @@ console.log(snapshot.schemaVersion, json);
 代码采用 [MPL-2.0](./LICENSE)。
 本包来源说明见[中文第三方声明](./THIRD_PARTY_NOTICES.zh-CN.md)；天文与历史
 数据来源另见核心库的[中文第三方声明](https://github.com/RedSC1/js-ephemeris-lite/blob/main/THIRD_PARTY_NOTICES.zh-CN.md)。
+
+## 自定义神煞
+
+`BaziShenShaCatalog` 支持不可变用户模块和选择快照，与 C++ 语义对齐。
+内置 66 种不可覆盖或删除，通过 `disabledIds` 停用；替代流派使用独立模块 ID。
+见 [用户模块说明](docs/shen-sha-catalog.md)。
