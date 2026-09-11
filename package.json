@@ -105,6 +105,10 @@
     "./hijri-calendar": {
       "types": "./src/hijri-calendar.d.ts",
       "default": "./src/hijri-calendar.js"
+    },
+    "./sun-moon": {
+      "types": "./src/sun-moon-ephemeris.d.ts",
+      "default": "./src/sun-moon-ephemeris.js"
     }
   },
   "engines": {

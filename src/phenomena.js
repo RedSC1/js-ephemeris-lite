@@ -1,4 +1,4 @@
-import { AU_KM } from './ephemeris.js';
+import { AU_KM } from './sun-moon-ephemeris.js';
 import { apparentBodyPosition, apparentGeometry } from './apparent.js';
 import { RAD, clamp, dot, normDeg, unit } from './sky-math.js';
 

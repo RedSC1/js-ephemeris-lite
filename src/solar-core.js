@@ -4,7 +4,7 @@ import {
   iau2000bNutation,
   meanEclipticOfDateMatrixState,
 } from './coordinates.js';
-import { earthState } from './ephemeris.js';
+import { earthState } from './sun-moon-ephemeris.js';
 
 const TWO_PI = 2 * Math.PI;
 

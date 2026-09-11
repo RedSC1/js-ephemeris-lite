@@ -4,7 +4,7 @@ import { solveLunar } from './eclipse-lunar.js';
 import { bodyHorizontalPosition, bodyRiseSetForDay } from './body-visibility.js';
 import { hybridAtmosphericRefraction } from './solar-visibility.js';
 import { BODY_DISC_RADIUS_KM } from './phenomena.js';
-import { AU_KM } from './ephemeris.js';
+import { AU_KM } from './sun-moon-ephemeris.js';
 import { JulianTime, ZonedTime } from './time.js';
 const SYNODIC_MONTH = 29.5306;
 const MAX_LUNATIONS = 5000;

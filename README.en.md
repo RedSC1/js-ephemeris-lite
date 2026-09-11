@@ -19,6 +19,16 @@ npm install js-ephemeris-lite
 
 The API is still in beta and may change before the first stable release.
 
+### Sun/Moon and calendar-only applications
+
+Calendar events and solar time no longer depend on other planetary models. For Earth and Moon positions alone, use:
+
+```js
+import { earthState, moonState } from 'js-ephemeris-lite/sun-moon';
+```
+
+The main entry and `/ephemeris` APIs remain unchanged. Coefficients are split by body, and Sun/Moon computations reference only their own models so tree-shaking bundlers can omit other planets. For native browser ESM, prefer feature subpaths to avoid loading the complete static graph of the main entry. This reduces feature-specific downloads/bundles, not the total coefficients shipped in the npm package; accuracy tiers and numerical results are unchanged.
+
 ## Quick start
 
 Convert between civil and Chinese calendar dates and generate a year's solar terms and lunar phases:

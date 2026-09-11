@@ -131,3 +131,17 @@ test('new sky chain remains finite across the lite model span and correction bri
     }
   }
 });
+
+test('Sun/Moon-only apparent evaluator matches the general evaluator exactly', async () => {
+  const dedicated = await import('../src/sun-moon-apparent.js');
+  const complete = await import('../src/apparent.js');
+  for (const jd of [2451545 - 2922000, 2451545, 2451545 + 2922000]) {
+    for (const body of ['sun', 'moon']) for (const accuracy of ['fast', 'mid', 'accurate']) {
+      for (const frame of ['j2000', 'mean-of-date', 'true-of-date']) {
+        const options = { accuracy, frame };
+        assert.deepEqual(dedicated.apparentBodyState(body, jd, options), complete.apparentBodyState(body, jd, options));
+      }
+    }
+  }
+  assert.throws(() => dedicated.apparentBodyPosition('mars', 2451545), RangeError);
+});

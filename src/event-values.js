@@ -2,7 +2,7 @@
 // derivative accumulation and lunar distance are deliberately skipped.
 import { meanEclipticOfDateMatrix, iau2000bNutationLongitude as nutationLongitude } from './coordinates.js';
 import { LOW_SOLAR_DRIFT, LOW_ELONGATION_DRIFT, FAST_EARTH_RADIUS_TERMS } from './event-series.js';
-import { EARTH_L, EARTH_B, EARTH_R } from './planet-series.js';
+import { EARTH_L, EARTH_B, EARTH_R } from './earth-series.js';
 import {
   EARTH_L_PREFIX_COUNTS,
   EARTH_B_PREFIX_COUNTS,

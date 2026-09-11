@@ -86,7 +86,6 @@ function frozenArray(values) {
   return `Object.freeze([${values.join(', ')}])`;
 }
 
-let source = fs.readFileSync(seriesPath, 'utf8');
 const generated = [
   '// Per-power retained-term counts for direct planetary position accuracy tiers.',
   '// Coefficients are reordered offline by complete frequency envelope; no coefficients are duplicated here.',
@@ -94,6 +93,8 @@ const generated = [
 ];
 
 for (const [body, radiusAu] of Object.entries(BODIES)) {
+  const bodyPath = path.join(root, `src/${body.toLowerCase()}-series.js`);
+  let source = fs.readFileSync(bodyPath, 'utf8');
   const names = ['L', 'B', 'R'].map(axis => `${body}_${axis}`);
   const axes = names.map(name => series[name]);
   const ranked = rankedEnvelopes(axes, radiusAu);
@@ -108,6 +109,8 @@ for (const [body, radiusAu] of Object.entries(BODIES)) {
   names.forEach((name, coordinate) => reordered[coordinate].forEach((rows, power) => {
     source = replaceBinding(source, `${name}${power}`, formatRows(rows));
   }));
+
+  fs.writeFileSync(bodyPath, source);
 
   const tierSizes = Object.fromEntries(Object.entries(TIER_FRACTIONS)
     .map(([tier, fraction]) => [tier, Math.round(ranked.length * fraction)]));
@@ -128,5 +131,4 @@ for (const [body, radiusAu] of Object.entries(BODIES)) {
   generated.push(']);', '');
 }
 
-fs.writeFileSync(seriesPath, source);
 fs.writeFileSync(outputPath, generated.join('\n'));

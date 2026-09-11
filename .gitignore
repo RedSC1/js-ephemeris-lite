@@ -12,6 +12,7 @@ tools/*
 !tools/verify-chinese-era-data.mjs
 !tools/build-planet-position-tiers.mjs
 !tools/build-moon-position-tiers.mjs
+!tools/measure-feature-bundles.mjs
 !tools/benchmark-full-models.py
 !tools/benchmark-elp82-driver.f90
 !tools/benchmarks/

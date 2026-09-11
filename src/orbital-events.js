@@ -1,5 +1,5 @@
 import { JulianTime } from './time.js';
-import { AU_KM, earthHeliocentricState, moonGeocentricState } from './ephemeris.js';
+import { AU_KM, earthHeliocentricState, moonGeocentricState } from './sun-moon-ephemeris.js';
 import { iau2000bNutation, meanEclipticOfDateMatrixState } from './coordinates.js';
 import { apparentBodyPosition, apparentBodyState, validateSkyBody } from './apparent.js';
 import { searchCrossings, searchAngleCrossings } from './event-search.js';

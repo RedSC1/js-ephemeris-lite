@@ -38,7 +38,10 @@
 
 | 文件 | 内容 |
 | --- | --- |
-| `src/planet-series.js` | 离线生成并折叠修正后的八大行星 L/B/R 表及冥王星拟合表 |
+| `src/{earth,mercury,…,pluto}-series.js` | 按天体独立存放的行星 L/B/R 表及冥王星拟合表；系数不重复 |
+| `src/planet-series.js` | 系数聚合导出，供离线工具和对拍使用；日月运行时不引用此入口 |
+| `src/earth-model.js`、`src/sun-moon-ephemeris.js` | 独立地球模型和日月状态 API，对应 `/sun-moon` 子入口 |
+| `src/apparent-core.js` | 共享视位置算法，显式接收行星求值器；日月入口不加载其他行星 |
 | `src/planet-models.js` | 各行星运行时基底的固定选择 |
 | `src/direct-planet-model.js` | 通用 Fourier–多项式 L/B/R 求值器及解析速度 |
 | `src/planet-prefix-counts.js` | 行星位置 fast／mid 的每阶保留项数，不含系数副本 |
@@ -54,7 +57,7 @@
 ### 八大行星
 
 当前运行时**不直接执行 VSOP2013 椭圆要素算法，也不直接求值原始 TOP2013
-表**。发布的 `planet-series.js` 是离线生成的折叠模型：
+表**。发布的各天体系数表是离线生成的折叠模型：
 
 - 水星、金星、地球和火星以完整 VSOP2013 椭圆要素解为理论来源，离线完成
   坐标转换、Fourier／多项式展开和截断选择；
@@ -194,3 +197,5 @@ WebAssembly。根包没有运行时依赖；三个规则包只依赖根包。
 第三方模型、历史数据、移植算法及各自许可边界见
 [中文第三方声明](../THIRD_PARTY_NOTICES.zh-CN.md)和
 [英文第三方声明](../THIRD_PARTY_NOTICES.md)。
+
+按需加载边界和体积实测见[日月依赖拆分](module-loading.md)。

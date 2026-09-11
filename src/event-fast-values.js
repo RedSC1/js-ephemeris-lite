@@ -1,5 +1,5 @@
 // Compact value-only evaluators for the fixed-stage fast event solvers.
-import { EARTH_L, EARTH_B, EARTH_R } from './planet-series.js';
+import { EARTH_L, EARTH_B, EARTH_R } from './earth-series.js';
 import { EARTH_L_PREFIX_COUNTS, EARTH_B_PREFIX_COUNTS, EARTH_R_PREFIX_COUNTS } from './earth-prefix-counts.js';
 import { MOON_L, MOON_B, MOON_W1, MOON_ARGUMENTS } from './moon-series.js';
 import { iau2000bNutationLongitude } from './coordinates.js';

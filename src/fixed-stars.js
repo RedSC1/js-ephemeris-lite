@@ -1,4 +1,4 @@
-import { AU_KM, earthHeliocentricState } from './ephemeris.js';
+import { AU_KM, earthHeliocentricState } from './sun-moon-ephemeris.js';
 import {
   ARCSEC_TO_RAD, J2000, iau2000bNutation, icrfEquatorialToJ2000Ecliptic,
   meanEclipticOfDateMatrixState,
@@ -7,7 +7,7 @@ import {
   RAD, add, cross, dot, finite, rotateX, rotateZ, scale, signedDeg, spherical,
   sub, transform, unit,
 } from './sky-math.js';
-import { LIGHT_TIME_DAYS_PER_AU, SKY_FRAME } from './apparent.js';
+import { LIGHT_TIME_DAYS_PER_AU, SKY_FRAME } from './apparent-core.js';
 
 export const TSC1_VERSION = 1;
 export const TSC1_HEADER_SIZE = 132;
