@@ -1,5 +1,5 @@
-import { earthModel } from './planet-models.js';
-import { EARTH_L, EARTH_R } from './planet-series.js';
+import { earthModel } from './earth-model.js';
+import { EARTH_L, EARTH_R } from './earth-series.js';
 import { EARTH_L_PREFIX_COUNTS, EARTH_R_PREFIX_COUNTS } from './earth-prefix-counts.js';
 import { LOW_SOLAR_DRIFT, LOW_ELONGATION_DRIFT, FAST_EARTH_RADIUS_TERMS } from './event-series.js';
 import { MOON_L } from './moon-series.js';
@@ -13,11 +13,11 @@ import {
 import {
   earthState,
   moonDirectionState,
-} from './ephemeris.js';
+} from './sun-moon-ephemeris.js';
 import { JulianTime } from './time.js';
 import { solarLongitude as solarValue, elongation as phaseValue, lowSolarValue, lowPhaseValue, mediumElongation } from './event-values.js';
 import { fastSolarLongitude, fastElongation, wrap as fastWrap } from './event-fast-values.js';
-import { apparentBodyState } from './apparent.js';
+import { apparentBodyState } from './sun-moon-apparent.js';
 import { checkedAccuracy } from './accuracy.js';
 import { solarRate2, elongationRate2, elongationRefineRate } from './event-rates.js';
 

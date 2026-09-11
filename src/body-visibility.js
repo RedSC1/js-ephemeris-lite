@@ -1,4 +1,4 @@
-import { AU_KM } from './ephemeris.js';
+import { AU_KM } from './sun-moon-ephemeris.js';
 import { apparentBodyPosition, greenwichSiderealTime, validateSkyBody } from './apparent.js';
 import { BODY_DISC_RADIUS_KM } from './phenomena.js';
 import { hybridAtmosphericRefraction } from './solar-visibility.js';

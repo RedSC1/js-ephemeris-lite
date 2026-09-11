@@ -1,4 +1,4 @@
-import { PLANET_EPOCH_JD, PLANET_PHASE_DAYS } from './planet-series.js';
+import { PLANET_EPOCH_JD, PLANET_PHASE_DAYS } from './planet-constants.js';
 import { planetTheoryToJ2000 } from './planet-frame.js';
 
 export function legendreBasis(x, degree, scaleDays) {

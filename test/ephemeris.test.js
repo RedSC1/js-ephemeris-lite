@@ -503,3 +503,24 @@ test('models remain finite over the intended wide interval', () => {
     }
   }
 });
+
+test('calendar and Sun/Moon entry graphs do not import other planetary tables', async () => {
+  const seen = new Set();
+  function visit(url) {
+    if (seen.has(url.href)) return;
+    seen.add(url.href);
+    const source = readFileSync(url, 'utf8');
+    for (const match of source.matchAll(/(?:from\s*|import\s*)['"](\.\.?\/[^'"]+\.js)['"]/g)) {
+      visit(new URL(match[1], url));
+    }
+  }
+  for (const entry of ['qi-shuo', 'solar-time', 'sun-moon-ephemeris', 'fixed-stars']) {
+    visit(new URL(`../src/${entry}.js`, import.meta.url));
+  }
+  for (const url of seen) {
+    assert(!/\/(?:planet-series|planet-models|pluto-model|(?:mercury|venus|mars|jupiter|saturn|uranus|neptune|pluto)-series)\.js$/.test(url), url);
+  }
+  const dedicated = await import('js-ephemeris-lite/sun-moon');
+  const complete = await import('../src/ephemeris.js');
+  for (const [name, value] of Object.entries(dedicated)) assert.strictEqual(value, complete[name], name);
+});

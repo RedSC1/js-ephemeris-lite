@@ -301,3 +301,8 @@ isHijriLeapYear(hijriDate.year);
 void hijriCivil;
 // @ts-expect-error offset is required; no implicit local or Beijing timezone.
 instantToHijri(2451545);
+
+// The lightweight entry shares the existing public state declarations.
+import { earthState as standaloneEarthState, moonState as standaloneMoonState } from 'js-ephemeris-lite/sun-moon';
+standaloneEarthState(2451545, 'mid').velocity[0].toFixed(6);
+standaloneMoonState(2451545, 'fast').position[0].toFixed(6);

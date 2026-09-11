@@ -1,0 +1,3 @@
+export const PLANET_EPOCH_JD = 2451545;
+export const PLANET_PHASE_DAYS = 365250;
+export const PLUTO_FALLBACK_SCALE_DAYS = 2922000;

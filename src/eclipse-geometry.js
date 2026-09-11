@@ -1,7 +1,7 @@
 // Circular-limb shadow geometry, WGS84 Earth; lengths are kilometres.
 // Internal times are TT days relative to J2000.
-import { apparentBodyPosition } from './apparent.js';
-import { AU_KM } from './ephemeris.js';
+import { apparentBodyPosition } from './sun-moon-apparent.js';
+import { AU_KM } from './sun-moon-ephemeris.js';
 export const D = Math.PI / 180, RE = 6378.137, RM = .2725076 * RE, RS = 695700, B = 1 - 1 / 298.257223563;
 export const dot = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0);
 export const scale = (a, s) => a.map(x => x * s);
