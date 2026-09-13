@@ -1,6 +1,6 @@
 {
   "name": "bazi-lite",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "BaZi and Four Pillars for JavaScript with Ten Gods, hidden stems, Shen Sha, fortune cycles, solar time, and birth-time reverse lookup",
   "type": "module",
   "license": "MPL-2.0",
@@ -42,7 +42,7 @@
     "prepack": "npm test"
   },
   "dependencies": {
-    "js-ephemeris-lite": "^1.1.0"
+    "js-ephemeris-lite": "^1.2.0"
   },
   "engines": {
     "node": ">=18"
