@@ -10,6 +10,7 @@ if (!version || !SEMVER.test(version)) {
 
 const packagePaths = [
   'package.json',
+  'packages/asteroids/package.json',
   'packages/bazi/package.json',
   'packages/huangli/package.json',
   'packages/star-catalog/package.json',
@@ -35,7 +36,14 @@ for (const path of packagePaths) {
 
 const lock = readJson('package-lock.json');
 lock.version = version;
-for (const key of ['', 'packages/bazi', 'packages/huangli', 'packages/star-catalog', 'packages/ziwei']) {
+for (const key of [
+  '',
+  'packages/asteroids',
+  'packages/bazi',
+  'packages/huangli',
+  'packages/star-catalog',
+  'packages/ziwei',
+]) {
   const entry = lock.packages?.[key];
   if (!entry) throw new Error(`package-lock.json is missing workspace entry: ${key || '<root>'}`);
   entry.version = version;

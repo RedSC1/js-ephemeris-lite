@@ -153,6 +153,28 @@ the DE441 binary kernel is used during coefficient generation.
 - JPL/NAIF planetary kernel archive:
   <https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/>
 
+## Optional minor-body ephemeris package
+
+The coefficient assets distributed by the optional
+`asteroid-ephemeris-lite` workspace package were generated
+from the canonical minor-body vectors published by the author's
+**ephemeris-data** project. That dataset combines NASA/JPL small-body SPKs
+with project-generated numerical extensions outside the official kernel
+intervals. The runtime package contains only compact fitted coefficients, not
+the SPK files or canonical sample arrays.
+
+- Derived-data repository: <https://github.com/RedSC1/ephemeris-data>
+- JPL small-body kernel archive:
+  <https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/asteroids/>
+- JPL Horizons: <https://ssd.jpl.nasa.gov/horizons/>
+- Apache License 2.0 for the derived ephemeris-data material:
+  <https://www.apache.org/licenses/LICENSE-2.0>
+
+The optional package documentation identifies which date ranges come directly from JPL
+SPKs and which use the numerical extensions. NASA/JPL source data and the
+project-generated extensions must not be presented as having the same
+provenance.
+
 ## Historical Chinese calendar profile
 
 `src/generated/historical-calendar-data.js` contains civil-day assignments

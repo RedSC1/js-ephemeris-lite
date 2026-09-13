@@ -15,6 +15,7 @@ if (!SEMVER.test(version)) {
 
 const packagePaths = [
   'package.json',
+  'packages/asteroids/package.json',
   'packages/bazi/package.json',
   'packages/huangli/package.json',
   'packages/star-catalog/package.json',

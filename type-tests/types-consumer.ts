@@ -41,6 +41,12 @@ import {
 } from 'js-ephemeris-lite';
 import { moonHeliocentricState } from 'js-ephemeris-lite/ephemeris';
 import {
+  ASTEROID,
+  asteroidGeocentricPosition,
+  asteroidHeliocentricPosition,
+  type Asteroid,
+} from 'asteroid-ephemeris-lite';
+import {
   parseTsc1Catalog, fixedStarPosition, fixedStarState,
   type Tsc1Catalog, type FixedStarPosition, type FixedStarState,
 } from 'js-ephemeris-lite/fixed-stars';
@@ -52,6 +58,10 @@ const starCatalog: Tsc1Catalog = parseTsc1Catalog(tsc1Bytes);
 const starPosition: FixedStarPosition = fixedStarPosition(starCatalog, 'vega', 2451545);
 const starState: FixedStarState = fixedStarState(starCatalog, 0, 2451545, { frame: 'mean-of-date' });
 void [starPosition, starState];
+const asteroid: Asteroid = ASTEROID.CHIRON;
+const asteroidHeliocentric: EphemerisVector3 = asteroidHeliocentricPosition(asteroid, 2451545);
+const asteroidGeocentric: EphemerisVector3 = asteroidGeocentricPosition(ASTEROID.CERES, 2451545, 'mid');
+void [asteroidHeliocentric, asteroidGeocentric];
 const solarEclipses: SolarEclipseEvent[] = searchSolarEclipses(
   new Date('2024-01-01T00:00:00Z'), new Date('2025-01-01T00:00:00Z'),
 );

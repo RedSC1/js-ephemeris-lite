@@ -1,4 +1,4 @@
-# taiyin-star-catalog-lite
+# star-catalog-lite
 
 `js-ephemeris-lite` 的可选亮星数据包。它原样携带 C++ Taiyin 生成的
 TSC1 v1 lite 星表，包含 2,057 条恒星/特殊方向记录和 12,242 个可搜索别名；
@@ -7,14 +7,14 @@ TSC1 v1 lite 星表，包含 2,057 条恒星/特殊方向记录和 12,242 个可
 ## 安装
 
 ```sh
-npm install js-ephemeris-lite taiyin-star-catalog-lite
+npm install js-ephemeris-lite star-catalog-lite
 ```
 
 ## 使用
 
 ```js
 import { fixedStarPosition } from 'js-ephemeris-lite/fixed-stars';
-import { loadLiteStarCatalog } from 'taiyin-star-catalog-lite';
+import { loadLiteStarCatalog } from 'star-catalog-lite';
 
 const catalog = await loadLiteStarCatalog();
 const spica = fixedStarPosition(catalog, '角宿一', 2460000.5);

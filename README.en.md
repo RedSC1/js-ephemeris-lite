@@ -106,9 +106,10 @@ console.log(searchSolarEclipses(
 - Twenty-four solar terms, seventy-two pentads, new moons, and arbitrary principal lunar phases.
 - Chinese calendar conversion, leap months, historical calendar reforms, Chinese era names, and Ganzhi.
 - Mean solar time, apparent solar time, equation of time, sunrise/sunset, twilight, polar-day, and polar-night handling.
-- TSC1 v1 star-catalog parsing, alias lookup, 3D space-motion propagation, and apparent fixed-star positions. The optional `taiyin-star-catalog-lite` package supplies the default bright-star catalog.
+- TSC1 v1 star-catalog parsing, alias lookup, 3D space-motion propagation, and apparent fixed-star positions. The optional `star-catalog-lite` package supplies the default bright-star catalog.
+- Long-range geometric positions for nine asteroids and centaurs through the optional `asteroid-ephemeris-lite` package.
 
-Asteroids are not currently supported. Eclipse search APIs do not include maps or administrative-region data.
+See the [asteroid model notes](./docs/asteroids.en.md) for data provenance, accuracy budgets, and long-range limitations. Eclipse search APIs do not include maps or administrative-region data.
 
 ## Time scales, units, and ranges
 
@@ -190,7 +191,8 @@ All packages can be installed separately. The Bazi, Ziwei, and Huangli packages 
 | [`bazi-lite`](./packages/bazi) | Four Pillars, Ten Gods, hidden stems, Shen-Sha, luck cycles, and reverse lookup |
 | [`ziwei-lite`](./packages/ziwei) | Zi Wei charts, time flows, custom rules, and star reverse lookup |
 | [`huangli-lite`](./packages/huangli) | Daily Yi/Ji, Shen-Sha, festivals, flying stars, and Simplified/Traditional Chinese output |
-| [`taiyin-star-catalog-lite`](./packages/star-catalog) | Optional TSC1 bright-star catalog |
+| [`star-catalog-lite`](./packages/star-catalog) | Optional TSC1 bright-star catalog |
+| [`asteroid-ephemeris-lite`](./packages/asteroids) | Optional long-range ephemerides for nine asteroids and centaurs |
 
 ## Documentation
 

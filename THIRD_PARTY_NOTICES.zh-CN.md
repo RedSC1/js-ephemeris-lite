@@ -126,6 +126,24 @@ SOFA 版权归 IAU Standards of Fundamental Astronomy Board 所有。
 - JPL/NAIF 行星星历核目录：
   <https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/>
 
+## 可选小天体星历包
+
+可选工作区包 `asteroid-ephemeris-lite` 的系数由作者的
+**ephemeris-data** 项目所发布的
+小天体标准向量生成。该数据集把 NASA/JPL 小天体 SPK 与官方星历区间外由项目
+生成的数值积分扩展合并为连续样本。运行时包只包含压缩后的拟合系数，不包含
+SPK 文件或标准样本数组。
+
+- 衍生数据仓库：<https://github.com/RedSC1/ephemeris-data>
+- JPL 小天体星历核目录：
+  <https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/asteroids/>
+- JPL Horizons：<https://ssd.jpl.nasa.gov/horizons/>
+- ephemeris-data 衍生材料采用 Apache License 2.0：
+  <https://www.apache.org/licenses/LICENSE-2.0>
+
+模块文档分别标出 JPL SPK 直接覆盖区间和数值积分扩展区间；两类区间不应被
+描述为具有相同的数据来源。
+
 ## 中国历史历法归日数据
 
 `src/generated/historical-calendar-data.js` 保存由上文所列古历数据和规则推导出的

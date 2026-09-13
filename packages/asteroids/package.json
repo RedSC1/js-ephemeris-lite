@@ -1,27 +1,24 @@
 {
-  "name": "star-catalog-lite",
+  "name": "asteroid-ephemeris-lite",
   "version": "1.1.0",
-  "description": "TSC1 bright-star catalog with complete Chinese-asterism and western-zodiac line coverage",
+  "description": "Long-range lightweight ephemerides for nine asteroids and centaurs in JavaScript",
   "type": "module",
   "license": "MPL-2.0",
   "author": "RedSC1",
   "sideEffects": false,
-  "main": "./src/node.js",
-  "types": "./src/index.d.ts",
+  "main": "./src/asteroids.js",
+  "types": "./src/asteroids.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "browser": "./src/browser.js",
-      "node": "./src/node.js",
-      "default": "./src/browser.js"
+      "types": "./src/asteroids.d.ts",
+      "default": "./src/asteroids.js"
     },
-    "./catalog.tsc1": "./data/stars-bright-v5.tsc1",
     "./package.json": "./package.json"
   },
   "files": [
-    "data",
     "src",
     "README.md",
+    "README.en.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
     "THIRD_PARTY_NOTICES.zh-CN.md"
@@ -35,12 +32,12 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/RedSC1/js-ephemeris-lite.git",
-    "directory": "packages/star-catalog"
+    "directory": "packages/asteroids"
   },
   "bugs": {
     "url": "https://github.com/RedSC1/js-ephemeris-lite/issues"
   },
-  "homepage": "https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/star-catalog#readme",
+  "homepage": "https://github.com/RedSC1/js-ephemeris-lite/tree/main/packages/asteroids#readme",
   "dependencies": {
     "js-ephemeris-lite": "^1.1.0"
   },
@@ -50,10 +47,9 @@
   },
   "keywords": [
     "astronomy",
-    "fixed-stars",
-    "star-catalog",
-    "gaia",
-    "hipparcos",
-    "tsc1"
+    "ephemeris",
+    "asteroids",
+    "minor-planets",
+    "centaurs"
   ]
 }
