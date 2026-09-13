@@ -192,6 +192,7 @@ All packages can be installed separately. The Bazi, Ziwei, and Huangli packages 
 | [`ziwei-lite`](./packages/ziwei) | Zi Wei charts, time flows, custom rules, and star reverse lookup |
 | [`huangli-lite`](./packages/huangli) | Daily Yi/Ji, Shen-Sha, festivals, flying stars, and Simplified/Traditional Chinese output |
 | [`star-catalog-lite`](./packages/star-catalog) | Optional TSC1 bright-star catalog |
+| [`asteroid-ephemeris-lite`](./packages/asteroids) | Optional long-range ephemerides for nine asteroids and centaurs |
 
 ## Documentation
 

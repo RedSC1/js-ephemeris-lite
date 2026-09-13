@@ -4,7 +4,7 @@
 
 ## 包与依赖方向
 
-仓库是一个 npm workspace，包含一个天文与历法核心和三个可独立发布的规则包：
+仓库是一个 npm workspace，包含一个天文与历法核心、三个规则包和两个可选数据／星历包：
 
 | 包 | 实现与发布内容 | 职责 |
 | --- | --- | --- |
@@ -12,9 +12,11 @@
 | `bazi-lite` | TypeScript 编译到 `dist` | 四柱、十神、神煞、起运大运与反查 |
 | `ziwei-lite` | TypeScript 编译到 `dist` | 紫微命盘、流运、自定义规则与反查 |
 | `huangli-lite` | 直接发布 JavaScript 源文件及类型声明 | 每日宜忌、神煞、节日与风水规则 |
+| `star-catalog-lite` | TSC1 二进制星表及 JavaScript 读取入口 | 可选亮星数据、传统星名与星座连线恒星 |
+| `asteroid-ephemeris-lite` | JavaScript 求值器及压缩拟合系数 | 可选小行星和半人马小行星位置 |
 
-三个规则包都依赖 `js-ephemeris-lite`，核心包不反向依赖八字、紫微或黄历。
-四个包均可单独安装和发布；workspace 只负责联合开发、测试及版本协作。
+五个 workspace 包均声明依赖 `js-ephemeris-lite`，核心包不反向依赖它们。
+六个包均可单独安装和发布；workspace 只负责联合开发、测试及版本协作。
 
 ## 核心模块层次
 

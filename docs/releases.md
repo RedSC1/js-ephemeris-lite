@@ -1,6 +1,6 @@
 # npm 发布流程
 
-仓库使用 `.github/workflows/publish.yml` 在推送 `v<版本号>` tag 时发布以下五个包：
+仓库使用 `.github/workflows/publish.yml` 在推送 `v<版本号>` tag 时发布以下六个包：
 
 - `js-ephemeris-lite`
 - `bazi-lite`
@@ -47,10 +47,10 @@ git push origin v1.0.0
 
 Action 会依次完成：
 
-1. 校验 tag 与五个 `package.json` 的版本完全一致；
+1. 校验 tag 与六个 `package.json` 的版本完全一致；
 2. 安装依赖，执行主包测试、类型检查和全部 workspace 测试；
-3. 确认五个 `name@version` 均未在 npm 发布，防止半途遇到重复版本；
-4. 先发布 `js-ephemeris-lite`，再发布四个依赖它的 workspace；
+3. 确认六个 `name@version` 均未在 npm 发布，防止半途遇到重复版本；
+4. 先发布 `js-ephemeris-lite`，再发布五个依赖它的 workspace；
 5. 所有版本都更新 npm 的 `latest` dist-tag。
 
 不要在版本提交尚未进入 `main` 时提前推 tag。npm 发布不可撤回，也不允许覆盖同名版本；
