@@ -49,6 +49,7 @@
 | `src/moon-model.js` | 月球共享相位求值与解析速度 |
 | `src/moon-prefix-counts.js` | 月球位置 fast／mid 的每阶保留项数，不含系数副本 |
 | `src/pluto-model.js` | 冥王星近代模型、后备模型及过渡区 |
+| `packages/asteroids/src/` | 可选小行星包的分段连续性处理及压缩系数；不包含在主包中 |
 | `src/planet-frame.js` | 行星理论原生系到 J2000 平黄道系的固定变换 |
 | `src/nutation-series.js` | IAU 2000B 章动系数 |
 | `src/event-series.js` | 定气定相的初值和专用事件模型系数 |

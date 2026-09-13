@@ -58,7 +58,8 @@ jobs:
 
       - name: Publish workspace packages
         run: |
+          npm publish --workspace=asteroid-ephemeris-lite --ignore-scripts --access public --tag latest
           npm publish --workspace=bazi-lite --ignore-scripts --access public --tag latest
           npm publish --workspace=ziwei-lite --ignore-scripts --access public --tag latest
           npm publish --workspace=huangli-lite --ignore-scripts --access public --tag latest
-          npm publish --workspace=taiyin-star-catalog-lite --ignore-scripts --access public --tag latest
+          npm publish --workspace=star-catalog-lite --ignore-scripts --access public --tag latest

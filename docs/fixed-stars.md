@@ -4,12 +4,12 @@
 主包只包含读取和计算代码，不强制携带恒星数据。默认亮星表可另行安装：
 
 ```sh
-npm install js-ephemeris-lite taiyin-star-catalog-lite
+npm install js-ephemeris-lite star-catalog-lite
 ```
 
 ```js
 import { fixedStarPosition, fixedStarState } from 'js-ephemeris-lite/fixed-stars';
-import { loadLiteStarCatalog } from 'taiyin-star-catalog-lite';
+import { loadLiteStarCatalog } from 'star-catalog-lite';
 
 const catalog = await loadLiteStarCatalog();
 const spica = fixedStarPosition(catalog, '角宿一', 2460000.5);

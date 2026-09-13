@@ -6,7 +6,8 @@
 - `bazi-lite`
 - `ziwei-lite`
 - `huangli-lite`
-- `taiyin-star-catalog-lite`
+- `star-catalog-lite`
+- `asteroid-ephemeris-lite`
 
 ## 一次性配置
 
@@ -27,7 +28,8 @@ npm trust github js-ephemeris-lite --repo RedSC1/js-ephemeris-lite --file publis
 npm trust github bazi-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
 npm trust github ziwei-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
 npm trust github huangli-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
-npm trust github taiyin-star-catalog-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
+npm trust github star-catalog-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
+npm trust github asteroid-ephemeris-lite --repo RedSC1/js-ephemeris-lite --file publish.yml --allow-publish --yes
 ```
 
 ## 发布新版本
